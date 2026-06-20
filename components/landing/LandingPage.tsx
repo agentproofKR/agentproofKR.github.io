@@ -162,8 +162,8 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <div className={styles.desktopDashboard}>
                     <Image
                       src="/agentproof_mvp_dashboard_agentproof.png"
-                      width={1545}
-                      height={770}
+                      width={1775}
+                      height={886}
                       priority
                       sizes="(max-width: 767px) 0px, 1200px"
                       alt="AgentProof 업무용 AI 검증 대시보드 샘플. 위험 점수, 테스트 통과율, 배포 승인 상태, 근거 문서, 최근 테스트 결과를 보여준다."
