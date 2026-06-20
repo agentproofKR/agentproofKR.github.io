@@ -23,9 +23,9 @@ const lead = {
 
 describe("static lead fallback", () => {
   it("builds a mailto handoff containing the validated lead fields", () => {
-    const href = createLeadMailtoHref(lead, "contact@agentproof.kr");
+    const href = createLeadMailtoHref(lead, "agentproof.ai@gmail.com");
 
-    expect(href).toMatch(/^mailto:contact%40agentproof\.kr\?/);
+    expect(href).toMatch(/^mailto:agentproof\.ai%40gmail\.com\?/);
     expect(decodeURIComponent(href)).toContain("역할: 대표·도입 담당자");
     expect(decodeURIComponent(href)).toContain(
       "가장 가까운 문제: 어떤 업무부터 도입해야 할지 모르겠다",
@@ -35,7 +35,7 @@ describe("static lead fallback", () => {
   });
 
   it("does not include the honeypot field in the outgoing mail body", () => {
-    const href = createLeadMailtoHref({ ...lead, honeypot: "filled" }, "contact@agentproof.kr");
+    const href = createLeadMailtoHref({ ...lead, honeypot: "filled" }, "agentproof.ai@gmail.com");
 
     expect(decodeURIComponent(href)).not.toContain("honeypot");
     expect(decodeURIComponent(href)).not.toContain("filled");

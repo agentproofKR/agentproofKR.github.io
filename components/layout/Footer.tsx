@@ -25,7 +25,9 @@ export function Footer() {
         <div>
           <p>업무 AI 도입 문제를 검증하는 Private beta</p>
           <Link href="/privacy">개인정보처리방침</Link>
-          <span>contact@agentproof.kr</span>
+          <Link href="/privacy/request">권리 행사</Link>
+          <Link href="/beta-terms">Founding Researcher 약관</Link>
+          <span>agentproof.ai@gmail.com</span>
           <span>© 2026 AgentProof</span>
         </div>
       </div>

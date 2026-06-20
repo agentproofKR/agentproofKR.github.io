@@ -29,22 +29,22 @@ test("passes core automated accessibility checks", async ({ page }) => {
   expect(results.violations).toEqual([]);
 });
 
-test("keyboard users can tab inside the modal and close back to the opener", async ({ page }) => {
+test("keyboard users can start the survey and move through the first question", async ({ page }) => {
   await page.goto("/");
-  const opener = page.getByRole("banner").getByRole("button", { name: "3분 진단" });
+  const opener = page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ });
   await opener.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("dialog", { name: "3분 AI 도입 과제 진단" })).toBeVisible();
+  await expect(page).toHaveURL(/\/survey\/$/);
 
-  for (let index = 0; index < 12; index += 1) {
-    await page.keyboard.press("Tab");
-    const inside = await page.evaluate(() => {
-      const dialog = document.querySelector('[role="dialog"]');
-      return dialog?.contains(document.activeElement);
-    });
-    expect(inside).toBe(true);
-  }
+  const practitioner = page.getByRole("link", { name: /실무자 진단 시작/ });
+  await practitioner.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
+  await expect(page.getByTestId("survey-progress")).toContainText("1/24");
 
-  await page.keyboard.press("Escape");
-  await expect(opener).toBeFocused();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Space");
+  await page.getByRole("button", { name: "계속" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("survey-progress")).toContainText("2/24");
 });

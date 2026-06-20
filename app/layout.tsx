@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const title = "AgentProof | 업무 AI, 어디까지 맡겨도 될까요?";
+const title = "AgentProof | 조직 AI 업무 도입 준비도 진단";
 const description =
-  "실무자의 사용 기준, 도입 담당자의 우선순위, 보안 담당자의 통제 기준을 진단하는 AgentProof Private beta입니다.";
+  "조직의 AI 사용 현황과 업무별 기회를 파악하고 정확성, 개인정보, 책임 위험을 진단해 도입 우선순위와 사용 기준으로 정리합니다.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/agentproof-logo-mark.png", type: "image/png" }],
   },
   openGraph: {
-    title,
+    title: "AI를 업무에 쓸 때, 무엇을 맡기고 무엇을 지킬지.",
     description,
     type: "website",
     url: "/",
@@ -51,7 +51,7 @@ type RootLayoutProps = Readonly<{
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="ko">
+    <html lang="ko" data-scroll-behavior="smooth">
       <body>{children}</body>
     </html>
   );

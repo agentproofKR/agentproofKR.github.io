@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { LeadModal } from "@/components/lead/LeadModal";
 import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/landing.module.css";
@@ -15,24 +15,9 @@ import {
   pilotDeliverables,
   processSteps,
   productTabs,
-  type ProblemOption,
-  type RoleOption,
   roleProblemCards,
 } from "./content";
 
-type ModalPlacement =
-  | "header"
-  | "hero"
-  | "process"
-  | "final"
-  | "role_employee"
-  | "role_business"
-  | "role_security";
-type ModalRequest = {
-  placement: ModalPlacement;
-  initialRole?: RoleOption;
-  initialProblem?: ProblemOption;
-};
 type ProductTabId = (typeof productTabs)[number]["id"];
 
 type LandingPageProps = {
@@ -40,9 +25,7 @@ type LandingPageProps = {
 };
 
 export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
-  const [modalRequest, setModalRequest] = useState<ModalRequest | null>(null);
   const [activeTabId, setActiveTabId] = useState<ProductTabId>(productTabs[0].id);
-  const openerRef = useRef<HTMLElement | null>(null);
   const activeTab = productTabs.find((tab) => tab.id === activeTabId) ?? productTabs[0];
 
   useEffect(() => {
@@ -59,39 +42,18 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
     });
   }, []);
 
-  const openLeadModal = (
-    placement: ModalPlacement,
-    opener: HTMLElement,
-    defaults: Omit<ModalRequest, "placement"> = {},
-  ) => {
-    openerRef.current = opener;
-    setModalRequest({ placement, ...defaults });
+  const trackSurveyCta = (placement: string, persona = "") => {
     const stored = getStoredUtm(window.sessionStorage);
-    trackEvent("lead_modal_open", {
+    trackEvent("persona_selected", {
       placement,
-      role: defaults.initialRole ?? "",
-      problem: defaults.initialProblem ?? "",
+      persona,
+      survey_version: "2026-06-21",
       utm_source: stored.source ?? "",
       utm_medium: stored.medium ?? "",
       utm_campaign: stored.campaign ?? "",
       utm_content: stored.content ?? "",
       viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
     });
-    trackEvent("diagnosis_start", {
-      placement,
-      role: defaults.initialRole ?? "",
-      problem: defaults.initialProblem ?? "",
-      utm_source: stored.source ?? "",
-      utm_medium: stored.medium ?? "",
-      utm_campaign: stored.campaign ?? "",
-      utm_content: stored.content ?? "",
-      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
-    });
-  };
-
-  const closeLeadModal = () => {
-    setModalRequest(null);
-    requestAnimationFrame(() => openerRef.current?.focus());
   };
 
   const handleProductClick = () => {
@@ -118,7 +80,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
         </div>
       ) : null}
       <div className={showVisualBaseline ? styles.semanticLandingBaseline : styles.semanticLanding}>
-        <Header onCtaClick={openLeadModal} onNavClick={handleNavClick} />
+        <Header onNavClick={handleNavClick} />
         <main id="main">
           <section id="top" className={styles.hero} aria-labelledby="hero-heading">
             <div className={styles.wrap}>
@@ -136,13 +98,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 진단합니다.
               </p>
               <div className={styles.heroActions}>
-                <button
+                <Link
                   className={`${styles.button} ${styles.buttonDark} ${styles.buttonLarge}`}
-                  type="button"
-                  onClick={(event) => openLeadModal("hero", event.currentTarget)}
+                  href="/survey/"
+                  onClick={() => trackSurveyCta("hero")}
                 >
-                  내 과제 3분 진단
-                </button>
+                  역할별 AI 준비도 정밀진단
+                </Link>
                 <button className={styles.textLink} type="button" onClick={handleProductClick}>
                   MVP 화면 보기 ↘
                 </button>
@@ -222,23 +184,20 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                       <i aria-hidden="true" />
                       {role.outcome}
                     </strong>
-                    <button
+                    <Link
                       className={styles.roleCta}
-                      type="button"
-                      onClick={(event) => {
+                      href={role.surveyPath}
+                      onClick={() => {
                         trackEvent("role_problem_click", {
                           placement: role.placement,
                           role: role.role,
                           problem: role.defaultProblem,
                         });
-                        openLeadModal(role.placement, event.currentTarget, {
-                          initialRole: role.role,
-                          initialProblem: role.defaultProblem,
-                        });
+                        trackSurveyCta(role.placement, role.surveyPath.replace("/survey/", "").replace("/", ""));
                       }}
                     >
                       이 문제 선택 <span aria-hidden="true">→</span>
-                    </button>
+                    </Link>
                   </article>
                 ))}
               </div>
@@ -267,13 +226,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   ))}
                 </ol>
                 <div className={styles.processAction}>
-                  <button
+                  <Link
                     className={`${styles.button} ${styles.buttonLight}`}
-                    type="button"
-                    onClick={(event) => openLeadModal("process", event.currentTarget)}
+                    href="/survey/"
+                    onClick={() => trackSurveyCta("process")}
                   >
-                    파일럿 관심 표시
-                  </button>
+                    역할별 진단 시작
+                  </Link>
                   <p>기밀자료 없이 상담할 수 있습니다.</p>
                 </div>
               </div>
@@ -306,13 +265,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 </h2>
                 <p>응답을 바탕으로 첫 고객과 기능 우선순위를 정합니다.</p>
                 <div className={styles.finalActions}>
-                  <button
+                  <Link
                     className={`${styles.button} ${styles.buttonDark} ${styles.buttonLarge}`}
-                    type="button"
-                    onClick={(event) => openLeadModal("final", event.currentTarget)}
+                    href="/survey/"
+                    onClick={() => trackSurveyCta("final")}
                   >
-                    3분 진단 시작
-                  </button>
+                    역할별 진단 시작
+                  </Link>
                   <a className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`} href="#product">
                     MVP 다시 보기
                   </a>
@@ -326,13 +285,6 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
         </main>
         <Footer />
       </div>
-      <LeadModal
-        isOpen={modalRequest !== null}
-        onClose={closeLeadModal}
-        placement={modalRequest?.placement ?? "hero"}
-        initialRole={modalRequest?.initialRole}
-        initialProblem={modalRequest?.initialProblem}
-      />
     </>
   );
 }

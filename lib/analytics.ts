@@ -16,7 +16,18 @@ export type AnalyticsEvent =
   | "lead_static_handoff"
   | "nav_anchor_click"
   | "product_tab_select"
-  | "role_problem_click";
+  | "role_problem_click"
+  | "survey_landing_view"
+  | "persona_selected"
+  | "privacy_notice_opened"
+  | "required_consent_accepted"
+  | "survey_started"
+  | "survey_section_completed"
+  | "survey_completed"
+  | "result_viewed"
+  | "beta_optin"
+  | "interview_optin"
+  | "pilot_requested";
 
 export type AnalyticsPayload = Record<string, string | number | boolean | string[]>;
 
@@ -34,6 +45,11 @@ const blockedKeys = new Set([
   "memo",
   "message",
   "phone",
+  "freeText",
+  "individualAnswer",
+  "incidentDetail",
+  "documentName",
+  "vulnerabilityDetail",
 ]);
 
 export function sanitizeAnalyticsPayload(payload: AnalyticsPayload = {}): AnalyticsPayload {

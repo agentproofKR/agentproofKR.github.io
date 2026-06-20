@@ -30,7 +30,7 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 ```
 
 GitHub Pages에는 서버 런타임이 없으므로 `/api/leads`는 제공하지 않습니다. 리드 폼은
-클라이언트 검증 뒤 `contact@agentproof.kr`로 보내는 `mailto:` fallback을 제공합니다.
+클라이언트 검증 뒤 `agentproof.ai@gmail.com`로 보내는 `mailto:` fallback을 제공합니다.
 서버 저장이 연결되지 않은 상태에서 저장 성공 메시지를 표시하지 않습니다.
 
 ## 검증

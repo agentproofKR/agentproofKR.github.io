@@ -1,0 +1,526 @@
+.page {
+  min-height: 100vh;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: 32px 0 64px;
+}
+
+.hero,
+.surveyPanel,
+.resultHero,
+.noticeBand,
+.optinPanel {
+  width: min(var(--max-content-width), calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 44px 0 24px;
+}
+
+.backLink {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: #4f5966;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.eyebrow {
+  margin: 20px 0 12px;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.hero h1,
+.surveyPanel h1,
+.resultHero h1 {
+  max-width: 920px;
+  margin: 0;
+  color: var(--color-ink);
+  font-size: clamp(42px, 7vw, 74px);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.lead {
+  max-width: 760px;
+  margin: 22px 0 0;
+  color: #4f5966;
+  font-size: 17px;
+  line-height: 1.72;
+  word-break: keep-all;
+}
+
+.summaryStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.summaryStrip span,
+.fieldHint {
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 68%);
+  padding: 8px 10px;
+  color: #5c6370;
+  font-size: 13px;
+  font-weight: 680;
+}
+
+.roleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(var(--max-content-width), calc(100% - 40px));
+  margin: 28px auto 0;
+}
+
+.roleCard,
+.resultCard,
+.surveyPanel,
+.resultHero,
+.noticeBand,
+.optinPanel {
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 74%);
+  box-shadow: 0 18px 60px rgb(15 17 23 / 6%);
+}
+
+.roleCard {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.cardIndex {
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.roleCard h2,
+.noticeBand h2,
+.optinPanel h2,
+.resultCard h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.roleCard p,
+.roleCard dd,
+.noticeBand p,
+.resultCard p,
+.optinPanel p {
+  color: #535d6b;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+
+.roleCard dl {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.roleCard dl div {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 10px;
+}
+
+.roleCard dt {
+  color: #7a8493;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.roleCard dd {
+  margin: 0;
+  font-size: 14px;
+}
+
+.primaryLink,
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-ink);
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 820;
+  letter-spacing: 0;
+}
+
+.primaryLink,
+.primaryButton {
+  background: var(--color-ink);
+  color: #fff;
+}
+
+.secondaryButton {
+  background: #fff;
+  color: var(--color-ink);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.noticeBand {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 24px;
+}
+
+.noticeBand a {
+  flex: 0 0 auto;
+  color: var(--color-accent);
+  font-weight: 820;
+}
+
+.surveyPanel,
+.resultHero {
+  max-width: 920px;
+  padding: 28px;
+}
+
+.progressRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #5c6370;
+  font-size: 14px;
+  font-weight: 780;
+}
+
+.progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e6ef;
+  margin: 14px 0 24px;
+}
+
+.progressTrack span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+}
+
+.questionBox {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.questionBox legend {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+
+.questionBox h1 {
+  max-width: 780px;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.12;
+}
+
+.optionList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.option {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgb(17 19 25 / 12%);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+  color: #1b1f2a;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.option input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--color-accent);
+}
+
+.actions,
+.inlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.errorBox,
+.warningBox,
+.successBox {
+  border-radius: 8px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  font-size: 14px;
+  font-weight: 730;
+  line-height: 1.5;
+}
+
+.errorBox {
+  border: 1px solid rgb(201 54 54 / 30%);
+  background: rgb(201 54 54 / 8%);
+  color: #9d2828;
+}
+
+.warningBox {
+  border: 1px solid rgb(181 107 0 / 28%);
+  background: rgb(181 107 0 / 9%);
+  color: #835000;
+}
+
+.successBox {
+  border: 1px solid rgb(11 125 95 / 24%);
+  background: rgb(11 125 95 / 8%);
+  color: #075c46;
+}
+
+.consentPanel {
+  display: grid;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.consentPanel label,
+.checkboxLine {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: #fff;
+  padding: 14px;
+  font-weight: 760;
+  line-height: 1.5;
+}
+
+.consentPanel input,
+.checkboxLine input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--color-accent);
+}
+
+.resultHero {
+  display: grid;
+  gap: 18px;
+}
+
+.scorePanel {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 14px;
+}
+
+.scorePanel > div {
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+}
+
+.scorePanel span {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.scorePanel strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(34px, 6vw, 72px);
+  line-height: 1;
+}
+
+.scorePanel p {
+  margin: 10px 0 0;
+  color: #535d6b;
+}
+
+.resultGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: min(var(--max-content-width), calc(100% - 40px));
+  margin: 18px auto 0;
+}
+
+.resultCard {
+  padding: 22px;
+}
+
+.resultCard ol {
+  display: grid;
+  gap: 10px;
+  padding-left: 22px;
+}
+
+.scoreRow {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 2fr 42px;
+  gap: 12px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.scoreRow span,
+.scoreRow b {
+  font-size: 14px;
+  font-weight: 780;
+}
+
+.scoreRow meter {
+  width: 100%;
+}
+
+.optinPanel {
+  margin-top: 18px;
+  padding: 24px;
+}
+
+.policySection {
+  border-top: 1px solid rgb(17 19 25 / 10%);
+  margin-top: 24px;
+  padding-top: 22px;
+}
+
+.policySection h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.policySection p,
+.policySection li {
+  color: #535d6b;
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.policySection ul,
+.policySection ol {
+  display: grid;
+  gap: 8px;
+  padding-left: 22px;
+}
+
+.optinForm {
+  display: grid;
+  gap: 12px;
+  max-width: 560px;
+  margin-top: 18px;
+}
+
+.optinForm label:not(.checkboxLine) {
+  display: grid;
+  gap: 7px;
+  color: #3f4754;
+  font-size: 14px;
+  font-weight: 780;
+}
+
+.optinForm input[type="email"],
+.optinForm input[type="text"] {
+  min-height: 44px;
+  border: 1px solid rgb(17 19 25 / 16%);
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 12px;
+  color: var(--color-ink);
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .roleGrid,
+  .resultGrid,
+  .scorePanel,
+  .optionList {
+    grid-template-columns: 1fr;
+  }
+
+  .noticeBand {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding-top: 18px;
+  }
+
+  .hero,
+  .surveyPanel,
+  .resultHero,
+  .noticeBand,
+  .optinPanel,
+  .roleGrid,
+  .resultGrid {
+    width: min(100% - 28px, var(--max-content-width));
+  }
+
+  .hero h1,
+  .surveyPanel h1,
+  .resultHero h1 {
+    font-size: 38px;
+  }
+
+  .surveyPanel,
+  .resultHero,
+  .noticeBand,
+  .optinPanel,
+  .roleCard,
+  .resultCard {
+    padding: 18px;
+  }
+
+  .actions > *,
+  .inlineActions > * {
+    width: 100%;
+  }
+
+  .scoreRow {
+    grid-template-columns: 1fr 42px;
+  }
+
+  .scoreRow meter {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

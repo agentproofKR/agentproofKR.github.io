@@ -42,7 +42,7 @@ type SubmitState =
   | { kind: "handoff"; message: string; href: string }
   | { kind: "error"; message: string };
 
-const staticLeadRecipient = "contact@agentproof.kr";
+const staticLeadRecipient = "agentproof.ai@gmail.com";
 
 export function LeadForm({ placement, initialRole, initialProblem }: LeadFormProps) {
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });

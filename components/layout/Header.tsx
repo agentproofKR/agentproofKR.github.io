@@ -1,13 +1,13 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import styles from "@/styles/landing.module.css";
 
 type HeaderProps = {
-  onCtaClick: (placement: "header", opener: HTMLElement) => void;
   onNavClick: (target: string) => void;
 };
 
-export function Header({ onCtaClick, onNavClick }: HeaderProps) {
+export function Header({ onNavClick }: HeaderProps) {
   return (
     <header className={styles.siteHeader}>
       <div className={styles.navWrap}>
@@ -42,13 +42,12 @@ export function Header({ onCtaClick, onNavClick }: HeaderProps) {
             파일럿
           </a>
         </nav>
-        <button
+        <Link
           className={`${styles.button} ${styles.buttonDark} ${styles.headerButton}`}
-          type="button"
-          onClick={(event) => onCtaClick("header", event.currentTarget)}
+          href="/survey/"
         >
-          3분 진단
-        </button>
+          역할별 AI 준비도
+        </Link>
       </div>
     </header>
   );
