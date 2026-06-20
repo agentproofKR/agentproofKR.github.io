@@ -346,7 +346,13 @@ function MobileDashboard() {
     >
       <div className={styles.mobileTop}>
         <div className={styles.mobileBrand}>
-          <span aria-hidden="true">[·]</span>
+          <Image
+            src="/agentproof-logo-mark.png"
+            width={786}
+            height={891}
+            alt=""
+            aria-hidden="true"
+          />
           AgentProof
         </div>
         <div>SAMPLE DATA</div>

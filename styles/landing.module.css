@@ -54,16 +54,21 @@
 
 .brand {
   display: inline-flex;
-  gap: 10px;
+  gap: 7px;
   align-items: center;
   width: max-content;
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0;
 }
 
-.brand span {
-  font-weight: 900;
+.brandMark {
+  display: block;
+  width: 23px;
+  height: auto;
+}
+
+.brandLogo {
+  display: block;
+  width: 132px;
+  height: auto;
 }
 
 .navLinks {
@@ -718,9 +723,23 @@
   justify-content: space-between;
 }
 
-.footer strong {
-  font-size: 14px;
-  font-weight: 900;
+.footerBrand {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.footerBrand img {
+  display: block;
+  height: auto;
+}
+
+.footerBrand img:first-child {
+  width: 20px;
+}
+
+.footerBrand img:last-child {
+  width: 118px;
 }
 
 .footer div {
@@ -985,7 +1004,15 @@
   }
 
   .brand {
-    font-size: 15px;
+    width: 132px;
+  }
+
+  .brandMark {
+    width: 18px;
+  }
+
+  .brandLogo {
+    width: 107px;
   }
 
   .headerButton {
@@ -1080,6 +1107,12 @@
     align-items: center;
     font-size: 12px;
     font-weight: 900;
+  }
+
+  .mobileBrand img {
+    display: block;
+    width: 15px;
+    height: auto;
   }
 
   .mobileTop div:last-child {

@@ -14,6 +14,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [{ url: "/agentproof-logo-mark.png", type: "image/png" }],
+    apple: [{ url: "/agentproof-logo-mark.png", type: "image/png" }],
+  },
   openGraph: {
     title,
     description,
