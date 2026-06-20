@@ -6,6 +6,7 @@ import { PNG } from "pngjs";
 
 const root = process.cwd();
 const baseUrl = (process.env.QA_BASE_URL ?? "http://127.0.0.1:3101").replace(/\/$/, "");
+const artifactPrefix = process.env.DEPLOY_CHECK_PREFIX ?? "local";
 const artifactsDir = resolve(root, "artifacts", "deploy-check");
 
 await mkdir(artifactsDir, { recursive: true });
@@ -13,8 +14,8 @@ await mkdir(artifactsDir, { recursive: true });
 const browser = await chromium.launch();
 const page = await browser.newPage({ colorScheme: "light", reducedMotion: "reduce" });
 
-const desktopPath = resolve(artifactsDir, "local-pc-1440.png");
-const mobilePath = resolve(artifactsDir, "local-mobile-390.png");
+const desktopPath = resolve(artifactsDir, `${artifactPrefix}-pc-1440.png`);
+const mobilePath = resolve(artifactsDir, `${artifactPrefix}-mobile-390.png`);
 
 await capture(page, { width: 1440, height: 1000 }, desktopPath);
 await capture(page, { width: 390, height: 844 }, mobilePath);
@@ -22,7 +23,7 @@ await capture(page, { width: 390, height: 844 }, mobilePath);
 const desktopDiff = await compareImages({
   actualPath: desktopPath,
   expectedPath: resolve(root, "reference", "visual-baseline", "pc", "00_pc_full_1440x3159.png"),
-  diffPath: resolve(artifactsDir, "local-pc-diff-1440.png"),
+  diffPath: resolve(artifactsDir, `${artifactPrefix}-pc-diff-1440.png`),
 });
 const mobileDiff = await compareImages({
   actualPath: mobilePath,
@@ -33,7 +34,7 @@ const mobileDiff = await compareImages({
     "mobile",
     "00_mobile_full_390x3759.png",
   ),
-  diffPath: resolve(artifactsDir, "local-mobile-diff-390.png"),
+  diffPath: resolve(artifactsDir, `${artifactPrefix}-mobile-diff-390.png`),
 });
 
 const overflow = [];
@@ -58,6 +59,7 @@ await browser.close();
 const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl,
+  artifactPrefix,
   captures: {
     desktop: desktopPath,
     mobile: mobilePath,

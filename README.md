@@ -1,7 +1,7 @@
 # AgentProof Landing V4.1
 
 AgentProof V4.1 랜딩페이지의 GitHub Pages 정적 배포 후보입니다. 최종 목표 URL은
-`https://agentproof.github.io/`이며, 루트 배포를 위해 `basePath`와 `assetPrefix`를
+`https://agentproofkr.github.io/`이며, 루트 배포를 위해 `basePath`와 `assetPrefix`를
 사용하지 않습니다.
 
 ## 문서
@@ -63,7 +63,7 @@ production build 기준으로 캡처하려면 먼저 `build`를 실행한 뒤 Po
 외부 production URL이 있으면 smoke를 실제 URL에 대해 실행합니다.
 
 ```bash
-$env:STAGING_BASE_URL='https://agentproof.github.io'
+$env:STAGING_BASE_URL='https://agentproofkr.github.io'
 npx -y pnpm@11.8.0 staging:smoke
 ```
 
