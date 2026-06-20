@@ -2,20 +2,23 @@
 
 import { useEffect, useRef } from "react";
 
+import { type ProblemOption, type RoleOption } from "@/components/landing/content";
 import styles from "@/styles/landing.module.css";
 
-import { LeadForm } from "./LeadForm";
+import { type LeadPlacement, LeadForm } from "./LeadForm";
 
 type LeadModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  placement: "header" | "hero" | "process";
+  placement: LeadPlacement;
+  initialRole?: RoleOption;
+  initialProblem?: ProblemOption;
 };
 
 const focusableSelector =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function LeadModal({ isOpen, onClose, placement }: LeadModalProps) {
+export function LeadModal({ isOpen, onClose, placement, initialRole, initialProblem }: LeadModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +31,9 @@ export function LeadModal({ isOpen, onClose, placement }: LeadModalProps) {
       return;
     }
 
-    const firstField = dialogRef.current?.querySelector<HTMLSelectElement>("#role");
+    const firstField = dialogRef.current?.querySelector<HTMLSelectElement>(
+      initialRole ? "#stage" : "#role",
+    );
     firstField?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -60,7 +65,7 @@ export function LeadModal({ isOpen, onClose, placement }: LeadModalProps) {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [initialRole, isOpen, onClose]);
 
   return (
     <div
@@ -81,14 +86,19 @@ export function LeadModal({ isOpen, onClose, placement }: LeadModalProps) {
       >
         <div className={styles.modalHeader}>
           <div>
-            <h2 id="lead-modal-title">AI 준비도 진단 신청</h2>
-            <p>현재 상황을 남겨주시면 샘플 리포트와 파일럿 안내를 보내드립니다.</p>
+            <h2 id="lead-modal-title">3분 AI 도입 과제 진단</h2>
+            <p>가장 가까운 문제와 원하는 다음 단계를 알려주세요.</p>
           </div>
           <button className={styles.modalClose} type="button" aria-label="닫기" onClick={onClose}>
             ×
           </button>
         </div>
-        <LeadForm placement={placement} />
+        <LeadForm
+          key={`${placement}-${initialRole ?? "none"}-${initialProblem ?? "none"}`}
+          placement={placement}
+          initialRole={initialRole}
+          initialProblem={initialProblem}
+        />
       </div>
     </div>
   );

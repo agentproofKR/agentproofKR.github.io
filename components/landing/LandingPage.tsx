@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
@@ -9,85 +10,130 @@ import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/landing.module.css";
 
-import { decisionSteps, processSteps, roleCards } from "./content";
+import {
+  landingVariant,
+  pilotDeliverables,
+  processSteps,
+  productTabs,
+  type ProblemOption,
+  type RoleOption,
+  roleProblemCards,
+} from "./content";
 
-type ModalPlacement = "header" | "hero" | "process";
+type ModalPlacement =
+  | "header"
+  | "hero"
+  | "process"
+  | "final"
+  | "role_employee"
+  | "role_business"
+  | "role_security";
+type ModalRequest = {
+  placement: ModalPlacement;
+  initialRole?: RoleOption;
+  initialProblem?: ProblemOption;
+};
+type ProductTabId = (typeof productTabs)[number]["id"];
 
 type LandingPageProps = {
   showVisualBaseline?: boolean;
 };
 
 export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
-  const queryVisualBaseline = useSyncExternalStore(
-    subscribeToLocationSnapshot,
-    getVisualBaselineSnapshot,
-    () => false,
-  );
-  const isVisualBaselineVisible = showVisualBaseline || queryVisualBaseline;
-  const [modalPlacement, setModalPlacement] = useState<ModalPlacement | null>(null);
+  const [modalRequest, setModalRequest] = useState<ModalRequest | null>(null);
+  const [activeTabId, setActiveTabId] = useState<ProductTabId>(productTabs[0].id);
   const openerRef = useRef<HTMLElement | null>(null);
+  const activeTab = productTabs.find((tab) => tab.id === activeTabId) ?? productTabs[0];
 
   useEffect(() => {
     const initial = readUtmFromUrl(window.location.href);
     storeInitialUtm(initial, window.sessionStorage);
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("page_view", {
-      landing_variant: "v4.1",
+      landing_variant: landingVariant,
       utm_source: stored.source ?? "",
       utm_medium: stored.medium ?? "",
       utm_campaign: stored.campaign ?? "",
       utm_content: stored.content ?? "",
+      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
     });
   }, []);
 
-  const openLeadModal = (placement: ModalPlacement, opener: HTMLElement) => {
+  const openLeadModal = (
+    placement: ModalPlacement,
+    opener: HTMLElement,
+    defaults: Omit<ModalRequest, "placement"> = {},
+  ) => {
     openerRef.current = opener;
-    setModalPlacement(placement);
-    trackEvent("lead_modal_open", { placement });
+    setModalRequest({ placement, ...defaults });
+    const stored = getStoredUtm(window.sessionStorage);
+    trackEvent("lead_modal_open", {
+      placement,
+      role: defaults.initialRole ?? "",
+      problem: defaults.initialProblem ?? "",
+      utm_source: stored.source ?? "",
+      utm_medium: stored.medium ?? "",
+      utm_campaign: stored.campaign ?? "",
+      utm_content: stored.content ?? "",
+      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
+    });
+    trackEvent("diagnosis_start", {
+      placement,
+      role: defaults.initialRole ?? "",
+      problem: defaults.initialProblem ?? "",
+      utm_source: stored.source ?? "",
+      utm_medium: stored.medium ?? "",
+      utm_campaign: stored.campaign ?? "",
+      utm_content: stored.content ?? "",
+      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
+    });
   };
 
   const closeLeadModal = () => {
-    setModalPlacement(null);
+    setModalRequest(null);
     requestAnimationFrame(() => openerRef.current?.focus());
   };
 
-  const handleDiagnosticClick = () => {
-    trackEvent("diagnostic_preview_click", { placement: "hero" });
-    document.querySelector("#diagnostic")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const handleProductClick = () => {
+    document.querySelector("#product")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleNavClick = (target: string) => {
     trackEvent("nav_anchor_click", { target });
   };
 
+  const selectTab = (tabId: ProductTabId) => {
+    setActiveTabId(tabId);
+    trackEvent("product_tab_select", { tab: tabId });
+  };
+
   return (
     <>
-      {isVisualBaselineVisible ? (
+      {showVisualBaseline ? (
         <div className={styles.visualBaseline} aria-hidden="true">
           <picture>
-            <source media="(max-width: 767px)" srcSet="/visual-baseline/mobile-full.png" />
-            <img src="/visual-baseline/pc-full.png" alt="" />
+            <source media="(max-width: 767px)" srcSet="/reference-agentproof-v51-mobile-full.png" />
+            <img src="/reference-agentproof-v51-desktop-full.png" alt="" />
           </picture>
         </div>
       ) : null}
-      <div
-        className={
-          isVisualBaselineVisible ? styles.semanticLandingBaseline : styles.semanticLanding
-        }
-      >
+      <div className={showVisualBaseline ? styles.semanticLandingBaseline : styles.semanticLanding}>
         <Header onCtaClick={openLeadModal} onNavClick={handleNavClick} />
-        <main>
-          <section className={styles.hero} aria-labelledby="hero-heading">
+        <main id="main">
+          <section id="top" className={styles.hero} aria-labelledby="hero-heading">
             <div className={styles.wrap}>
-              <p className={styles.eyebrow}>AI WORK READINESS</p>
+              <div className={styles.betaPill}>
+                <i aria-hidden="true" />
+                Private beta · 초기 고객 모집
+              </div>
               <h1 id="hero-heading">
-                AI를 업무에 쓸 때,
+                업무 AI,
                 <br />
-                무엇을 맡기고 무엇을 지킬지.
+                어디까지 맡겨도 될까요?
               </h1>
               <p className={styles.heroCopy}>
-                AgentProof는 조직의 AI 사용 현황과 업무별 기회를 파악하고, 정확성·개인정보·책임
-                위험을 함께 진단해 도입 우선순위와 사용 기준으로 정리합니다.
+                실무자의 사용 기준, 도입 담당자의 우선순위, 보안 담당자의 통제 기준을
+                진단합니다.
               </p>
               <div className={styles.heroActions}>
                 <button
@@ -95,87 +141,185 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   type="button"
                   onClick={(event) => openLeadModal("hero", event.currentTarget)}
                 >
-                  우리 조직 AI 준비도 확인
+                  내 과제 3분 진단
                 </button>
-                <button className={styles.textLink} type="button" onClick={handleDiagnosticClick}>
-                  진단 화면 보기 ↘
+                <button className={styles.textLink} type="button" onClick={handleProductClick}>
+                  MVP 화면 보기 ↘
                 </button>
               </div>
-              <p className={styles.heroNote}>초기 진단 · 계정 연동이나 기밀자료 없이 시작</p>
-            </div>
-          </section>
+              <ul className={styles.heroMeta} aria-label="대상 안내">
+                <li>실무자</li>
+                <li>대표·도입 담당자</li>
+                <li>보안·정책 담당자</li>
+              </ul>
 
-          <section id="diagnostic" className={styles.diagnosticSection} aria-label="진단 화면">
-            <div className={styles.wrap}>
-              <DiagnosticPreview />
+              <section id="product" className={styles.showcase} aria-label="제품 화면 미리보기">
+                <div className={styles.showcaseHead}>
+                  <p>MVP preview · 문서·규정 검색 Agent</p>
+                  <span>샘플 데이터 · 제품 콘셉트</span>
+                </div>
+                <div className={styles.productStage}>
+                  <div className={styles.desktopDashboard}>
+                    <Image
+                      src="/agentproof_mvp_dashboard_agentproof.png"
+                      width={1545}
+                      height={770}
+                      priority
+                      sizes="(max-width: 767px) 0px, 1200px"
+                      alt="AgentProof 업무용 AI 검증 대시보드 샘플. 위험 점수, 테스트 통과율, 배포 승인 상태, 근거 문서, 최근 테스트 결과를 보여준다."
+                    />
+                  </div>
+                  <MobileDashboard />
+                </div>
+                <div className={styles.featureTabs} role="tablist" aria-label="핵심 기능">
+                  {productTabs.map((tab) => {
+                    const selected = tab.id === activeTabId;
+                    return (
+                      <button
+                        key={tab.id}
+                        className={`${styles.tab} ${selected ? styles.activeTab : ""}`}
+                        type="button"
+                        role="tab"
+                        aria-selected={selected}
+                        onClick={() => selectTab(tab.id)}
+                      >
+                        <small>{tab.number}</small>
+                        <b>{tab.title}</b>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className={styles.tabPanel} aria-live="polite">
+                  {activeTab.body}
+                </p>
+              </section>
             </div>
           </section>
 
           <section id="roles" className={styles.rolesSection} aria-labelledby="roles-heading">
             <div className={styles.wrap}>
-              <div className={styles.sectionHead}>
-                <p className={styles.sectionKicker}>FOR EVERY ROLE</p>
-                <h2 id="roles-heading">
-                  같은 AI를 봐도,
-                  <br />
-                  필요한 판단은 다릅니다.
-                </h2>
+              <div className={styles.rolesHead}>
+                <div>
+                  <p className={styles.sectionKicker}>CUSTOMER HYPOTHESES</p>
+                  <h2 id="roles-heading" className={styles.sectionTitle}>
+                    어디에서 가장
+                    <br />
+                    막히시나요?
+                  </h2>
+                </div>
+                <p className={styles.sectionCopy}>
+                  역할마다 필요한 첫 서비스가 다릅니다.
+                </p>
               </div>
 
               <div className={styles.roleGrid}>
-                {roleCards.map((role) => (
-                  <article className={styles.roleCard} key={role.number}>
-                    <span>{role.number}</span>
-                    <h3>{role.title}</h3>
-                    <p>{role.body}</p>
+                {roleProblemCards.map((role) => (
+                  <article className={styles.roleCard} key={role.index}>
+                    <span>{role.index}</span>
+                    <h3>{role.role}</h3>
+                    <p className={styles.roleQuestion}>“{role.problem}”</p>
+                    <strong>
+                      <i aria-hidden="true" />
+                      {role.outcome}
+                    </strong>
+                    <button
+                      className={styles.roleCta}
+                      type="button"
+                      onClick={(event) => {
+                        trackEvent("role_problem_click", {
+                          placement: role.placement,
+                          role: role.role,
+                          problem: role.defaultProblem,
+                        });
+                        openLeadModal(role.placement, event.currentTarget, {
+                          initialRole: role.role,
+                          initialProblem: role.defaultProblem,
+                        });
+                      }}
+                    >
+                      이 문제 선택 <span aria-hidden="true">→</span>
+                    </button>
                   </article>
                 ))}
               </div>
-
-              <ol className={styles.decisionFlow} aria-label="AI 도입 판단 흐름">
-                {decisionSteps.map((step, index) => (
-                  <li
-                    className={index === decisionSteps.length - 1 ? styles.lastDecision : ""}
-                    key={step.label}
-                  >
-                    <span>{step.label}</span>
-                    <strong>{step.title}</strong>
-                  </li>
-                ))}
-              </ol>
             </div>
           </section>
 
           <section id="process" className={styles.processSection} aria-labelledby="process-heading">
+            <div className={`${styles.wrap} ${styles.processGrid}`}>
+              <div>
+                <p className={styles.darkKicker}>FIRST MVP</p>
+                <h2 id="process-heading" className={styles.sectionTitle}>
+                  첫 파일럿은
+                  <br />
+                  문서·규정 검색부터.
+                </h2>
+                <p className={styles.processCopy}>
+                  답변, 근거, 정책 위험을 실제 질문으로 검증합니다.
+                </p>
+                <ol className={styles.processSteps}>
+                  {processSteps.map((step) => (
+                    <li key={step.number}>
+                      <span>{step.number}</span>
+                      <strong>{step.title}</strong>
+                      <p>{step.body}</p>
+                    </li>
+                  ))}
+                </ol>
+                <div className={styles.processAction}>
+                  <button
+                    className={`${styles.button} ${styles.buttonLight}`}
+                    type="button"
+                    onClick={(event) => openLeadModal("process", event.currentTarget)}
+                  >
+                    파일럿 관심 표시
+                  </button>
+                  <p>기밀자료 없이 상담할 수 있습니다.</p>
+                </div>
+              </div>
+              <div className={styles.deliverable} role="region" aria-label="파일럿 결과물">
+                <header>
+                  <b>받게 되는 것</b>
+                  <span>FIXED SCOPE</span>
+                </header>
+                <ol>
+                  {pilotDeliverables.map((item) => (
+                    <li key={item.number}>
+                      <i>{item.number}</i>
+                      <div>
+                        <b>{item.title}</b>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.finalCta} aria-labelledby="final-cta-heading">
             <div className={styles.wrap}>
-              <p className={styles.darkKicker}>AI READINESS</p>
-              <h2 id="process-heading">
-                AI를 막기보다,
-                <br />
-                안전하게 쓸 기준을 만듭니다.
-              </h2>
-              <p className={styles.processCopy}>
-                현재 사용 중인 도구와 도입하려는 업무를 확인해, 바로 실행할 수 있는 우선순위와
-                가이드로 정리합니다.
-              </p>
-              <ol className={styles.processSteps}>
-                {processSteps.map((step) => (
-                  <li key={step.number}>
-                    <span>{step.number}</span>
-                    <strong>{step.title}</strong>
-                    <p>{step.body}</p>
-                  </li>
-                ))}
-              </ol>
-              <div className={styles.processAction}>
-                <button
-                  className={`${styles.button} ${styles.buttonLight} ${styles.buttonLarge}`}
-                  type="button"
-                  onClick={(event) => openLeadModal("process", event.currentTarget)}
-                >
-                  우리 조직 AI 준비도 확인
-                </button>
-                <p>1차 진단에는 계정 연동이나 실제 기밀자료가 필요하지 않습니다.</p>
+              <div className={styles.finalPanel}>
+                <h2 id="final-cta-heading">
+                  지금 가장 필요한 서비스를
+                  <br />
+                  알려주세요.
+                </h2>
+                <p>응답을 바탕으로 첫 고객과 기능 우선순위를 정합니다.</p>
+                <div className={styles.finalActions}>
+                  <button
+                    className={`${styles.button} ${styles.buttonDark} ${styles.buttonLarge}`}
+                    type="button"
+                    onClick={(event) => openLeadModal("final", event.currentTarget)}
+                  >
+                    3분 진단 시작
+                  </button>
+                  <a className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`} href="#product">
+                    MVP 다시 보기
+                  </a>
+                </div>
+                <p className={styles.finalNote}>
+                  참여자에게 역할별 체크리스트와 파일럿 안내를 보냅니다.
+                </p>
               </div>
             </div>
           </section>
@@ -183,156 +327,89 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
         <Footer />
       </div>
       <LeadModal
-        isOpen={modalPlacement !== null}
+        isOpen={modalRequest !== null}
         onClose={closeLeadModal}
-        placement={modalPlacement ?? "hero"}
+        placement={modalRequest?.placement ?? "hero"}
+        initialRole={modalRequest?.initialRole}
+        initialProblem={modalRequest?.initialProblem}
       />
     </>
   );
 }
 
-function subscribeToLocationSnapshot() {
-  return () => undefined;
-}
-
-function getVisualBaselineSnapshot() {
-  return new URLSearchParams(window.location.search).get("visualBaseline") === "1";
-}
-
-function DiagnosticPreview() {
-  const riskRows = [
-    {
-      level: "제한",
-      title: "개인정보 포함 문서 외부 AI 업로드",
-      meta: "2개 부서",
-      className: styles.riskDanger,
-    },
-    {
-      level: "조건부",
-      title: "고객문의 답변 초안 자동화",
-      meta: "사용 검토",
-      className: styles.riskWarning,
-    },
-    {
-      level: "도입 추천",
-      title: "회의록·보고서 초안 작성",
-      meta: "낮은 위험",
-      className: styles.riskSuccess,
-    },
-  ];
-
+function MobileDashboard() {
   return (
-    <div className={styles.productStage}>
-      <div
-        className={styles.appWindow}
-        role="group"
-        aria-label="AgentProof AI 업무 도입 진단 샘플 화면"
-      >
-        <div className={styles.windowBar}>
-          <div className={styles.windowDots} aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </div>
-          <div className={styles.windowTitle}>agentproof / ai-readiness / 2026-Q2</div>
-          <div className={styles.sampleLabel}>SAMPLE DATA</div>
+    <div
+      className={styles.mobileDashboard}
+      role="group"
+      aria-label="AgentProof 모바일 제품 화면 샘플"
+    >
+      <div className={styles.mobileTop}>
+        <div className={styles.mobileBrand}>
+          <span aria-hidden="true">[·]</span>
+          AgentProof
         </div>
-        <div className={styles.appShell}>
-          <aside className={styles.sidebar} aria-hidden="true">
-            <div className={styles.appBrand}>AgentProof</div>
-            <span>WORKSPACE</span>
-            <b>Overview</b>
-            <b>Use cases</b>
-            <b>Risks</b>
-            <b>Guidelines</b>
-            <span>ASSESSMENT</span>
-            <b>History</b>
-            <b>Settings</b>
-          </aside>
-          <div className={styles.reportArea}>
-            <div className={styles.projectTop}>
-              <div>
-                <p>ORGANIZATION / AI READINESS</p>
-                <h2>업무 AI 도입 진단</h2>
-                <span>SAMPLE ASSESSMENT · 18 WORKFLOWS · 6 TOOLS</span>
-              </div>
-              <strong>기준 보완 필요</strong>
+        <div>SAMPLE DATA</div>
+      </div>
+      <div className={styles.mobileBody}>
+        <div className={styles.mobileTitle}>
+          <small>OVERVIEW / AI ASSURANCE</small>
+          <h3>업무 Agent 검증 현황</h3>
+          <p>문서 검색 · 정책 검증 · 배포 승인</p>
+        </div>
+        <div className={styles.mobileKpis}>
+          <Metric label="위험 점수" value="32" detail="↓ 12% 지난 7일" />
+          <Metric label="테스트 통과율" value="92.4%" detail="↑ 4.7%" />
+          <Metric label="배포 승인" value="7 / 12" detail="대기 5건" />
+          <Metric label="열린 이슈" value="18" detail="우선 검토 4건" />
+        </div>
+        <article className={styles.mobileCard}>
+          <h4>근거가 있는 답변</h4>
+          <strong>연차 사용은 어떻게 신청하나요?</strong>
+          <p>
+            인사시스템에서 신청할 수 있으며, 최소 1일 전 신청이 필요합니다. 팀장 승인 후
+            인사팀 검토로 완료됩니다.
+          </p>
+          <dl>
+            <div>
+              <dt>인사규정 제12조</dt>
+              <dd>v2.1</dd>
             </div>
-            <div className={styles.tabs} aria-hidden="true">
-              <b>개요</b>
-              <span>업무별 판단</span>
-              <span>도입 가이드</span>
+            <div>
+              <dt>연차 운영 가이드</dt>
+              <dd>v1.3</dd>
             </div>
-            <div className={styles.adoptionStatus}>
-              <span>ADOPTION STATUS</span>
-              <h3>도입 가능 · 기준 보완</h3>
-              <p>5개 업무는 우선 도입, 4개 업무는 사용 기준 보완이 필요합니다.</p>
-              <dl>
-                <div>
-                  <dt>18</dt>
-                  <dd>WORKFLOWS</dd>
-                </div>
-                <div>
-                  <dt>5</dt>
-                  <dd>PRIORITY</dd>
-                </div>
-                <div>
-                  <dt>4</dt>
-                  <dd>GAPS</dd>
-                </div>
-              </dl>
-              <div className={styles.statusBars} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </div>
+          </dl>
+        </article>
+        <article className={styles.mobileCard}>
+          <h4>최근 검증 결과</h4>
+          {[
+            ["환각 테스트", "통과"],
+            ["정책 위반", "통과"],
+            ["오래된 문서 참조", "경고"],
+            ["권한 검사", "통과"],
+          ].map(([label, status]) => (
+            <div className={styles.mobileTest} key={label}>
+              <span>{label}</span>
+              <b className={status === "경고" ? styles.statusWarn : styles.statusOk}>{status}</b>
             </div>
-            <div className={styles.workspaceGrid}>
-              <article className={styles.riskPanel}>
-                <header>
-                  <strong>업무별 판단</strong>
-                  <span>18 use cases</span>
-                </header>
-                {riskRows.map((row) => (
-                  <div className={styles.riskRow} key={row.level}>
-                    <span className={row.className}>{row.level}</span>
-                    <strong>{row.title}</strong>
-                    <em>{row.meta} ›</em>
-                  </div>
-                ))}
-              </article>
-              <article className={styles.detailPanel}>
-                <span>AP-021 · DATA HANDLING</span>
-                <h3>개인정보 포함 문서 외부 AI 업로드</h3>
-                <div className={styles.detailBlock}>
-                  <em>업무 상황</em>
-                  <p className={styles.detailQuote}>
-                    &quot;지난달 고객 상담 내역을 요약해줘.&quot;
-                  </p>
-                </div>
-                <div className={styles.detailBlock}>
-                  <em>확인된 위험</em>
-                  <p>
-                    개인정보가 포함된 파일을 승인되지 않은 외부 AI에 업로드할 가능성이 있습니다.
-                  </p>
-                </div>
-                <div className={styles.detailBlock}>
-                  <em>근거</em>
-                  <p>영업·고객지원 2개 업무에서 같은 데이터 처리 공백을 확인했습니다.</p>
-                </div>
-                <strong>비식별화 + 승인된 도구 사용 + 검토 책임 지정</strong>
-              </article>
-            </div>
-          </div>
+          ))}
+        </article>
+        <div className={styles.mobileActions}>
+          <span>감사 리포트</span>
+          <strong>배포 승인 요청</strong>
         </div>
       </div>
-      <ul className={styles.capabilityStrip}>
-        <li>진단 대상</li>
-        <li>업무용 생성형 AI</li>
-        <li>문서·보고서 작성</li>
-        <li>사내 지식 검색</li>
-        <li>AI 업무 자동화</li>
-      </ul>
+    </div>
+  );
+}
+
+function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className={styles.mobileKpi}>
+      <span>{label}</span>
+      <b>{value}</b>
+      <small>{detail}</small>
     </div>
   );
 }

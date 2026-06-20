@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 import {
-  concernOptions,
+  followupOptions,
   landingVariant,
   leadConsentVersion,
+  problemOptions,
   roleOptions,
   stageOptions,
 } from "@/components/landing/content";
@@ -14,13 +15,13 @@ const optionalString = z.preprocess(
 );
 
 export const leadSchema = z.object({
-  role: z.enum(roleOptions, { message: "역할을 선택해주세요." }),
-  stage: z.enum(stageOptions, { message: "현재 단계를 선택해주세요." }),
-  concern: z.enum(concernOptions, { message: "가장 걱정되는 문제를 선택해주세요." }),
-  company: z.string().trim().min(2, "회사/팀명은 2자 이상 입력해주세요.").max(80),
+  role: z.enum(roleOptions, { message: "담당 역할을 선택해주세요." }),
+  stage: z.enum(stageOptions, { message: "현재 도입 단계를 선택해주세요." }),
+  problem: z.enum(problemOptions, { message: "가장 가까운 문제를 선택해주세요." }),
+  followup: z.enum(followupOptions, { message: "원하는 다음 단계를 선택해주세요." }),
   email: z.string().trim().toLowerCase().email("업무 이메일 형식을 확인해주세요.").max(254),
-  memo: optionalString,
-  consent: z.boolean().refine((value) => value === true, "개인정보 동의가 필요합니다."),
+  focusArea: optionalString,
+  consent: z.boolean().refine((value) => value === true, "개인정보 수집·이용 동의가 필요합니다."),
   consentVersion: z.literal(leadConsentVersion),
   utm: z
     .object({

@@ -4,7 +4,7 @@ import styles from "@/styles/landing.module.css";
 
 export const metadata = {
   title: "개인정보처리방침 | AgentProof",
-  description: "AgentProof 초기 고객검증 신청 정보 처리 기준입니다.",
+  description: "AgentProof 3분 AI 도입 과제 진단 정보 처리 기준입니다.",
 };
 
 export default function PrivacyPage() {
@@ -15,16 +15,16 @@ export default function PrivacyPage() {
       </Link>
       <h1>개인정보처리방침</h1>
       <p>
-        AgentProof는 초기 고객검증과 샘플 리포트 안내를 위해 신청자가 직접 입력한 최소 정보만
+        AgentProof는 3분 AI 도입 과제 진단과 후속 안내를 위해 신청자가 직접 입력한 최소 정보만
         수집합니다.
       </p>
       <section>
         <h2>수집 항목</h2>
-        <p>역할, 현재 단계, 걱정되는 문제, 회사/팀명, 업무 이메일, 선택 입력한 상황 설명.</p>
+        <p>담당 역할, 현재 AI 도입 단계, 가장 가까운 문제, 원하는 다음 단계, 업무 이메일, 선택 입력한 적용 업무.</p>
       </section>
       <section>
         <h2>이용 목적</h2>
-        <p>샘플 리포트 안내, 파일럿 상담, 고객검증 단계의 문제 적합성 확인에 사용합니다.</p>
+        <p>역할별 체크리스트, 샘플 리포트, 파일럿 상담 안내와 고객검증 단계의 문제 적합성 확인에 사용합니다.</p>
       </section>
       <section>
         <h2>보유 기간</h2>

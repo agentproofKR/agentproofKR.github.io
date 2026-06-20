@@ -5,9 +5,13 @@ import { useRef, useState } from "react";
 import { type Resolver, useForm } from "react-hook-form";
 
 import {
-  concernOptions,
+  followupEventByOption,
+  followupOptions,
   landingVariant,
   leadConsentVersion,
+  type ProblemOption,
+  problemOptions,
+  type RoleOption,
   roleOptions,
   stageOptions,
 } from "@/components/landing/content";
@@ -17,18 +21,30 @@ import { createLeadMailtoHref } from "@/lib/staticLeadFallback";
 import { getStoredUtm } from "@/lib/utm";
 import styles from "@/styles/landing.module.css";
 
+export type LeadPlacement =
+  | "header"
+  | "hero"
+  | "process"
+  | "final"
+  | "role_employee"
+  | "role_business"
+  | "role_security";
+
 type LeadFormProps = {
-  placement: "header" | "hero" | "process";
+  placement: LeadPlacement;
+  initialRole?: RoleOption;
+  initialProblem?: ProblemOption;
 };
 
 type SubmitState =
   | { kind: "idle" }
   | { kind: "submitting" }
-  | { kind: "handoff"; message: string; href: string };
+  | { kind: "handoff"; message: string; href: string }
+  | { kind: "error"; message: string };
 
-const leadRecipient = "contact@agentproof.kr";
+const staticLeadRecipient = "contact@agentproof.kr";
 
-export function LeadForm({ placement }: LeadFormProps) {
+export function LeadForm({ placement, initialRole, initialProblem }: LeadFormProps) {
   const [submitState, setSubmitState] = useState<SubmitState>({ kind: "idle" });
   const hasStarted = useRef(false);
   const {
@@ -39,12 +55,12 @@ export function LeadForm({ placement }: LeadFormProps) {
   } = useForm<LeadInput>({
     resolver: zodResolver(leadSchema) as unknown as Resolver<LeadInput>,
     defaultValues: {
-      role: undefined,
+      role: initialRole,
       stage: undefined,
-      concern: undefined,
-      company: "",
+      problem: initialProblem,
+      followup: undefined,
       email: "",
-      memo: "",
+      focusArea: "",
       consent: false,
       consentVersion: leadConsentVersion,
       utm: {},
@@ -58,44 +74,63 @@ export function LeadForm({ placement }: LeadFormProps) {
       return;
     }
     hasStarted.current = true;
-    trackEvent("lead_form_start", { role_if_known: "" });
+    trackEvent("lead_form_start", { placement, role_if_known: initialRole ?? "" });
   };
 
-  const onSubmit = (data: LeadInput) => {
+  const onSubmit = async (data: LeadInput) => {
     const currentUtm = getStoredUtm(window.sessionStorage);
+    const viewportGroup = window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop";
     setSubmitState({ kind: "submitting" });
-    trackEvent("lead_form_submit_attempt", {
+    trackEvent("diagnosis_submit", {
       role: data.role,
       stage: data.stage,
-      concern: data.concern,
+      problem: data.problem,
+      followup: data.followup,
       placement,
       utm_source: currentUtm.source ?? "",
       utm_medium: currentUtm.medium ?? "",
       utm_campaign: currentUtm.campaign ?? "",
       utm_content: currentUtm.content ?? "",
+      viewport_group: viewportGroup,
     });
 
-    const href = createLeadMailtoHref(
-      {
-        ...data,
-        utm: currentUtm,
-        landingVariant,
-        consentVersion: leadConsentVersion,
-      },
-      leadRecipient,
-    );
+    const leadForHandoff: LeadInput = {
+      ...data,
+      utm: currentUtm,
+      landingVariant,
+      consentVersion: leadConsentVersion,
+    };
+    const href = createLeadMailtoHref(leadForHandoff, staticLeadRecipient);
 
+    trackEvent(followupEventByOption[data.followup], {
+      role: data.role,
+      stage: data.stage,
+      problem: data.problem,
+      placement,
+    });
+    trackEvent("lead_static_handoff", {
+      role: data.role,
+      stage: data.stage,
+      problem: data.problem,
+      followup: data.followup,
+      placement,
+      utm_source: currentUtm.source ?? "",
+      utm_medium: currentUtm.medium ?? "",
+      utm_campaign: currentUtm.campaign ?? "",
+      utm_content: currentUtm.content ?? "",
+      viewport_group: viewportGroup,
+    });
     setSubmitState({
       kind: "handoff",
       href,
       message:
-        "GitHub Pages 정적 배포에서는 서버 저장이 연결되어 있지 않습니다. 아래 버튼으로 업무 이메일에서 신청 내용을 발송해주세요.",
+        "GitHub Pages 정적 배포에서는 서버 저장이 연결되어 있지 않습니다. 아래 링크로 메일 앱을 열어 신청 내용을 보내주세요.",
     });
   };
 
   const onInvalid = () => {
     const fieldNames = Object.keys(errors);
-    trackEvent("lead_form_validation_error", { field_names: fieldNames });
+    trackEvent("lead_form_error", { error_code: "VALIDATION_ERROR", field_names: fieldNames });
     const first = fieldNames[0] as keyof LeadInput | undefined;
     if (first) {
       setFocus(first);
@@ -109,85 +144,91 @@ export function LeadForm({ placement }: LeadFormProps) {
       onSubmit={handleSubmit(onSubmit, onInvalid)}
     >
       <div className={styles.formGrid}>
-        <FieldError id="role-error" message={errors.role?.message} />
         <label>
-          <span>역할</span>
+          <span>나는</span>
           <select
             id="role"
             aria-describedby={errors.role ? "role-error" : undefined}
             {...register("role")}
           >
-            <option value="">선택해주세요</option>
+            <option value="">선택</option>
             {roleOptions.map((option) => (
               <option key={option}>{option}</option>
             ))}
           </select>
+          <FieldError id="role-error" message={errors.role?.message} />
         </label>
-        <FieldError id="stage-error" message={errors.stage?.message} />
         <label>
           <span>현재 단계</span>
           <select
+            id="stage"
             aria-describedby={errors.stage ? "stage-error" : undefined}
             {...register("stage")}
           >
-            <option value="">선택해주세요</option>
+            <option value="">선택</option>
             {stageOptions.map((option) => (
               <option key={option}>{option}</option>
             ))}
           </select>
+          <FieldError id="stage-error" message={errors.stage?.message} />
         </label>
       </div>
 
-      <FieldError id="concern-error" message={errors.concern?.message} />
       <label>
-        <span>가장 걱정되는 문제</span>
+        <span>가장 가까운 문제</span>
         <select
-          aria-describedby={errors.concern ? "concern-error" : undefined}
-          {...register("concern")}
+          aria-describedby={errors.problem ? "problem-error" : undefined}
+          {...register("problem")}
         >
-          <option value="">선택해주세요</option>
-          {concernOptions.map((option) => (
+          <option value="">선택</option>
+          {problemOptions.map((option) => (
             <option key={option}>{option}</option>
           ))}
         </select>
+        <FieldError id="problem-error" message={errors.problem?.message} />
       </label>
 
       <div className={styles.formGrid}>
-        <FieldError id="company-error" message={errors.company?.message} />
         <label>
-          <span>회사/팀명</span>
-          <input
-            autoComplete="organization"
-            aria-describedby={errors.company ? "company-error" : undefined}
-            placeholder="예: QA 테스트 팀"
-            {...register("company")}
-          />
+          <span>원하는 다음 단계</span>
+          <select
+            aria-describedby={errors.followup ? "followup-error" : undefined}
+            {...register("followup")}
+          >
+            <option value="">선택</option>
+            {followupOptions.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
+          <FieldError id="followup-error" message={errors.followup?.message} />
         </label>
-        <FieldError id="email-error" message={errors.email?.message} />
         <label>
           <span>업무 이메일</span>
           <input
             type="email"
             autoComplete="email"
             aria-describedby={errors.email ? "email-error" : undefined}
-            placeholder="name@company.com"
             {...register("email")}
           />
+          <FieldError id="email-error" message={errors.email?.message} />
         </label>
       </div>
 
-      <FieldError id="memo-error" message={errors.memo?.message} />
       <label>
-        <span>상황 설명</span>
+        <span>
+          적용하고 싶은 업무 <em className={styles.optionalField}>선택</em>
+        </span>
         <textarea
-          aria-describedby={errors.memo ? "memo-error memo-help" : "memo-help"}
-          placeholder="예: 직원들이 ChatGPT를 쓰고 있는데 회사 기준이 없습니다."
-          {...register("memo")}
+          aria-describedby={errors.focusArea ? "focus-area-error focus-area-help" : "focus-area-help"}
+          placeholder="예: 인사 규정 검색, 고객 문의 답변"
+          {...register("focusArea")}
         />
+        <FieldError id="focus-area-error" message={errors.focusArea?.message} />
       </label>
-      <p id="memo-help" className={styles.fieldHelp}>
-        실제 기밀자료, 고객 데이터, 주민등록번호 등 민감정보는 입력하지 않습니다.
+      <p id="focus-area-help" className={styles.fieldHelp}>
+        기밀정보는 작성하지 마세요.
       </p>
+
       <input
         type="text"
         aria-label="website"
@@ -201,25 +242,40 @@ export function LeadForm({ placement }: LeadFormProps) {
 
       <label className={styles.consentLabel}>
         <input type="checkbox" {...register("consent")} />
-        <span>개인정보 동의 및 고객검증 안내 수신에 동의합니다.</span>
+        <span>
+          진단 결과와 파일럿 안내를 위한 개인정보 수집·이용에 동의합니다. 기밀정보는
+          작성하지 마세요.
+        </span>
       </label>
       <FieldError id="consent-error" message={errors.consent?.message} />
 
       <button
         className={`${styles.button} ${styles.buttonDark} ${styles.submitButton}`}
         type="submit"
-        disabled={isSubmitting || submitState.kind === "submitting"}
+        disabled={
+          isSubmitting || submitState.kind === "submitting"
+        }
       >
-        {submitState.kind === "submitting" ? "신청 중…" : "신청하기"}
+        {submitState.kind === "submitting" ? "신청 중…" : "진단 제출"}
       </button>
 
+      <p className={styles.formHint}>Private beta 고객검증용 화면입니다.</p>
+
       {submitState.kind === "handoff" ? (
-        <div className={styles.handoffMessage} role="status">
-          <p>{submitState.message}</p>
-          <a className={styles.handoffLink} href={submitState.href}>
+        <p className={styles.successMessage} role="status">
+          {submitState.message}
+          <a
+            className={`${styles.button} ${styles.buttonDark} ${styles.mailtoLink}`}
+            href={submitState.href}
+          >
             업무 이메일로 신청 내용 보내기
           </a>
-        </div>
+        </p>
+      ) : null}
+      {submitState.kind === "error" ? (
+        <p className={styles.errorMessage} role="alert">
+          {submitState.message}
+        </p>
       ) : null}
     </form>
   );

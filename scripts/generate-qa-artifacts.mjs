@@ -64,11 +64,11 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(visualBaselineUrl(), { waitUntil: "networkidle" });
   await addStableCaptureStyles(page);
-  await page.getByRole("button", { name: "우리 조직 AI 준비도 확인" }).first().click();
+  await page.getByRole("button", { name: "내 과제 3분 진단" }).click();
   await page.locator('[role="dialog"]').screenshot({
     path: resolve(artifactsDir, "modal-default-pc.png"),
   });
-  await page.getByRole("button", { name: "신청하기" }).click();
+  await page.getByRole("button", { name: "진단 제출" }).click();
   await page.locator('[role="dialog"]').screenshot({
     path: resolve(artifactsDir, "modal-error-pc.png"),
   });
@@ -147,7 +147,7 @@ async function captureFullPage(page, viewport, path) {
 async function captureSections(page, prefix) {
   for (const [name, selector] of [
     ["hero", "main > section:first-child"],
-    ["diagnostic", "#diagnostic"],
+    ["product", "#product"],
     ["roles", "#roles"],
     ["process", "#process"],
   ]) {
@@ -266,7 +266,7 @@ async function isAgentProofLanding(base) {
       return false;
     }
     const html = await response.text();
-    return html.includes("AgentProof") && html.includes("AI 준비도 진단");
+    return html.includes("AgentProof") && (html.includes("3분 진단") || html.includes("업무 AI"));
   } catch {
     return false;
   }
@@ -315,7 +315,7 @@ function resolveSourcePaths() {
     desktopReference:
       firstExisting(
         candidates.map((candidate) =>
-          resolve(candidate, "reference", "visual-baseline", "pc", "00_pc_full_1440x3159.png"),
+          resolve(candidate, "reference", "visual-baseline", "v5-service", "pc-full-1440.png"),
         ),
       ) ?? resolve(root, "reference", "agentproof_v4_target_desktop.png"),
     mobileReference:
@@ -325,8 +325,8 @@ function resolveSourcePaths() {
             candidate,
             "reference",
             "visual-baseline",
-            "mobile",
-            "00_mobile_full_390x3759.png",
+            "v5-service",
+            "mobile-full-390.png",
           ),
         ),
       ) ?? resolve(root, "reference", "agentproof_v4_target_mobile.png"),

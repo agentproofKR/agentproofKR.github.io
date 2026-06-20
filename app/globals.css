@@ -1,15 +1,17 @@
 :root {
-  --color-ink: #0f1117;
-  --color-paper: #f2f1ec;
+  --color-ink: #111319;
+  --color-paper: #f4f3ee;
   --color-surface: #ffffff;
-  --color-muted: #667085;
+  --color-muted: #69707e;
   --color-line: #e3e6ec;
+  --color-line-soft: rgb(17 19 25 / 12%);
   --color-accent: #315efb;
-  --color-success: #0b7d5f;
-  --color-warning: #b56b00;
+  --color-product-navy: #061a4c;
+  --color-dark-section: #0f1420;
+  --color-success: #14945f;
+  --color-warning: #c57b00;
   --color-danger: #c93636;
-  --color-dark: #111318;
-  --max-content-width: 1180px;
+  --max-content-width: 1200px;
   --background: var(--color-paper);
   --foreground: var(--color-ink);
 }
@@ -20,6 +22,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 84px;
 }
 
 body {
@@ -28,7 +31,8 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", Inter, system-ui, sans-serif;
+  font-family:
+    NanumSquare, "Apple SD Gothic Neo", "Noto Sans KR", Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   word-break: keep-all;

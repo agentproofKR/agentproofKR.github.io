@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_SITE_URL: https://agentproofkr.github.io
-      NEXT_PUBLIC_LANDING_VARIANT: v4.1
+      NEXT_PUBLIC_LANDING_VARIANT: v5.1
     steps:
       - name: Checkout
         uses: actions/checkout@v4

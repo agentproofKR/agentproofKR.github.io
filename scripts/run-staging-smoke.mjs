@@ -20,7 +20,10 @@ await runCheck("GET / renders static landing shell", async () => {
   const html = await response.text();
   assert(response.status === 200, `expected 200, received ${response.status}`);
   assert(html.includes("AgentProof"), "landing HTML does not include AgentProof");
-  assert(html.includes("AI 준비도 진단") || html.includes("_next"), "landing HTML missing app shell");
+  assert(
+    html.includes("업무 AI") || html.includes("3분 진단") || html.includes("_next"),
+    "landing HTML missing V5 app shell",
+  );
   return { statusCode: response.status };
 });
 
@@ -76,15 +79,15 @@ await runCheck("Browser form produces mailto fallback without API calls", async 
     `${baseUrl}/?utm_source=smoke&utm_medium=local&utm_campaign=pages&utm_content=static`,
     { waitUntil: "networkidle" },
   );
-  await page.getByRole("button", { name: "우리 조직 AI 준비도 확인" }).first().click();
-  await page.getByLabel("역할").selectOption("대표·임원·팀장");
-  await page.getByLabel("현재 단계").selectOption("회사 도입 검토");
-  await page.getByLabel("가장 걱정되는 문제").selectOption("도입 우선순위");
-  await page.getByLabel("회사/팀명").fill("QA 테스트 팀");
+  await page.getByRole("button", { name: "내 과제 3분 진단" }).click();
+  await page.getByLabel("나는").selectOption("대표·도입 담당자");
+  await page.getByLabel("현재 단계").selectOption("조직 도입 검토 중");
+  await page.getByLabel("가장 가까운 문제").selectOption("어떤 업무부터 도입해야 할지 모르겠다");
+  await page.getByLabel("원하는 다음 단계").selectOption("MVP 샘플 리포트");
   await page.getByLabel("업무 이메일").fill("qa+agentproof@example.com");
-  await page.getByLabel("상황 설명").fill("정적 Pages smoke test입니다.");
-  await page.getByLabel(/개인정보 동의/).check();
-  await page.getByRole("button", { name: "신청하기" }).click();
+  await page.getByLabel(/적용하고 싶은 업무/).fill("정적 Pages smoke test입니다.");
+  await page.getByLabel(/개인정보 수집·이용/).check();
+  await page.getByRole("button", { name: "진단 제출" }).click();
 
   const statusText = await page.getByRole("status").textContent();
   const href = await page
@@ -100,8 +103,8 @@ await runCheck("Browser form produces mailto fallback without API calls", async 
   );
   assert(href?.startsWith("mailto:"), "mailto handoff link missing");
   assert(!eventText.includes("qa+agentproof@example.com"), "analytics leaked email");
-  assert(!eventText.includes("QA 테스트 팀"), "analytics leaked company");
-  assert(!eventText.includes("정적 Pages smoke"), "analytics leaked memo");
+  assert(!eventText.includes("정적 Pages smoke"), "analytics leaked focus area");
+  assert(!eventText.includes("lead_form_success"), "analytics emitted false success");
 
   return { apiCalls, handoff: "mailto", analyticsPii: false };
 });

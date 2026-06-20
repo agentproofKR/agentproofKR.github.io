@@ -31,10 +31,10 @@ test("passes core automated accessibility checks", async ({ page }) => {
 
 test("keyboard users can tab inside the modal and close back to the opener", async ({ page }) => {
   await page.goto("/");
-  const opener = page.getByRole("button", { name: "AI 준비도 진단" });
+  const opener = page.getByRole("banner").getByRole("button", { name: "3분 진단" });
   await opener.focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("dialog", { name: "AI 준비도 진단 신청" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "3분 AI 도입 과제 진단" })).toBeVisible();
 
   for (let index = 0; index < 12; index += 1) {
     await page.keyboard.press("Tab");

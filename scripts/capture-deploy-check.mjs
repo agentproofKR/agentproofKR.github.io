@@ -8,6 +8,20 @@ const root = process.cwd();
 const baseUrl = (process.env.QA_BASE_URL ?? "http://127.0.0.1:3101").replace(/\/$/, "");
 const artifactPrefix = process.env.DEPLOY_CHECK_PREFIX ?? "local";
 const artifactsDir = resolve(root, "artifacts", "deploy-check");
+const desktopReferencePath = resolve(
+  root,
+  "reference",
+  "visual-baseline",
+  "v5-service",
+  "pc-full-1440.png",
+);
+const mobileReferencePath = resolve(
+  root,
+  "reference",
+  "visual-baseline",
+  "v5-service",
+  "mobile-full-390.png",
+);
 
 await mkdir(artifactsDir, { recursive: true });
 
@@ -22,18 +36,12 @@ await capture(page, { width: 390, height: 844 }, mobilePath);
 
 const desktopDiff = await compareImages({
   actualPath: desktopPath,
-  expectedPath: resolve(root, "reference", "visual-baseline", "pc", "00_pc_full_1440x3159.png"),
+  expectedPath: desktopReferencePath,
   diffPath: resolve(artifactsDir, `${artifactPrefix}-pc-diff-1440.png`),
 });
 const mobileDiff = await compareImages({
   actualPath: mobilePath,
-  expectedPath: resolve(
-    root,
-    "reference",
-    "visual-baseline",
-    "mobile",
-    "00_mobile_full_390x3759.png",
-  ),
+  expectedPath: mobileReferencePath,
   diffPath: resolve(artifactsDir, `${artifactPrefix}-mobile-diff-390.png`),
 });
 
@@ -60,6 +68,11 @@ const summary = {
   generatedAt: new Date().toISOString(),
   baseUrl,
   artifactPrefix,
+  visualReference: {
+    version: "agentproof_v5_service QA",
+    desktop: desktopReferencePath,
+    mobile: mobileReferencePath,
+  },
   captures: {
     desktop: desktopPath,
     mobile: mobilePath,
@@ -158,6 +171,9 @@ function renderMarkdown(summary) {
 - Generated at: ${summary.generatedAt}
 - Base URL: ${summary.baseUrl}
 - Passed: ${summary.passed}
+- Visual reference: ${summary.visualReference.version}
+- Desktop reference: ${summary.visualReference.desktop}
+- Mobile reference: ${summary.visualReference.mobile}
 
 ## Visual Diff
 

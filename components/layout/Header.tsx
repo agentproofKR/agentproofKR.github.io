@@ -9,19 +9,19 @@ export function Header({ onCtaClick, onNavClick }: HeaderProps) {
   return (
     <header className={styles.siteHeader}>
       <div className={styles.navWrap}>
-        <a className={styles.brand} href="#" aria-label="AgentProof 홈">
+        <a className={styles.brand} href="#top" aria-label="AgentProof 홈">
           <span aria-hidden="true">[·]</span>
           AgentProof
         </a>
-        <nav className={styles.navLinks} aria-label="주요 섹션">
-          <a href="#diagnostic" onClick={() => onNavClick("#diagnostic")}>
-            진단 화면
+        <nav className={styles.navLinks} aria-label="주요 메뉴">
+          <a href="#product" onClick={() => onNavClick("#product")}>
+            MVP
           </a>
           <a href="#roles" onClick={() => onNavClick("#roles")}>
-            역할별 가치
+            고객 가설
           </a>
           <a href="#process" onClick={() => onNavClick("#process")}>
-            진행 방식
+            파일럿
           </a>
         </nav>
         <button
@@ -29,7 +29,7 @@ export function Header({ onCtaClick, onNavClick }: HeaderProps) {
           type="button"
           onClick={(event) => onCtaClick("header", event.currentTarget)}
         >
-          AI 준비도 진단
+          3분 진단
         </button>
       </div>
     </header>
