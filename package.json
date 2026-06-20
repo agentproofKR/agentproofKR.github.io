@@ -1,0 +1,45 @@
+{
+  "name": "agentproof-landing",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "node scripts/serve-static.mjs out",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "qa:artifacts": "node scripts/generate-qa-artifacts.mjs",
+    "staging:smoke": "node scripts/run-staging-smoke.mjs",
+    "format": "prettier --check \"app/**/*.{css,ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\" \"styles/**/*.css\" \"scripts/**/*.mjs\" \"tests/**/*.{ts,tsx}\" \"*.{js,json,md,mjs,ts}\"",
+    "format:write": "prettier --write \"app/**/*.{css,ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\" \"styles/**/*.css\" \"scripts/**/*.mjs\" \"tests/**/*.{ts,tsx}\" \"*.{js,json,md,mjs,ts}\""
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
+    "next": "16.2.9",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-hook-form": "^7.79.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
+    "@playwright/test": "1.61.0",
+    "@types/node": "25.9.3",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.2",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.9",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "prettier": "3.8.4",
+    "typescript": "6.0.3",
+    "vitest": "4.1.9"
+  }
+}

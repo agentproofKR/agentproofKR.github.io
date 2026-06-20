@@ -1,0 +1,95 @@
+{
+  "version": "AgentProof Landing V4 final visual baseline",
+  "generated_from": {
+    "pc": "agentproof_landing_v4_desktop_full.png",
+    "mobile": "agentproof_landing_v4_mobile_full.png"
+  },
+  "authoritative_full_page": [
+    {
+      "file": "pc/00_pc_full_1440x3159.png",
+      "width": 1440,
+      "height": 3159,
+      "device_scale_factor": 1,
+      "sha256": "a81d750d917a414bc8dba22d448d922c0b997d55c87bb2cf2521c72a0436b89b"
+    },
+    {
+      "file": "mobile/00_mobile_full_390x3759.png",
+      "width": 390,
+      "height": 3759,
+      "device_scale_factor": 1,
+      "sha256": "5454929c7b240d755d96fd101841925734c5b94774e84f11ca3643ccaf5b35d9"
+    }
+  ],
+  "human_review_crops": [
+    {
+      "file": "pc/01_pc_hero_product_1440x1200.png",
+      "source": "pc/00_pc_full_1440x3159.png",
+      "crop_y": [
+        0,
+        1200
+      ],
+      "note": "헤더·히어로·진단 화면 상단",
+      "sha256": "c58853af34eb8731dd703454cb45504577e858b91664fcfb8dba412c8e3a377e"
+    },
+    {
+      "file": "pc/02_pc_product_roles_1440x1200.png",
+      "source": "pc/00_pc_full_1440x3159.png",
+      "crop_y": [
+        980,
+        2180
+      ],
+      "note": "진단 화면 하단·역할별 가치·판단 흐름",
+      "sha256": "919eaf5861fb28eabfb7718bc1e673b2e6b58b707c80620a732c0d49e0b83d83"
+    },
+    {
+      "file": "pc/03_pc_flow_process_footer_1440x1200.png",
+      "source": "pc/00_pc_full_1440x3159.png",
+      "crop_y": [
+        1959,
+        3159
+      ],
+      "note": "판단 흐름 하단·진행 방식·CTA·푸터",
+      "sha256": "eb907263cd08b818eeb1f7aae3425a989948970c741f094d8cc73224b37ca53c"
+    },
+    {
+      "file": "mobile/01_mobile_hero_product_390x1200.png",
+      "source": "mobile/00_mobile_full_390x3759.png",
+      "crop_y": [
+        0,
+        1200
+      ],
+      "note": "헤더·히어로·진단 화면 상단",
+      "sha256": "4d1b31ecf2bbf7740b42f67e119a8f25244f2c2315c64ccafee951183b76ba9f"
+    },
+    {
+      "file": "mobile/02_mobile_product_roles_390x1200.png",
+      "source": "mobile/00_mobile_full_390x3759.png",
+      "crop_y": [
+        850,
+        2050
+      ],
+      "note": "진단 화면·역할별 가치 상단",
+      "sha256": "7cb84447df17192dd294463e65dfac20663269fffaaf88ad5799fa37f05c71e7"
+    },
+    {
+      "file": "mobile/03_mobile_roles_flow_390x1200.png",
+      "source": "mobile/00_mobile_full_390x3759.png",
+      "crop_y": [
+        1700,
+        2900
+      ],
+      "note": "역할별 가치·판단 흐름·다크 섹션 시작",
+      "sha256": "bf32eb2f5e1db7b0aaaf33787a2448ce723864b75f8b93fa3571d5db72d60c03"
+    },
+    {
+      "file": "mobile/04_mobile_process_footer_390x1200.png",
+      "source": "mobile/00_mobile_full_390x3759.png",
+      "crop_y": [
+        2559,
+        3759
+      ],
+      "note": "진행 방식·CTA·푸터",
+      "sha256": "764290bd8ec17bd9007b378f3dd5b896c06d4e738daffa916a28b30df58314a7"
+    }
+  ]
+}
