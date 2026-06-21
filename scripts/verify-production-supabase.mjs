@@ -234,7 +234,9 @@ function assertEvidence() {
     assert(item.rawEmailContactRowsAfterContacts === 0, `${persona}: raw email stored in contact table`);
     assert(item.analyticsRowsWithPii === 0, `${persona}: analytics rows contain PII-like content`);
     assert(item.utmSource === "agentproof_qa", `${persona}: UTM source not stored`);
-    assert(item.resultScoreMatches === true, `${persona}: deterministic score mismatch`);
+    assert(item.clientScoreIgnored === true, `${persona}: client-supplied score was stored`);
+    assert(item.clientBandIgnored === true, `${persona}: client-supplied band was stored`);
+    assert(item.clientRiskIgnored === true, `${persona}: client-supplied risk flag was stored`);
     assert(item.riskFlagCount > 0, `${persona}: critical risk flags were not stored`);
   }
 
@@ -268,10 +270,10 @@ function buildSurveyPayload(persona) {
     honeypot: "",
     answers: personaAnswers(persona, commonAnswers(persona)),
     result: {
-      totalScore: persona === "security" ? 28 : persona === "practitioner" ? 34 : 57,
-      resultBand: persona === "leader" ? "qa-fit-for-limited-pilot" : "qa-policy-needed",
-      dimensionScores: { readiness: 25, policy: 50, privacy: 75, audit: 25, execution: 40 },
-      riskFlags: ["qa-critical-risk-flag"],
+      totalScore: 100,
+      resultBand: "forged-client-band",
+      dimensionScores: { forged: 100 },
+      riskFlags: ["forged-client-risk"],
     },
     consents: {
       age14OrOlder: true,
@@ -426,7 +428,9 @@ async function verifyStoredSurvey(payload) {
     surveyVersion: sessionRows[0]?.survey_version,
     scoringVersion: sessionRows[0]?.scoring_version,
     resultScore: result.total_score,
-    resultScoreMatches: result.total_score === payload.result.totalScore,
+    clientScoreIgnored: result.total_score !== payload.result.totalScore,
+    clientBandIgnored: result.result_band !== payload.result.resultBand,
+    clientRiskIgnored: !riskFlags.includes("forged-client-risk"),
     resultBand: result.result_band,
     riskFlagCount: riskFlags.length,
     utmSource: sessionRows[0]?.utm_source,

@@ -20,7 +20,7 @@ type SurveyPayload = {
   idempotencyKey: string;
   honeypot?: string;
   answers: Record<string, AnswerValue>;
-  result: {
+  result?: {
     totalScore: number;
     resultBand: string;
     dimensionScores: Record<string, number>;
@@ -64,6 +64,177 @@ const allowedQuestionIds: Record<Persona, Set<string>> = {
   leader: new Set([...commonIds, ...rangeIds("L", 7, 25)]),
   security: new Set([...commonIds, ...rangeIds("S", 7, 26)]),
 };
+
+type QuestionRule = {
+  options: Record<string, number | null>;
+  dimension?: string;
+  scored?: boolean;
+  multi?: boolean;
+  maxSelections?: number;
+};
+
+const surveyVersion = "2026-06-21";
+const scoringVersion = "2026-06-21";
+
+const unscored = nullOptions;
+const maturity = scoreOptions({
+  none: 0,
+  planning: 1,
+  partial: 2,
+  mostly: 3,
+  established: 4,
+  unknown: 0,
+  not_applicable: null,
+});
+const yesPartialNo = scoreOptions({
+  yes: 4,
+  partial: 2,
+  no: 0,
+  unknown: 0,
+  not_applicable: null,
+});
+const reverseIncident = scoreOptions({ yes: 0, partial: 1, no: 4, unknown: 0 });
+const account = scoreOptions({ company: 4, mixed: 2, personal: 0, unknown: 0 });
+const infoType = scoreOptions({
+  public: 4,
+  internal_general: 2,
+  customer_contract: 1,
+  personal_data: 0,
+  confidential: 0,
+  unknown: 0,
+});
+
+const commonRules: Record<string, QuestionRule> = {
+  C01: rule(unscored(["practitioner", "executive", "ai_dx", "security_policy", "other"])),
+  C02: rule(unscored(["1_10", "11_50", "51_300", "301_1000", "1001_plus", "prefer_not"])),
+  C03: rule(
+    unscored([
+      "it_software",
+      "professional_services",
+      "manufacturing",
+      "finance_insurance",
+      "commerce",
+      "education",
+      "public_nonprofit",
+      "healthcare",
+      "media_content",
+      "other",
+      "prefer_not",
+    ]),
+  ),
+  C04: rule(unscored(["none", "personal", "team", "pilot", "formal_some", "companywide", "unknown"])),
+  C05: rule(
+    unscored([
+      "gen_ai",
+      "copilot",
+      "internal_chatbot",
+      "rag",
+      "agent_automation",
+      "coding",
+      "media_generation",
+      "none",
+      "other",
+    ]),
+    { multi: true, maxSelections: 4 },
+  ),
+  C06: rule(
+    unscored([
+      "time_saving",
+      "quality",
+      "cost",
+      "customer_experience",
+      "decision_support",
+      "risk_management",
+      "new_service",
+      "unclear",
+    ]),
+  ),
+};
+
+const workflow = unscored([
+  "documents",
+  "research",
+  "customer_support",
+  "internal_search",
+  "code_data",
+  "external_action",
+  "other",
+]);
+const barrier = unscored(["security", "accuracy", "budget", "ownership", "data", "change", "unknown"]);
+const support = unscored(["checklist", "policy_template", "priority_report", "risk_review", "pilot_plan", "unknown"]);
+
+const questionRules: Record<Persona, Record<string, QuestionRule>> = {
+  practitioner: {
+    ...commonRules,
+    P07: rule(unscored(["none", "monthly", "weekly", "several_weekly", "daily", "unknown"])),
+    P08: rule(workflow, { multi: true, maxSelections: 3 }),
+    P09: rule(yesPartialNo, { scored: true, dimension: "정책 인지도" }),
+    P10: rule(account, { scored: true, dimension: "정보보호" }),
+    P11: rule(infoType, { scored: true, dimension: "정보보호", multi: true, maxSelections: 3 }),
+    P12: rule(yesPartialNo, { scored: true, dimension: "정보보호" }),
+    P13: rule(maturity, { scored: true, dimension: "정책 인지도" }),
+    P14: rule(maturity, { scored: true, dimension: "답변 신뢰성" }),
+    P15: rule(maturity, { scored: true, dimension: "답변 신뢰성" }),
+    P16: rule(maturity, { scored: true, dimension: "안전한 활용 준비도" }),
+    P17: rule(maturity, { scored: true, dimension: "답변 신뢰성" }),
+    P18: rule(maturity, { scored: true, dimension: "안전한 활용 준비도" }),
+    P19: rule(maturity, { scored: true, dimension: "안전한 활용 준비도" }),
+    P20: rule(maturity, { scored: true, dimension: "정책 인지도" }),
+    P21: rule(reverseIncident, { scored: true, dimension: "답변 신뢰성" }),
+    P22: rule(maturity, { scored: true, dimension: "업무 적합성" }),
+    P23: rule(barrier, { multi: true, maxSelections: 2 }),
+    P24: rule(support),
+  },
+  leader: {
+    ...commonRules,
+    L07: rule(unscored(["operations", "sales_cs", "hr", "finance", "product_it", "companywide", "unknown"])),
+    L08: rule(workflow, { multi: true, maxSelections: 3 }),
+    L09: rule(maturity, { scored: true, dimension: "업무 우선순위" }),
+    L10: rule(maturity, { scored: true, dimension: "도입 목적 명확성" }),
+    L11: rule(commonRules.C06.options, { multi: true, maxSelections: 3 }),
+    L12: rule(yesPartialNo, { scored: true, dimension: "도입 목적 명확성" }),
+    L13: rule(yesPartialNo, { scored: true, dimension: "위험관리" }),
+    L14: rule(maturity, { scored: true, dimension: "데이터·프로세스 준비" }),
+    L15: rule(maturity, { scored: true, dimension: "데이터·프로세스 준비" }),
+    L16: rule(maturity, { scored: true, dimension: "파일럿 실행 준비도" }),
+    L17: rule(maturity, { scored: true, dimension: "파일럿 실행 준비도" }),
+    L18: rule(maturity, { scored: true, dimension: "위험관리" }),
+    L19: rule(yesPartialNo, { scored: true, dimension: "위험관리" }),
+    L20: rule(maturity, { scored: true, dimension: "위험관리" }),
+    L21: rule(maturity, { scored: true, dimension: "파일럿 실행 준비도" }),
+    L22: rule(unscored(["none", "under_1m", "1m_3m", "3m_10m", "10m_plus", "range_review", "prefer_not"])),
+    L23: rule(unscored(["within_1m", "within_3m", "within_6m", "this_year", "not_decided", "unknown"])),
+    L24: rule(barrier, { multi: true, maxSelections: 2 }),
+    L25: rule(support),
+  },
+  security: {
+    ...commonRules,
+    ...Object.fromEntries(
+      rangeIds("S", 7, 21).map((id) => [
+        id,
+        rule(maturity, { scored: true, dimension: securityDimensionFor(id) }),
+      ]),
+    ),
+    S22: rule(yesPartialNo, { scored: true, dimension: "데이터·접근통제" }),
+    S23: rule(maturity, { scored: true, dimension: "공급자·사고대응" }),
+    S24: rule(maturity, { scored: true, dimension: "정책 성숙도" }),
+    S25: rule(maturity, { scored: true, dimension: "정책 성숙도" }),
+    S26: rule(support),
+  },
+};
+
+const dimensionsByPersona: Record<Persona, string[]> = {
+  practitioner: ["업무 적합성", "답변 신뢰성", "정보보호", "정책 인지도", "안전한 활용 준비도"],
+  leader: ["도입 목적 명확성", "업무 우선순위", "데이터·프로세스 준비", "위험관리", "파일럿 실행 준비도"],
+  security: ["AI 자산 가시성", "정책 성숙도", "데이터·접근통제", "검증·모니터링", "공급자·사고대응"],
+};
+
+const readinessBands = [
+  { min: 0, max: 39, label: "기준 정립 필요" },
+  { min: 40, max: 59, label: "제한적 실험 적합" },
+  { min: 60, max: 79, label: "통제 기반 확대 준비" },
+  { min: 80, max: 100, label: "운영 고도화 단계" },
+];
 
 Deno.serve(async (request) => {
   const origin = request.headers.get("origin") ?? "";
@@ -125,6 +296,7 @@ async function handleSurvey(
   headers: HeadersInit,
 ): Promise<Response> {
   validateSurveyPayload(payload);
+  const serverResult = computeServerResult(payload);
   await rejectDuplicateIdempotency(supabaseUrl, serviceRoleKey, payload.idempotencyKey);
 
   const completedAt = new Date();
@@ -167,10 +339,10 @@ async function handleSurvey(
   await checkedTableRequest(supabaseUrl, serviceRoleKey, "survey_results", [
     {
       session_id: payload.sessionId,
-      total_score: payload.result.totalScore,
-      dimension_scores_json: payload.result.dimensionScores,
-      risk_flags_json: payload.result.riskFlags,
-      result_band: payload.result.resultBand,
+      total_score: serverResult.totalScore,
+      dimension_scores_json: serverResult.dimensionScores,
+      risk_flags_json: serverResult.riskFlags,
+      result_band: serverResult.resultBand,
     },
   ]);
 
@@ -202,7 +374,7 @@ async function handleSurvey(
       persona: payload.persona,
       survey_version: payload.surveyVersion,
       non_sensitive_properties_json: {
-        result_band: payload.result.resultBand,
+        result_band: serverResult.resultBand,
         question_count: Object.keys(payload.answers).length,
       },
     },
@@ -267,28 +439,127 @@ function validateSurveyPayload(payload: SurveyPayload): void {
   if (!isPersona(payload.persona)) throw new Error("INVALID_PERSONA");
   if (!payload.consents?.age14OrOlder) throw new Error("MISSING_AGE_CONSENT");
   if (!payload.consents?.surveyProcessing) throw new Error("MISSING_SURVEY_CONSENT");
-  if (!payload.surveyVersion || !payload.scoringVersion || !payload.consents.consentVersion) {
-    throw new Error("MISSING_VERSION");
+  if (payload.surveyVersion !== surveyVersion || payload.scoringVersion !== scoringVersion) {
+    throw new Error("UNKNOWN_SURVEY_VERSION");
   }
+  if (!payload.consents.consentVersion) throw new Error("MISSING_VERSION");
   if (!payload.idempotencyKey || payload.idempotencyKey.length > 160) {
     throw new Error("INVALID_IDEMPOTENCY_KEY");
   }
-  if (payload.result.totalScore < 0 || payload.result.totalScore > 100) {
-    throw new Error("INVALID_SCORE");
-  }
 
   const allowed = allowedQuestionIds[payload.persona];
+  const rules = questionRules[payload.persona];
+  for (const questionId of Object.keys(rules)) {
+    if (payload.answers?.[questionId] === undefined) {
+      throw new Error("MISSING_REQUIRED_ANSWER");
+    }
+  }
   for (const [questionId, answer] of Object.entries(payload.answers ?? {})) {
     if (!allowed.has(questionId)) {
       throw new Error("INVALID_QUESTION_ID");
     }
+    const question = rules[questionId];
     const values = Array.isArray(answer) ? answer : [answer];
+    if (question.multi !== true && Array.isArray(answer)) {
+      throw new Error("INVALID_ANSWER_TYPE");
+    }
+    if (question.multi === true && !Array.isArray(answer)) {
+      throw new Error("INVALID_ANSWER_TYPE");
+    }
+    if (question.maxSelections && values.length > question.maxSelections) {
+      throw new Error("INVALID_MULTI_SELECT_LIMIT");
+    }
     for (const value of values) {
       if (typeof value !== "string" || value.length > 160 || /[<>]/.test(value)) {
         throw new Error("INVALID_ANSWER");
       }
+      if (!(value in question.options)) {
+        throw new Error("INVALID_ANSWER");
+      }
     }
   }
+}
+
+function computeServerResult(payload: SurveyPayload): {
+  totalScore: number;
+  resultBand: string;
+  dimensionScores: Record<string, number>;
+  riskFlags: string[];
+} {
+  const rules = questionRules[payload.persona];
+  const totals = new Map(dimensionsByPersona[payload.persona].map((dimension) => [dimension, { score: 0, max: 0 }]));
+  const informationGaps: string[] = [];
+
+  for (const [questionId, rule] of Object.entries(rules)) {
+    if (!rule.scored || !rule.dimension) continue;
+    const answer = payload.answers[questionId];
+    const values = Array.isArray(answer) ? answer : [answer];
+    if (values.every((value) => value === "not_applicable" || value === "prefer_not")) continue;
+
+    const scores = values
+      .filter((value) => value !== "not_applicable" && value !== "prefer_not")
+      .map((value) => rule.options[value])
+      .filter((score): score is number => typeof score === "number");
+    if (scores.length === 0) continue;
+    if (values.includes("unknown")) informationGaps.push(questionId);
+
+    const total = totals.get(rule.dimension) ?? { score: 0, max: 0 };
+    total.score += Math.min(...scores);
+    total.max += 4;
+    totals.set(rule.dimension, total);
+  }
+
+  const dimensionScores = Object.fromEntries(
+    [...totals.entries()].map(([dimension, total]) => [
+      dimension,
+      total.max === 0 ? 0 : Math.round((total.score / total.max) * 100),
+    ]),
+  );
+  const scores = [...totals.values()].filter((total) => total.max > 0).map((total) => Math.round((total.score / total.max) * 100));
+  const totalScore = scores.length === 0 ? 0 : Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  const criticalWarnings = criticalWarningsFor(payload);
+  const riskFlags = unique([
+    ...criticalWarnings,
+    ...(informationGaps.length > 0 ? ["정보 공백: 모름 응답이 있어 추가 확인이 필요합니다."] : []),
+    ...Object.entries(dimensionScores)
+      .filter(([, score]) => score < 40)
+      .map(([dimension]) => `${dimension}: 기준 보완이 필요합니다.`),
+  ]).slice(0, 6);
+  const band = criticalWarnings.length > 0 ? readinessBands[0] : readinessBandFor(totalScore);
+
+  return { totalScore, resultBand: band.label, dimensionScores, riskFlags };
+}
+
+function criticalWarningsFor(payload: SurveyPayload): string[] {
+  const answers = payload.answers;
+  const warnings: string[] = [];
+  const p11 = asArray(answers.P11);
+  const c05 = asArray(answers.C05);
+
+  if (
+    payload.persona === "practitioner" &&
+    (p11.includes("personal_data") || p11.includes("confidential")) &&
+    (answers.P09 === "none" || answers.P10 === "personal" || c05.includes("gen_ai"))
+  ) {
+    warnings.push("소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.");
+  }
+  if (answers.P16 === "none" || answers.L19 === "no") warnings.push("외부 제출물이 사람 검토 없이 사용될 수 있습니다.");
+  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "none") warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
+  if (answers.S22 === "no") warnings.push("행동 수행 Agent에 사람 승인 절차가 없습니다.");
+  if (answers.P18 === "none" || answers.S16 === "none") warnings.push("질문·답변·행동 로그가 없습니다.");
+  if (answers.S19 === "unknown") warnings.push("공급자의 모델 학습 또는 국외 이전 상태를 알 수 없습니다.");
+
+  return unique(warnings);
+}
+
+function readinessBandFor(score: number): { min: number; max: number; label: string } {
+  const normalized = Math.max(0, Math.min(100, Math.round(score)));
+  return readinessBands.find((band) => normalized >= band.min && normalized <= band.max) ?? readinessBands[0];
+}
+
+function asArray(value: AnswerValue | undefined): string[] {
+  if (Array.isArray(value)) return value;
+  return value ? [value] : [];
 }
 
 function validateContactPayload(payload: ContactPayload): void {
@@ -478,6 +749,29 @@ function rangeIds(prefix: string, start: number, end: number): string[] {
   return Array.from({ length: end - start + 1 }, (_, index) => `${prefix}${String(index + start).padStart(2, "0")}`);
 }
 
+function nullOptions(values: string[]): Record<string, null> {
+  return Object.fromEntries(values.map((value) => [value, null]));
+}
+
+function scoreOptions(values: Record<string, number | null>): Record<string, number | null> {
+  return values;
+}
+
+function rule(
+  options: Record<string, number | null>,
+  extras: Omit<QuestionRule, "options"> = {},
+): QuestionRule {
+  return { options, ...extras };
+}
+
+function securityDimensionFor(questionId: string): string {
+  if (["S07", "S08", "S09"].includes(questionId)) return "AI 자산 가시성";
+  if (["S10", "S11", "S12"].includes(questionId)) return "정책 성숙도";
+  if (["S13", "S14", "S15"].includes(questionId)) return "데이터·접근통제";
+  if (["S16", "S17", "S20", "S21"].includes(questionId)) return "검증·모니터링";
+  return "공급자·사고대응";
+}
+
 function isPersona(value: string): value is Persona {
   return value === "practitioner" || value === "leader" || value === "security";
 }
@@ -514,4 +808,8 @@ function base64(bytes: Uint8Array): string {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
+}
+
+function unique(values: string[]): string[] {
+  return [...new Set(values)];
 }
