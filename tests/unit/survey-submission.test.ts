@@ -134,6 +134,18 @@ describe("survey submission validation", () => {
     });
   });
 
+  it("disables live storage when the legal operator name is missing", () => {
+    expect(
+      getSurveySubmissionMode({
+        publicApiUrl: "https://example.supabase.co/functions/v1/survey-submit",
+        legalOperatorName: null,
+      }),
+    ).toEqual({
+      mode: "disabled",
+      message: "LEGAL_OPERATOR_NAME이 설정되지 않아 공개 설문 저장을 비활성화했습니다.",
+    });
+  });
+
   it("keeps forbidden fields out of analytics payloads", () => {
     expect(
       sanitizeAnalyticsPayload({

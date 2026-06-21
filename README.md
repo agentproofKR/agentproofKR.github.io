@@ -1,80 +1,83 @@
-# AgentProof Landing V4.1
+# AgentProof Landing V5
 
-AgentProof V4.1 랜딩페이지의 GitHub Pages 정적 배포 후보입니다. 최종 목표 URL은
-`https://agentproofkr.github.io/`이며, 루트 배포를 위해 `basePath`와 `assetPrefix`를
-사용하지 않습니다.
+AgentProof의 공개 랜딩페이지와 역할별 AI 준비도 자가진단입니다.
+운영 URL은 `https://agentproofkr.github.io/`이며, GitHub Pages 정적 프런트엔드와
+Supabase Edge Function 기반 설문 저장 경로로 운영됩니다.
 
-## 문서
+## 현재 운영 구조
 
-- `docs/01_랜딩페이지_설계문서.md` — 제품, 화면, 카피, 상호작용 기준
-- `docs/02_개발계획문서.md` — 기술 스택, 작업 티켓, 배포 계획
-- `docs/03_검수과정문서.md` — 기능·시각·접근성·보안 검수
-- `docs/04_다음버전_개선계획.md` — V4.2 실험과 V5 로드맵
-- `docs/05_시각검수_기준.md` — PC·모바일 캡처 비교 기준
-- `AGENTS.md` — Codex 실행 규칙
+- 프런트엔드: Next.js 정적 export, GitHub Pages 루트 배포
+- 설문 제출: `NEXT_PUBLIC_SURVEY_API_URL`에 설정된 Supabase Edge Function
+- 데이터 저장: Supabase Postgres, 프로젝트 리전 `ap-northeast-2`
+- 공개 연락처: `agentproof.ai@gmail.com`
+- 운영자 표시명: GitHub repository variable `LEGAL_OPERATOR_NAME`
+- 배포 식별자: `/version.json`
 
-## 로컬 실행
+GitHub Pages에는 서버 라우트가 없으므로 `/api/leads`는 운영 API가 아닙니다.
+설문 저장, 동의 기록, 선택 연락 요청은 Edge Function을 통해서만 처리됩니다.
+
+## 개인정보와 동의 흐름
+
+설문은 역할 선택 뒤 목적과 개인정보 요약을 먼저 안내하고, 만 14세 이상 확인과
+필수 개인정보 수집·이용 동의를 받은 다음 질문을 시작합니다.
+
+기본 동작은 다음과 같습니다.
+
+- 이메일 입력 없이 결과 확인 가능
+- 답변 원문, 동의 상태, 이메일, 회사명은 기본적으로 브라우저 localStorage에 저장하지 않음
+- 결과 화면에는 민감하지 않은 요약만 sessionStorage에 임시 저장
+- 베타 참여, 인터뷰, 파일럿 상담은 각각 별도 선택 동의로 처리
+- analytics payload는 허용된 비식별 필드만 전송
+
+`LEGAL_OPERATOR_NAME`이 비어 있으면 공개 UI에 임의 이름을 표시하지 않아야 하며,
+운영 데이터 수집은 release gate에서 차단되어야 합니다.
+
+## 운영 검증
+
+로컬에서는 다음 명령을 사용합니다.
 
 ```bash
 npx -y pnpm@11.8.0 install
-npx -y pnpm@11.8.0 dev
-```
-
-## 환경 변수
-
-```bash
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_GTM_ID=
-NEXT_PUBLIC_LANDING_VARIANT=v4.1
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
-```
-
-GitHub Pages에는 자체 서버 런타임이 없으므로 `/api/leads`는 제공하지 않습니다. 과거 리드 폼은
-클라이언트 검증 뒤 `agentproof.ai@gmail.com`로 보내는 `mailto:` fallback을 사용합니다.
-역할별 설문 저장은 `NEXT_PUBLIC_SURVEY_API_URL`이 Supabase Edge Function으로 설정된 경우에만
-외부 함수로 전송합니다. 저장소가 연결되지 않은 상태에서는 저장 성공 메시지를 표시하지 않고,
-결과 요약만 현재 브라우저 세션에 표시합니다.
-
-## 검증
-
-```bash
 npx -y pnpm@11.8.0 lint
 npx -y pnpm@11.8.0 typecheck
 npx -y pnpm@11.8.0 test
+npx -y pnpm@11.8.0 build
+npx -y pnpm@11.8.0 test:content
 npx -y pnpm@11.8.0 test:e2e
-npx -y pnpm@11.8.0 build
 ```
 
-정적 빌드 결과는 `out/`에 생성됩니다. 로컬 production 후보는 다음처럼 확인합니다.
+운영 HTML까지 포함한 콘텐츠 검사는 배포 뒤 실행합니다.
 
 ```bash
-npx -y pnpm@11.8.0 build
-npx -y pnpm@11.8.0 start -- --hostname 127.0.0.1 --port 3101
-npx -y pnpm@11.8.0 staging:smoke
+$env:CONTENT_SCAN_BASE_URL='https://agentproofkr.github.io'
+npx -y pnpm@11.8.0 test:content
 ```
 
-QA 증거 패키지는 다음 명령으로 생성합니다.
+Supabase 운영 저장 경로는 GitHub Actions의 `Supabase Release Verification`
+workflow에서 검증합니다. 이 workflow는 마이그레이션, Edge Function 배포,
+서버 재계산, RLS, CORS, replay 차단, rate limit, QA 데이터 삭제를 확인하고
+`production-storage-verification` artifact를 남깁니다.
 
-```bash
-npx -y pnpm@11.8.0 qa:artifacts
-```
+## 배포
 
-production build 기준으로 캡처하려면 먼저 `build`를 실행한 뒤 PowerShell에서
-`$env:QA_SERVER_MODE='production'`을 설정하고 같은 명령을 실행합니다.
+`main` 브랜치 push 또는 수동 실행으로 `.github/workflows/deploy-pages.yml`이 동작합니다.
+빌드 시 `scripts/write-version.mjs`가 `public/version.json`을 생성하고, Pages artifact에 포함합니다.
+`/version.json`에는 commit SHA, build timestamp, privacy policy version, survey version만 들어가며
+secret은 포함하지 않습니다.
 
-외부 production URL이 있으면 smoke를 실제 URL에 대해 실행합니다.
+## 환경 변수와 저장소 변수
 
-```bash
-$env:STAGING_BASE_URL='https://agentproofkr.github.io'
-npx -y pnpm@11.8.0 staging:smoke
-```
+GitHub repository variables:
 
-## 배포 설정
+- `NEXT_PUBLIC_SURVEY_API_URL`
+- `LEGAL_OPERATOR_NAME`
+- `SUPABASE_PROJECT_REF`
+- `SUPABASE_URL`
 
-GitHub Pages 배포는 `.github/workflows/deploy-pages.yml`에서 `main` push와
-`workflow_dispatch`로 실행됩니다. 빌드 산출물은 `./out`이며, Pages Source는
-GitHub Actions로 설정되어야 합니다.
+GitHub secrets:
 
-production smoke에서는 실제 도메인 HTTPS 접속, CSS/JS 로드, PC·모바일 렌더링,
-CTA·역할별 설문 진입, analytics PII 미노출을 확인합니다. Supabase 설문 저장, RLS,
-QA 데이터 삭제는 `verify:production:supabase`에서 별도로 검증합니다.
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_DB_PASSWORD`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+secret 값은 클라이언트 번들, 문서, 스크린샷, 로그에 노출하지 않습니다.

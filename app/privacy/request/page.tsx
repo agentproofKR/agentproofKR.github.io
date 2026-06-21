@@ -33,6 +33,16 @@ export default function PrivacyRequestPage() {
           <a href={mailto}>{LEGAL_CONFIG.contactEmail}</a>
         </div>
         <section className={styles.policySection}>
+          <h2>개인정보처리자</h2>
+          <p>
+            서비스명은 AgentProof이며 운영 형태는 {LEGAL_CONFIG.operatorType}입니다.{" "}
+            {LEGAL_CONFIG.operatorName
+              ? `개인정보처리자와 개인정보 보호책임자는 ${LEGAL_CONFIG.operatorName}입니다.`
+              : "LEGAL_OPERATOR_NAME이 설정되기 전에는 공개 설문 저장을 활성화하지 않습니다."}{" "}
+            개인정보 문의 및 권리행사 연락처는 {LEGAL_CONFIG.contactEmail}입니다.
+          </p>
+        </section>
+        <section className={styles.policySection}>
           <h2>작성 시 포함할 내용</h2>
           <ol>
             <li>요청 종류와 범위</li>

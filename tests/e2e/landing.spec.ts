@@ -13,7 +13,7 @@ test("renders the landing baseline and routes CTAs to the role-based survey", as
     }),
   ).toBeVisible();
   await expect(page.locator("#product")).toContainText("예시 화면 · 문서·규정 검색 Agent");
-  await expect(page.locator("#product")).toContainText("SAMPLE DATA");
+  await expect(page.locator("#product")).toContainText("예시 데이터");
   await expect(
     page.getByRole("img", { name: /AgentProof 업무용 AI 검증 대시보드 샘플/ }),
   ).toBeAttached();

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SurveyFlow } from "@/components/survey/SurveyFlow";
+import { LEGAL_CONFIG } from "@/lib/legal";
 import { getSurveyDefinition } from "@/lib/survey/questions";
 import type { Persona } from "@/lib/survey/types";
 
@@ -39,7 +40,7 @@ export default async function PersonaSurveyPage({ params }: PersonaPageProps) {
   if (!isPersona(persona)) {
     notFound();
   }
-  return <SurveyFlow persona={persona} />;
+  return <SurveyFlow persona={persona} legalOperatorName={LEGAL_CONFIG.operatorName} />;
 }
 
 function isPersona(value: string): value is Persona {

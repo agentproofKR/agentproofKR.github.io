@@ -23,12 +23,13 @@ jobs:
       NEXT_PUBLIC_LANDING_VARIANT: v5.2
       NEXT_PUBLIC_SURVEY_API_URL: ${{ vars.NEXT_PUBLIC_SURVEY_API_URL }}
       LEGAL_OPERATOR_NAME: ${{ vars.LEGAL_OPERATOR_NAME }}
+      PRIVACY_POLICY_VERSION: "2026-06-21"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
 
@@ -62,13 +63,16 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Content scan
+        run: pnpm test:content
+
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         with:
           enablement: true
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
 
@@ -81,4 +85,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

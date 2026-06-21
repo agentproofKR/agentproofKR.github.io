@@ -120,12 +120,19 @@ const contactPayloadSchema = z.object({
 
 export function getSurveySubmissionMode(config: {
   publicApiUrl?: string | null;
+  legalOperatorName?: string | null;
 }): SurveySubmissionMode {
   const endpoint = config.publicApiUrl?.trim();
   if (!endpoint) {
     return {
       mode: "disabled",
       message: "설문 저장소가 아직 연결되지 않았습니다. 결과는 이 기기에만 표시됩니다.",
+    };
+  }
+  if (!config.legalOperatorName?.trim()) {
+    return {
+      mode: "disabled",
+      message: "LEGAL_OPERATOR_NAME이 설정되지 않아 공개 설문 저장을 비활성화했습니다.",
     };
   }
   return { mode: "live", endpoint };

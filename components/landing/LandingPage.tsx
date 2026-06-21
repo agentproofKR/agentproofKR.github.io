@@ -123,7 +123,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 <div className={styles.productStage}>
                   <div className={styles.desktopDashboard}>
                     <Image
-                      src="/agentproof_mvp_dashboard_agentproof.png"
+                      src="/agentproof-dashboard-sample.png"
                       width={1775}
                       height={886}
                       priority
@@ -307,11 +307,11 @@ function MobileDashboard() {
           />
           AgentProof
         </div>
-        <div>SAMPLE DATA</div>
+        <div>예시 데이터</div>
       </div>
       <div className={styles.mobileBody}>
         <div className={styles.mobileTitle}>
-          <small>OVERVIEW / AI ASSURANCE</small>
+          <small>AI 사용 현황</small>
           <h3>업무 Agent 검증 현황</h3>
           <p>문서 검색 · 정책 검증 · 배포 승인</p>
         </div>

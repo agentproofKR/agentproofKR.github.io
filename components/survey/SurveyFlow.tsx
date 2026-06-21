@@ -19,6 +19,7 @@ import styles from "@/styles/survey.module.css";
 
 type SurveyFlowProps = {
   persona: Persona;
+  legalOperatorName: string | null;
 };
 
 type DraftState = {
@@ -35,7 +36,7 @@ const emptyConsents: ConsentState = {
   pilot: false,
 };
 
-export function SurveyFlow({ persona }: SurveyFlowProps) {
+export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   const definition = useMemo(() => getSurveyDefinition(persona), [persona]);
   const draftKey = `agentproof-survey-draft-${persona}`;
   const initialDraft = useMemo(() => readDraft(draftKey), [draftKey]);
@@ -49,6 +50,7 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
   const currentQuestion = definition.questions[currentIndex];
   const submissionMode = getSurveySubmissionMode({
     publicApiUrl: process.env.NEXT_PUBLIC_SURVEY_API_URL,
+    legalOperatorName,
   });
 
   useEffect(() => {

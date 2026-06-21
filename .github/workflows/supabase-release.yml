@@ -18,10 +18,10 @@ jobs:
       NEXT_PUBLIC_SURVEY_API_URL: ${{ vars.NEXT_PUBLIC_SURVEY_API_URL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
 
@@ -64,7 +64,7 @@ jobs:
         run: node scripts/verify-production-supabase.mjs
 
       - name: Upload production verification evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: production-storage-verification
