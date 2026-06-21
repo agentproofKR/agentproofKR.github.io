@@ -171,7 +171,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 </p>
               </div>
 
-              <div className={styles.roleGrid}>
+              <div className={styles.roleGrid} data-testid="problem-grid">
                 {roleProblemCards.map((role) => (
                   <article className={styles.roleCard} key={role.index}>
                     <span>{role.index}</span>
@@ -231,17 +231,19 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <span>SAMPLE DATA · 예시 화면</span>
                 </div>
                 <div className={styles.productStage}>
-                  <div className={styles.desktopDashboard}>
+                  <div
+                    className={styles.desktopDashboard}
+                    data-testid="desktop-dashboard"
+                  >
                     <Image
                       src="/agentproof-dashboard-sample.png"
                       width={1775}
                       height={886}
                       priority
-                      sizes="(max-width: 767px) 0px, 1200px"
+                      sizes="(max-width: 767px) 720px, 1200px"
                       alt="AgentProof 업무용 AI 검증 대시보드 샘플. 위험 점수, 테스트 통과율, 배포 승인 상태, 근거 문서, 최근 테스트 결과를 보여줍니다."
                     />
                   </div>
-                  <MobileDashboard />
                 </div>
                 <div
                   className={styles.featureTabs}
@@ -404,102 +406,5 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
         <Footer />
       </div>
     </>
-  );
-}
-
-function MobileDashboard() {
-  return (
-    <div
-      className={styles.mobileDashboard}
-      role="group"
-      aria-label="AgentProof 모바일 제품 화면 샘플"
-    >
-      <div className={styles.mobileTop}>
-        <div className={styles.mobileBrand}>
-          <Image
-            src="/agentproof-logo-mark.png"
-            width={786}
-            height={891}
-            alt=""
-            aria-hidden="true"
-          />
-          AgentProof
-        </div>
-        <div>SAMPLE DATA</div>
-      </div>
-      <div className={styles.mobileBody}>
-        <div className={styles.mobileTitle}>
-          <small>AI 사용 현황</small>
-          <h3>업무 AI 사용 현황</h3>
-          <p>문서 근거 · 사용 기준 · 승인 기록</p>
-        </div>
-        <div className={styles.mobileKpis}>
-          <Metric label="위험 점수" value="32" detail="지난 7일 -12%" />
-          <Metric label="테스트 통과율" value="92.4%" detail="+4.7%" />
-          <Metric label="배포 승인" value="7 / 12" detail="대기 5건" />
-          <Metric label="열린 이슈" value="18" detail="우선 검토 4건" />
-        </div>
-        <article className={styles.mobileCard}>
-          <h4>근거가 있는 답변</h4>
-          <strong>연차 사용은 어떻게 신청하나요?</strong>
-          <p>
-            인사규정과 운영 가이드를 근거로 답변합니다. 외부 제출 전에는
-            승인자를 남기고 변경 이력을 보관합니다.
-          </p>
-          <dl>
-            <div>
-              <dt>인사규정 12조</dt>
-              <dd>v2.1</dd>
-            </div>
-            <div>
-              <dt>연차 운영 가이드</dt>
-              <dd>v1.3</dd>
-            </div>
-          </dl>
-        </article>
-        <article className={styles.mobileCard}>
-          <h4>최근 검증 결과</h4>
-          {[
-            ["환각 테스트", "통과"],
-            ["정책 위반", "통과"],
-            ["오래된 문서 참조", "경고"],
-            ["권한 검토", "통과"],
-          ].map(([label, status]) => (
-            <div className={styles.mobileTest} key={label}>
-              <span>{label}</span>
-              <b
-                className={
-                  status === "경고" ? styles.statusWarn : styles.statusOk
-                }
-              >
-                {status}
-              </b>
-            </div>
-          ))}
-        </article>
-        <div className={styles.mobileActions}>
-          <span>감사 리포트</span>
-          <strong>배포 승인 요청</strong>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className={styles.mobileKpi}>
-      <span>{label}</span>
-      <b>{value}</b>
-      <small>{detail}</small>
-    </div>
   );
 }

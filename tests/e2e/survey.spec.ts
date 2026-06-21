@@ -164,7 +164,7 @@ test("records beta, interview, and pilot actions separately without analytics PI
   await page.getByLabel(/초기 사용자 참여 안내/).check();
   await page.getByRole("button", { name: "체크리스트 요청하기" }).click();
   await expect(page.getByRole("status")).toContainText(
-    "저장소가 연결되면 별도 기록됩니다",
+    "저장소가 꺼져 있어 전송하지 않았습니다.",
   );
 
   await page.getByRole("button", { name: "인터뷰하기" }).click();

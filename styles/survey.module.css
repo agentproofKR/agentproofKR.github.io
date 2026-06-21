@@ -457,6 +457,15 @@
   padding-left: 22px;
 }
 
+.resultCard li strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.resultCard li span {
+  display: block;
+}
+
 .scoreRow {
   display: grid;
   grid-template-columns: minmax(130px, 1fr) 2fr 42px;

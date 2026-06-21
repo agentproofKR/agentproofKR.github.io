@@ -77,9 +77,9 @@ export function SurveyHub() {
       >
         <div>
           <h2 id="survey-next-title">
-            설문을 마치면 위험과 이번 주 할 일을 바로 보여드립니다.
+            끝나면 바로 보여드립니다.
           </h2>
-          <p>이메일은 체크리스트나 상담이 필요할 때만 선택해서 입력합니다.</p>
+          <p>위험과 이번 주 할 일을 정리합니다.</p>
         </div>
         <div className={styles.linkRow}>
           <Link href="/privacy/">개인정보 안내</Link>

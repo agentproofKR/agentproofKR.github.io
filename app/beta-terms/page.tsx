@@ -25,39 +25,24 @@ export default function BetaTermsPage() {
         </p>
 
         <section className={styles.policySection}>
-          <h2>무엇을 볼 수 있나요?</h2>
-          <ul>
-            <li>설문 결과와 이번 주 할 일</li>
-            <li>체크리스트</li>
-            <li>신청한 분께 보내는 베타 안내</li>
-          </ul>
+          <h2>참여 안내</h2>
+          <p>베타 참여가 꼭 보장되지는 않습니다.</p>
         </section>
 
         <section className={styles.policySection}>
-          <h2>참여는 어떻게 정해지나요?</h2>
-          <p>
-            베타 참여는 신청 순서, 운영 상황, 필요한 사용자 유형에 따라 달라집니다.
-          </p>
+          <h2>혜택 안내</h2>
+          <p>혜택이 생기면 조건을 먼저 알려드립니다.</p>
         </section>
 
         <section className={styles.policySection}>
-          <h2>혜택이 생기면 어떻게 알 수 있나요?</h2>
-          <p>
-            혜택이 생기면 조건, 기간, 사용 방법을 먼저 알려드립니다.
-          </p>
+          <h2>양도 제한</h2>
+          <p>현금으로 바꾸거나 다른 사람에게 줄 수 없습니다.</p>
         </section>
 
         <section className={styles.policySection}>
-          <h2>다른 사람에게 넘길 수 있나요?</h2>
+          <h2>취소</h2>
           <p>
-            아니요. 체험 혜택은 현금으로 바꾸거나 다른 사람에게 줄 수 없습니다.
-          </p>
-        </section>
-
-        <section className={styles.policySection}>
-          <h2>취소할 수 있나요?</h2>
-          <p>
-            네.{" "}
+            취소하고 싶으면{" "}
             <a href={`mailto:${LEGAL_CONFIG.contactEmail}`}>
               {LEGAL_CONFIG.contactEmail}
             </a>

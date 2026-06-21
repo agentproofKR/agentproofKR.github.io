@@ -149,51 +149,51 @@ const barrierOptions = [
 
 const supportOptions = [
   { value: "checklist", label: "체크리스트" },
-  { value: "policy_template", label: "사용 기준 템플릿" },
-  { value: "priority_report", label: "도입 우선순위 리포트" },
-  { value: "risk_review", label: "보안·정책 위험 검토" },
-  { value: "pilot_plan", label: "파일럿 실행 계획" },
-  { value: "unknown", label: "아직 명확하지 않음" },
+  { value: "policy_template", label: "사용 기준" },
+  { value: "priority_report", label: "도입 우선순위" },
+  { value: "risk_review", label: "보안·정책 점검" },
+  { value: "pilot_plan", label: "파일럿 계획" },
+  { value: "unknown", label: "아직 모름" },
 ] as const satisfies readonly SurveyOption[];
 
 const situationOptions = [
-  { value: "direct_user", label: "내가 직접 AI를 업무에 쓰고 있다" },
-  { value: "adoption_owner", label: "팀이나 회사에 AI 도입을 검토하고 있다" },
-  { value: "security_owner", label: "AI 사용 기준, 보안, 개인정보가 걱정된다" },
-  { value: "unclear", label: "아직 명확하지 않지만 AI 사용이 불안하다" },
+  { value: "direct_user", label: "내가 직접 쓴다" },
+  { value: "adoption_owner", label: "팀·회사 도입 검토" },
+  { value: "security_owner", label: "보안·개인정보 걱정" },
+  { value: "unclear", label: "AI 사용이 불안하다" },
 ] as const satisfies readonly SurveyOption[];
 
 const concernOptions = [
-  { value: "wrong_answer", label: "AI 답변이 틀릴까 봐 걱정된다", score: 1 },
-  { value: "source_check", label: "근거와 출처를 확인하기 어렵다", score: 1 },
-  { value: "data_leak", label: "개인정보나 회사 기밀이 들어갈까 봐 걱정된다", score: 0 },
-  { value: "approval_gap", label: "누가 승인하고 책임지는지 기준이 없다", score: 0 },
-  { value: "where_to_start", label: "어떤 업무부터 도입해야 할지 모르겠다", score: 1 },
-  { value: "effect_cost", label: "비용 대비 효과를 설명하기 어렵다", score: 1 },
-  { value: "unknown_usage", label: "직원들이 어떤 AI를 쓰는지 파악하기 어렵다", score: 0 },
+  { value: "wrong_answer", label: "AI 답변 오류", score: 1 },
+  { value: "source_check", label: "근거·출처 확인 어려움", score: 1 },
+  { value: "data_leak", label: "개인정보·기밀 유출", score: 0 },
+  { value: "approval_gap", label: "승인·책임 기준 없음", score: 0 },
+  { value: "where_to_start", label: "어디부터 도입할지 모름", score: 1 },
+  { value: "effect_cost", label: "비용 대비 효과 설명 어려움", score: 1 },
+  { value: "unknown_usage", label: "직원 AI 사용 파악 어려움", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
 const dataInputOptions = [
   { value: "none", label: "없다", score: 4 },
   { value: "public_only", label: "공개 정보만 입력한다", score: 4 },
-  { value: "internal_general", label: "일반 사내자료를 입력한 적이 있다", score: 2 },
-  { value: "customer_contract", label: "고객·계약 정보를 입력한 적이 있다", score: 1 },
+  { value: "internal_general", label: "일반 사내자료를 넣은 적 있다", score: 2 },
+  { value: "customer_contract", label: "고객·계약 정보를 넣은 적 있다", score: 1 },
   { value: "personal_confidential", label: "개인정보·기밀을 넣은 적 있다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
 const humanReviewOptions = [
   { value: "always", label: "항상 확인한다", score: 4 },
-  { value: "important_only", label: "중요한 경우만 확인한다", score: 2 },
+  { value: "important_only", label: "중요할 때만 확인한다", score: 2 },
   { value: "rarely", label: "거의 확인하지 않는다", score: 0 },
   { value: "no_standard", label: "확인 기준이 없다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
 const policyOptions = [
-  { value: "clear", label: "명확한 기준이 있고 안내되어 있다", score: 4 },
-  { value: "partial", label: "일부 기준은 있다", score: 2 },
-  { value: "verbal", label: "구두로만 안내되어 있다", score: 1 },
+  { value: "clear", label: "명확한 기준 있음", score: 4 },
+  { value: "partial", label: "일부 기준 있음", score: 2 },
+  { value: "verbal", label: "말로만 안내됨", score: 1 },
   { value: "none", label: "기준이 없다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
 ] as const satisfies readonly SurveyOption[];

@@ -266,7 +266,9 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             이제 결과를 볼까요?
           </h1>
           <p className={styles.lead}>
-            결과는 바로 계산됩니다. 설문 답변은 URL에 담기지 않고, 이메일도 묻지 않습니다.
+            결과는 바로 계산됩니다.
+            <br />
+            이메일은 묻지 않습니다.
           </p>
           <StorageNotice mode={submissionMode} />
           {error ? (
@@ -411,8 +413,8 @@ function ConsentPanel({
         <span>답변을 결과 계산에 사용하는 데 동의합니다.</span>
       </label>
       <p>
-        수집 항목은 설문 답변, 결과 점수, 제출 시각, UTM입니다. 이름, 전화번호,
-        회사명, 고객명, 회사 기밀은 묻지 않습니다. 설문 답변은 6개월 보관합니다.
+        설문 답변과 결과 점수만 씁니다.
+        이름, 전화번호, 회사 기밀은 묻지 않습니다.
       </p>
     </div>
   );
@@ -420,7 +422,7 @@ function ConsentPanel({
 
 function StorageNotice({ mode }: { mode: SurveySubmissionMode }) {
   if (mode.mode === "live") {
-    return <p className={styles.infoBox}>설문 저장소가 연결되어 있으며 제출 후 저장됩니다.</p>;
+    return <p className={styles.infoBox}>제출 후 안전하게 저장됩니다.</p>;
   }
   return <p className={styles.warningBox}>{mode.message}</p>;
 }

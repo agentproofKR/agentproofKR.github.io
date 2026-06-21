@@ -13,19 +13,19 @@ export const metadata = {
 const summaryCards = [
   {
     title: "받는 것",
-    body: "설문 답변과 AI 사용 상황을 받습니다.",
+    body: "설문 답변, AI 사용 상황",
   },
   {
     title: "안 받는 것",
-    body: "이름, 전화번호, 회사 기밀은 받지 않습니다.",
+    body: "이름, 전화번호, 회사 기밀",
   },
   {
     title: "이메일",
-    body: "체크리스트나 상담을 원할 때만 입력합니다.",
+    body: "체크리스트나 상담을 원할 때만",
   },
   {
     title: "보관",
-    body: "설문 답변은 6개월 보관합니다.",
+    body: "설문 답변은 6개월",
   },
   {
     title: "삭제",
@@ -293,9 +293,16 @@ export default function PrivacyPage() {
         <p className={styles.eyebrow}>개인정보</p>
         <h1>개인정보 안내</h1>
         <p className={styles.lead}>
-          이름 안 받아요. 전화번호 안 받아요. 회사 기밀 안 받아요.
+          이름 안 받아요.
           <br />
-          이메일은 원할 때만 입력합니다. 삭제 요청도 할 수 있어요.
+          전화번호 안 받아요.
+          <br />
+          회사 기밀 안 받아요.
+          <br />
+          <br />
+          이메일은 원할 때만 입력합니다.
+          <br />
+          삭제 요청도 할 수 있어요.
         </p>
 
         <div className={styles.summaryGrid} aria-label="개인정보 요약">

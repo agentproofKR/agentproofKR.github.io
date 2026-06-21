@@ -11,7 +11,7 @@ const ogImage = {
   url: "/og-agentproof.png",
   width: 1200,
   height: 630,
-  alt: "AgentProof AI 자가점검 예시 화면",
+  alt: "AgentProof AI 안전 체크 화면",
 } as const;
 
 export const dynamicParams = false;

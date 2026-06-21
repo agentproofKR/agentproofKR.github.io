@@ -23,7 +23,7 @@ export function Footer() {
           />
         </strong>
         <div>
-          <p>업무 AI 도입 문제를 검증하는 초기 고객검증 단계</p>
+          <p>업무 AI 위험을 확인하는 초기 검증 단계</p>
           <Link href="/privacy">개인정보처리방침</Link>
           <Link href="/privacy/request">권리 행사</Link>
           <Link href="/beta-terms">초기 사용자 프로그램 안내</Link>

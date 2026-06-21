@@ -75,3 +75,36 @@ test("links each landing problem card to the unified survey with problem intent"
       .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=security");
 });
+
+test("keeps mobile problem cards horizontal and uses the desktop dashboard image", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 1200 });
+  await page.goto("/");
+
+  const problemGrid = page.locator("#problem").locator("[data-testid='problem-grid']");
+  await expect(problemGrid).toBeVisible();
+  const gridMetrics = await problemGrid.evaluate((element) => ({
+    scrollWidth: element.scrollWidth,
+    clientWidth: element.clientWidth,
+    templateColumns: getComputedStyle(element).gridTemplateColumns,
+    snapType: getComputedStyle(element).scrollSnapType,
+    cardCount: element.querySelectorAll("article").length,
+  }));
+
+  expect(gridMetrics.cardCount).toBe(3);
+  expect(gridMetrics.scrollWidth).toBeGreaterThan(gridMetrics.clientWidth);
+  expect(gridMetrics.templateColumns.split(" ").length).toBe(3);
+  expect(gridMetrics.snapType).toContain("x");
+
+  const desktopDashboard = page.locator("#product").locator("[data-testid='desktop-dashboard']");
+  await expect(desktopDashboard).toBeVisible();
+  await expect(
+    desktopDashboard.getByRole("img", {
+      name: /AgentProof 업무용 AI 검증 대시보드 샘플/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.locator("[aria-label='AgentProof 모바일 제품 화면 샘플']"),
+  ).toHaveCount(0);
+});

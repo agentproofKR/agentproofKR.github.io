@@ -3,9 +3,9 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-const title = "AgentProof | 조직 AI 업무 도입 준비도 진단";
+const title = "AgentProof | AI 안전 체크";
 const description =
-  "조직의 AI 사용 현황과 업무별 기회를 파악하고 정확성, 개인정보, 책임 위험을 진단해 도입 우선순위와 사용 기준으로 정리합니다.";
+  "AI 답변 오류, 기밀유출, 책임 문제를 3분 안에 확인하세요.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/agentproof-logo-mark.png", type: "image/png" }],
   },
   openGraph: {
-    title: "AI를 업무에 쓸 때, 무엇을 맡기고 무엇을 지킬지.",
+    title: "AI 답변, 그냥 쓰면 위험합니다.",
     description,
     type: "website",
     url: "/",

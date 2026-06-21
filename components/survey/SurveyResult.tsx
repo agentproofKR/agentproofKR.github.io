@@ -70,7 +70,11 @@ export function SurveyResult() {
       <main className={styles.page}>
         <section className={styles.surveyPanel}>
           <h1>AI 안전 체크 결과</h1>
-          <p>저장된 결과가 없습니다. 3분 체크를 먼저 완료해주세요.</p>
+          <p>
+            아직 결과가 없습니다.
+            <br />
+            3분 체크를 먼저 완료해주세요.
+          </p>
           <Link className={styles.primaryLink} href="/survey/">
             시작하기
           </Link>
@@ -90,7 +94,7 @@ export function SurveyResult() {
         <p className={styles.eyebrow}>AI 안전 체크 결과</p>
         <h1 id="result-title">AI 안전 체크 결과</h1>
         <p className={styles.lead}>
-          지금 먼저 막아야 할 위험과
+          먼저 막아야 할 위험과
           <br />
           이번 주 할 일을 정리했습니다.
           <br />
@@ -130,7 +134,7 @@ export function SurveyResult() {
           </ol>
         </article>
         <article className={styles.resultCard}>
-          <h2>이번 주에 할 일</h2>
+          <h2>이번 주 할 일</h2>
           <ol>
             {result.recommendedActions.map((action) => (
               <li key={action}>{action}</li>
@@ -140,17 +144,26 @@ export function SurveyResult() {
         <article className={styles.resultCard}>
           <h2>AgentProof로 관리하기</h2>
           <ol>
-            <li>답변 근거 / 출처 없는 답을 걸러냅니다.</li>
-            <li>위험 테스트 / 오답·기밀·권한 문제를 찾습니다.</li>
-            <li>승인 기록 / 누가 확인했는지 남깁니다.</li>
+            <li>
+              <strong>답변 근거</strong>
+              <span>출처 없는 답을 걸러냅니다.</span>
+            </li>
+            <li>
+              <strong>위험 테스트</strong>
+              <span>오답·기밀·권한 문제를 찾습니다.</span>
+            </li>
+            <li>
+              <strong>승인 기록</strong>
+              <span>누가 확인했는지 남깁니다.</span>
+            </li>
           </ol>
         </article>
       </section>
 
       <section className={styles.noticeBand} aria-labelledby="reward-title">
         <div>
-          <h2 id="reward-title">이제 뭘 하면 될까요?</h2>
-          <p>원하면 다음 단계로 이어갈 수 있어요.</p>
+          <h2 id="reward-title">다음 단계</h2>
+          <p>원하면 이어갈 수 있어요.</p>
         </div>
         <div className={styles.inlineActions}>
           <button className={styles.secondaryButton} type="button" onClick={() => window.print()}>
@@ -202,15 +215,15 @@ export function SurveyResult() {
 
 function getRiskSummary(riskBand: SurveyScoreResult["displayRiskBand"]): string {
   if (riskBand === "즉시 점검 필요") {
-    return "AI를 사용하고 있지만 정보 입력, 사람 검토, 사용 기준이 충분히 정리되지 않은 상태입니다.";
+    return "자료 입력과 승인 기준을 먼저 막아야 합니다.";
   }
   if (riskBand === "위험") {
-    return "일부 업무는 실험할 수 있지만 회사 자료 입력과 승인 기준을 먼저 보완해야 합니다.";
+    return "회사 자료 입력 기준부터 정리하세요.";
   }
   if (riskBand === "주의") {
-    return "기본 기준은 있으나 외부 제출 전 검토와 허용 도구 목록을 더 명확히 해야 합니다.";
+    return "검토 기준과 허용 도구를 더 좁히세요.";
   }
-  return "AI 사용 기준이 비교적 정리되어 있으며 정기 점검과 승인 기록을 유지하면 좋습니다.";
+  return "기준은 있습니다. 기록과 점검을 유지하세요.";
 }
 
 function OptInForm({
@@ -276,8 +289,8 @@ function OptInForm({
     setError("");
     onStatus(
       submissionMode.mode === "live"
-        ? "선택 참여 요청이 별도 기록되었습니다."
-        : "저장소가 연결되면 별도 기록됩니다. 현재 화면에서는 개인정보를 전송하지 않습니다.",
+        ? "요청이 기록되었습니다."
+        : "저장소가 꺼져 있어 전송하지 않았습니다.",
     );
     event.currentTarget.reset();
   };
@@ -297,7 +310,7 @@ function OptInForm({
       ) : null}
       <input name="website" type="text" tabIndex={-1} autoComplete="off" hidden />
       <p className={styles.fieldHint}>
-        개인정보, 고객명, 회사 기밀, 접속정보 또는 실제 보안 취약점은 입력하지 마세요.
+        개인정보, 고객명, 회사 기밀은 입력하지 마세요.
       </p>
       <label className={styles.checkboxLine}>
         <input name="consent" type="checkbox" />
@@ -318,11 +331,11 @@ function OptInForm({
 function downloadChecklist(stored: StoredResult) {
   const result = stored.result;
   const body = [
-    "AgentProof 역할별 AI 자가점검 결과",
-    `역할: ${getSurveyDefinition(stored.persona).title}`,
+    "AgentProof AI 안전 체크 결과",
+    `체크: ${getSurveyDefinition(stored.persona).title}`,
     `현재 상태: ${result.displayRiskBand}`,
     "",
-    "이번 주에 할 일",
+    "이번 주 할 일",
     ...result.recommendedActions.map((action, index) => `${index + 1}. ${action}`),
     "",
     `문의: ${LEGAL_CONFIG.contactEmail}`,

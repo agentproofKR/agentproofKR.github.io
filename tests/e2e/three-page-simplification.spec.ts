@@ -64,9 +64,9 @@ test.describe("three-page simplification", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "개인정보 안내" }),
     ).toBeVisible();
-    await expect(page.locator("body")).toContainText(
-      "이름 안 받아요. 전화번호 안 받아요. 회사 기밀 안 받아요.",
-    );
+    await expect(page.locator("body")).toContainText("이름 안 받아요.");
+    await expect(page.locator("body")).toContainText("전화번호 안 받아요.");
+    await expect(page.locator("body")).toContainText("회사 기밀 안 받아요.");
     await expect(page.locator("body")).toContainText(
       "이메일은 원할 때만 입력합니다.",
     );
@@ -128,7 +128,13 @@ test.describe("three-page simplification", () => {
       "설문 결과와 체크리스트는 바로 볼 수 있습니다.",
     );
     await expect(page.locator("body")).toContainText(
-      "참여는 어떻게 정해지나요?",
+      "베타 참여가 꼭 보장되지는 않습니다.",
+    );
+    await expect(page.locator("body")).toContainText(
+      "혜택이 생기면 조건을 먼저 알려드립니다.",
+    );
+    await expect(page.locator("body")).toContainText(
+      "현금으로 바꾸거나 다른 사람에게 줄 수 없습니다.",
     );
     await expect(page.locator("body")).toContainText(
       "설문 답변, 점수, 구매 의향에 따라 다르게 대우하지 않습니다.",
