@@ -35,9 +35,6 @@ export function Header({ onNavClick }: HeaderProps) {
           <a href="#problem" onClick={() => onNavClick("#problem")}>
             문제
           </a>
-          <a href="#result-example" onClick={() => onNavClick("#result-example")}>
-            결과
-          </a>
           <a href="#product" onClick={() => onNavClick("#product")}>
             대시보드
           </a>

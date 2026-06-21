@@ -726,38 +726,6 @@
   line-height: 1.7;
 }
 
-.resultExampleGrid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  max-width: 920px;
-  margin: 30px auto 0;
-}
-
-.resultExampleCard {
-  min-height: 130px;
-  border: 1px solid var(--color-line-soft);
-  border-radius: 8px;
-  background: #f7f8fb;
-  padding: 22px;
-  text-align: left;
-}
-
-.resultExampleLabel {
-  display: block;
-  color: #5b6472;
-  font-size: 11px;
-  font-weight: 850;
-}
-
-.resultExampleCard strong {
-  display: block;
-  margin-top: 16px;
-  color: var(--color-ink);
-  font-size: 20px;
-  line-height: 1.35;
-}
-
 .finalActions {
   display: flex;
   gap: 14px;
@@ -1401,17 +1369,12 @@
     margin-top: 18px;
   }
 
-  .faqList,
-  .resultExampleGrid {
+  .faqList {
     grid-template-columns: 1fr;
   }
 
   .faqList .roleCard {
     padding: 20px;
-  }
-
-  .resultExampleCard {
-    min-height: 0;
   }
 
   .decisionFlow {

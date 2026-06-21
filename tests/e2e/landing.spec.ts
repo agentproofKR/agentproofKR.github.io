@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("renders the V6 landing baseline and routes CTAs to the unified survey", async ({
+test("renders the simplified landing flow and routes CTAs to the unified survey", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -11,11 +11,16 @@ test("renders the V6 landing baseline and routes CTAs to the unified survey", as
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: /AI 답변,\s*그냥 믿고 쓰고 있나요\?/,
+      name: /AI 답변,\s*그냥 쓰면 위험합니다\./,
     }),
   ).toBeVisible();
-  await expect(page.locator("#result-example")).toContainText("결과는 이렇게 나옵니다");
-  await expect(page.locator("#product")).toContainText("AgentProof로 이렇게 관리합니다");
+  await expect(page.locator("#result-example")).toHaveCount(0);
+  await expect(page.getByText("결과 예시 보기")).toHaveCount(0);
+  await expect(page.getByText("결과는 이렇게 나옵니다")).toHaveCount(0);
+  await expect(page.getByRole("navigation")).not.toContainText("결과");
+  await expect(page.locator("#product")).toContainText(
+    "AgentProof로 이렇게 관리합니다",
+  );
   await expect(page.locator("#product")).toContainText("SAMPLE DATA");
   await expect(
     page.getByRole("img", { name: /AgentProof 업무용 AI 검증 대시보드 샘플/ }),
@@ -26,17 +31,21 @@ test("renders the V6 landing baseline and routes CTAs to the unified survey", as
       name: /AI 쓸 때,\s*가장 많이 막히는 3가지/,
     }),
   ).toBeVisible();
+  await expect(page.locator("#problem + #product")).toHaveCount(1);
 
   const headerCta = page
     .getByRole("banner")
     .getByRole("link", { name: /3분 체크/ });
   await expect(headerCta).toHaveAttribute("href", "/survey/");
   await expect(
-    page.getByRole("link", { name: "AI 업무 자가점검 시작" }),
+    page.getByRole("link", { name: "AI 업무 자가진단 시작" }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "바로 확인하기" }).first(),
   ).toHaveAttribute("href", "/survey/");
+  await expect(
+    page.getByRole("button", { name: "대시보드 보기" }),
+  ).toBeVisible();
 
   const events = await page.evaluate(() => window.dataLayer);
   expect(JSON.stringify(events)).toContain("page_view");
@@ -56,13 +65,13 @@ test("links each landing problem card to the unified survey with problem intent"
   await expect(
     page
       .locator("article")
-      .filter({ hasText: "AI 도입" })
+      .filter({ hasText: "AI 도입," })
       .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=adoption");
   await expect(
     page
       .locator("article")
-      .filter({ hasText: "회사 자료" })
+      .filter({ hasText: "회사 자료," })
       .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=security");
 });

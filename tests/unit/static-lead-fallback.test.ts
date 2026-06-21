@@ -6,7 +6,7 @@ const lead = {
   role: "대표·도입 담당자",
   stage: "조직 도입 검토 중",
   problem: "어떤 업무부터 도입해야 할지 모르겠다",
-  followup: "결과 예시 요약",
+  followup: "결과 요약 받기",
   email: "qa+agentproof@example.com",
   focusArea: "사내 문서 검색 Agent의 답변 근거와 권한을 검증하고 싶습니다.",
   consent: true,

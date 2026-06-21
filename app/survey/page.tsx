@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "3분 AI 안전 체크 | AgentProof",
-    description: "10문항에 답하고 이메일 없이 결과를 볼 수 있습니다.",
+    description: "10문항만 답하고 이메일 없이 결과를 볼 수 있어요.",
     url: "/survey/",
     images: [
       {
         url: "/og-agentproof.png",
         width: 1200,
         height: 630,
-        alt: "AgentProof AI 자가점검 예시 화면",
+        alt: "AgentProof AI 자가진단 예시 화면",
       },
     ],
   },

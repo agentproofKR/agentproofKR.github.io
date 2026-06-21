@@ -24,9 +24,9 @@ type LandingPageProps = {
 };
 
 const faqs = [
-  ["이메일 필요?", "아니요. 결과는 이메일 없이 바로 볼 수 있습니다."],
-  ["회사 자료를 넣어야 하나요?", "아니요. 기밀 자료는 절대 입력하지 않습니다."],
-  ["AI Agent를 안 써도 되나요?", "네. ChatGPT나 Copilot만 써도 확인할 수 있습니다."],
+  ["이메일 필요?", "아니요. 결과는 바로 볼 수 있어요."],
+  ["회사 자료를 넣어야 하나요?", "아니요. 기밀 자료는 입력하지 않습니다."],
+  ["AI Agent를 안 써도 되나요?", "네. ChatGPT나 Copilot만 써도 됩니다."],
   ["무료인가요?", "3분 체크는 무료입니다."],
   ["결과가 보안 인증인가요?", "아니요. 빠른 자가 확인용입니다."],
 ] as const;
@@ -120,12 +120,12 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
               <h1 id="hero-heading">
                 AI 답변,
                 <br />
-                그냥 믿고 쓰고 있나요?
+                그냥 쓰면 위험합니다.
               </h1>
               <p className={styles.heroCopy}>
                 오답·기밀유출·책임 문제.
                 <br />
-                3분이면 확인할 수 있습니다.
+                3분 안에 확인하세요.
               </p>
               <div className={styles.heroActions}>
                 <Link
@@ -138,9 +138,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 <button
                   className={styles.textLink}
                   type="button"
-                  onClick={() => scrollToSection("#result-example")}
+                  onClick={() => scrollToSection("#product")}
                 >
-                  결과 예시 보기 →
+                  대시보드 보기
                 </button>
               </div>
               <ul className={styles.heroMeta} aria-label="체크 안내">
@@ -154,20 +154,20 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
           <section
             id="problem"
             className={styles.rolesSection}
-            aria-labelledby="roles-heading"
+            aria-labelledby="problem-heading"
           >
             <div className={styles.wrap}>
               <div className={styles.rolesHead}>
                 <div>
                   <p className={styles.sectionKicker}>문제</p>
-                  <h2 id="roles-heading" className={styles.sectionTitle}>
+                  <h2 id="problem-heading" className={styles.sectionTitle}>
                     AI 쓸 때,
                     <br />
                     가장 많이 막히는 3가지
                   </h2>
                 </div>
                 <p className={styles.sectionCopy}>
-                  긴 설명 없이, 지금 가장 가까운 문제부터 확인하세요.
+                  가까운 문제부터 확인하세요.
                 </p>
               </div>
 
@@ -177,10 +177,6 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     <span>{role.index}</span>
                     <h3>{role.role}</h3>
                     <p className={styles.roleQuestion}>{role.problem}</p>
-                    <strong>
-                      <i aria-hidden="true" />
-                      {role.outcome}
-                    </strong>
                     <Link
                       className={styles.roleCta}
                       href={role.surveyPath}
@@ -197,47 +193,10 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                         );
                       }}
                     >
-                      확인하기 <span aria-hidden="true">→</span>
+                      {role.outcome} <span aria-hidden="true">→</span>
                     </Link>
                   </article>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          <section
-            id="result-example"
-            className={styles.finalCta}
-            aria-labelledby="result-example-heading"
-          >
-            <div className={styles.wrap}>
-              <div className={styles.finalPanel}>
-                <p className={styles.sectionKicker}>결과 예시</p>
-                <h2 id="result-example-heading">결과는 이렇게 나옵니다</h2>
-                <div className={styles.resultExampleGrid}>
-                  <article className={styles.resultExampleCard}>
-                    <span className={styles.resultExampleLabel}>위험도</span>
-                    <strong>주의</strong>
-                  </article>
-                  <article className={styles.resultExampleCard}>
-                    <span className={styles.resultExampleLabel}>가장 큰 위험</span>
-                    <strong>회사 자료 입력 기준 없음</strong>
-                  </article>
-                  <article className={styles.resultExampleCard}>
-                    <span className={styles.resultExampleLabel}>이번 주 할 일</span>
-                    <strong>금지 정보 5개 정하기</strong>
-                  </article>
-                </div>
-                <div className={styles.finalActions}>
-                  <Link
-                    className={`${styles.button} ${styles.buttonDark} ${styles.buttonLarge}`}
-                    href="/survey/"
-                    onClick={() => trackSurveyCta("result_example")}
-                  >
-                    내 결과 보기
-                  </Link>
-                </div>
-                <p className={styles.finalNote}>SAMPLE DATA · 예시 결과입니다.</p>
               </div>
             </div>
           </section>
@@ -256,7 +215,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   </h2>
                 </div>
                 <p className={styles.sectionCopy}>
-                  답변 근거. 위험 테스트. 승인 기록. AI 사용을 한 화면에서 봅니다.
+                  답변 근거.
+                  <br />
+                  위험 테스트.
+                  <br />
+                  승인 기록.
+                  <br />
+                  AI 사용을 한 화면에서 관리합니다.
                 </p>
               </div>
 
@@ -319,7 +284,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   3분이면 끝납니다
                 </h2>
                 <p className={styles.processCopy}>
-                  결과를 먼저 보여드리고, 체크리스트나 인터뷰·상담은 원할 때만 이어갑니다.
+                  10문항만 답하면
+                  <br />
+                  위험과 할 일이 나옵니다.
                 </p>
                 <ol className={styles.processSteps}>
                   {processSteps.map((step) => (
@@ -351,9 +318,24 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <span>SAMPLE DATA</span>
                 </header>
                 <ol>
-                  <li><i>01</i><div><b>답변 근거</b></div></li>
-                  <li><i>02</i><div><b>위험 테스트</b></div></li>
-                  <li><i>03</i><div><b>승인 기록</b></div></li>
+                  <li>
+                    <i>01</i>
+                    <div>
+                      <b>답변 근거</b>
+                    </div>
+                  </li>
+                  <li>
+                    <i>02</i>
+                    <div>
+                      <b>위험 테스트</b>
+                    </div>
+                  </li>
+                  <li>
+                    <i>03</i>
+                    <div>
+                      <b>승인 기록</b>
+                    </div>
+                  </li>
                 </ol>
               </div>
             </div>
@@ -366,7 +348,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
           >
             <div className={styles.wrap}>
               <p className={styles.sectionKicker}>FAQ</p>
-              <h2 id="faq-heading" className={styles.sectionTitle}>자주 묻는 질문</h2>
+              <h2 id="faq-heading" className={styles.sectionTitle}>
+                자주 묻는 질문
+              </h2>
               <div className={styles.faqList}>
                 {faqs.map(([question, answer]) => (
                   <article className={styles.roleCard} key={question}>
@@ -386,8 +370,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
               <div className={styles.finalPanel}>
                 <h2 id="final-cta-heading">
                   AI, 그냥 쓰기 전에
-                  <br />
-                  한 번만 확인하세요.
+                  <br />한 번만 확인하세요.
                 </h2>
                 <p>
                   10문항.
@@ -460,8 +443,8 @@ function MobileDashboard() {
           <h4>근거가 있는 답변</h4>
           <strong>연차 사용은 어떻게 신청하나요?</strong>
           <p>
-            인사시스템에서 신청할 수 있으며, 최소 1일 전 신청이 필요합니다. 팀장
-            승인 후 인사팀 검토로 완료됩니다.
+            인사규정과 운영 가이드를 근거로 답변합니다. 외부 제출 전에는
+            승인자를 남기고 변경 이력을 보관합니다.
           </p>
           <dl>
             <div>

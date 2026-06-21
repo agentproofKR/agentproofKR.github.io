@@ -7,11 +7,7 @@ import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-const helperItems = [
-  "회사명 입력 없음",
-  "기밀 입력 없음",
-  "약 3분",
-];
+const helperItems = ["회사명 입력 없음", "기밀 입력 없음", "약 3분"];
 
 export function SurveyHub() {
   useEffect(() => {
@@ -83,11 +79,11 @@ export function SurveyHub() {
           <h2 id="survey-next-title">
             설문을 마치면 위험과 이번 주 할 일을 바로 보여드립니다.
           </h2>
-          <p>이메일은 체크리스트나 상담을 원할 때만 선택해서 입력합니다.</p>
+          <p>이메일은 체크리스트나 상담이 필요할 때만 선택해서 입력합니다.</p>
         </div>
         <div className={styles.linkRow}>
           <Link href="/privacy/">개인정보 안내</Link>
-          <Link href="/beta-terms/">초기 사용자 안내</Link>
+          <Link href="/beta-terms/">초기 사용 안내</Link>
         </div>
       </section>
     </main>

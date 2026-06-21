@@ -1,7 +1,12 @@
 export const leadConsentVersion = "2026-06-20";
 export const landingVariant = process.env.NEXT_PUBLIC_LANDING_VARIANT ?? "v5.1";
 
-export const roleOptions = ["실무자", "대표·도입 담당자", "보안·정책 담당자", "기타"] as const;
+export const roleOptions = [
+  "실무자",
+  "대표·도입 담당자",
+  "보안·정책 담당자",
+  "기타",
+] as const;
 export type RoleOption = (typeof roleOptions)[number];
 
 export const stageOptions = [
@@ -20,12 +25,16 @@ export const problemOptions = [
 ] as const;
 export type ProblemOption = (typeof problemOptions)[number];
 
-export const followupOptions = ["체크리스트 받기", "결과 예시 요약", "우리 회사 상담"] as const;
+export const followupOptions = [
+  "체크리스트 받기",
+  "결과 요약 받기",
+  "우리 회사 상담",
+] as const;
 export type FollowupOption = (typeof followupOptions)[number];
 
 export const followupEventByOption = {
   "체크리스트 받기": "followup_checklist",
-  "결과 예시 요약": "followup_sample_report",
+  "결과 요약 받기": "followup_sample_report",
   "우리 회사 상담": "followup_pilot",
 } as const;
 
@@ -57,7 +66,7 @@ export const roleProblemCards = [
     placement: "problem_trust",
     surveyPath: "/survey/?problem=trust",
     problem: "오답·출처·보고서 오류",
-    outcome: "믿어도 되는 답인지 확인",
+    outcome: "확인하기",
     defaultProblem: "trust",
   },
   {
@@ -66,7 +75,7 @@ export const roleProblemCards = [
     placement: "problem_adoption",
     surveyPath: "/survey/?problem=adoption",
     problem: "업무·비용·우선순위",
-    outcome: "먼저 바꿀 업무 찾기",
+    outcome: "확인하기",
     defaultProblem: "adoption",
   },
   {
@@ -75,7 +84,7 @@ export const roleProblemCards = [
     placement: "problem_security",
     surveyPath: "/survey/?problem=security",
     problem: "보안·개인정보·승인 기준",
-    outcome: "입력 금지 기준 정하기",
+    outcome: "확인하기",
     defaultProblem: "security",
   },
 ] as const;
@@ -100,6 +109,6 @@ export const processSteps = [
 
 export const pilotDeliverables = [
   { number: "01", title: "업무별 위험 지도" },
-  { number: "02", title: "할 일 실행 기준" },
+  { number: "02", title: "다음 실행 기준" },
   { number: "03", title: "자가진단 결과 요약" },
 ] as const;
