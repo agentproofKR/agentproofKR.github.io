@@ -25,8 +25,11 @@ type LandingPageProps = {
 };
 
 export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
-  const [activeTabId, setActiveTabId] = useState<ProductTabId>(productTabs[0].id);
-  const activeTab = productTabs.find((tab) => tab.id === activeTabId) ?? productTabs[0];
+  const [activeTabId, setActiveTabId] = useState<ProductTabId>(
+    productTabs[0].id,
+  );
+  const activeTab =
+    productTabs.find((tab) => tab.id === activeTabId) ?? productTabs[0];
 
   useEffect(() => {
     const initial = readUtmFromUrl(window.location.href);
@@ -38,7 +41,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
       utm_medium: stored.medium ?? "",
       utm_campaign: stored.campaign ?? "",
       utm_content: stored.content ?? "",
-      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
+      viewport_group: window.matchMedia("(max-width: 767px)").matches
+        ? "mobile"
+        : "desktop",
     });
   }, []);
 
@@ -52,12 +57,16 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
       utm_medium: stored.medium ?? "",
       utm_campaign: stored.campaign ?? "",
       utm_content: stored.content ?? "",
-      viewport_group: window.matchMedia("(max-width: 767px)").matches ? "mobile" : "desktop",
+      viewport_group: window.matchMedia("(max-width: 767px)").matches
+        ? "mobile"
+        : "desktop",
     });
   };
 
   const handleProductClick = () => {
-    document.querySelector("#product")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .querySelector("#product")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleNavClick = (target: string) => {
@@ -74,15 +83,28 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
       {showVisualBaseline ? (
         <div className={styles.visualBaseline} aria-hidden="true">
           <picture>
-            <source media="(max-width: 767px)" srcSet="/reference-agentproof-v51-mobile-full.png" />
+            <source
+              media="(max-width: 767px)"
+              srcSet="/reference-agentproof-v51-mobile-full.png"
+            />
             <img src="/reference-agentproof-v51-desktop-full.png" alt="" />
           </picture>
         </div>
       ) : null}
-      <div className={showVisualBaseline ? styles.semanticLandingBaseline : styles.semanticLanding}>
+      <div
+        className={
+          showVisualBaseline
+            ? styles.semanticLandingBaseline
+            : styles.semanticLanding
+        }
+      >
         <Header onNavClick={handleNavClick} />
         <main id="main">
-          <section id="top" className={styles.hero} aria-labelledby="hero-heading">
+          <section
+            id="top"
+            className={styles.hero}
+            aria-labelledby="hero-heading"
+          >
             <div className={styles.wrap}>
               <div className={styles.betaPill}>
                 <i aria-hidden="true" />
@@ -94,8 +116,8 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 어디까지 맡겨도 될까요?
               </h1>
               <p className={styles.heroCopy}>
-                실무자의 사용 기준, 도입 담당자의 우선순위, 보안 담당자의 통제 기준을
-                진단합니다.
+                실무자의 사용 기준, 도입 담당자의 우선순위, 보안 담당자의 통제
+                기준을 진단합니다.
               </p>
               <div className={styles.heroActions}>
                 <Link
@@ -103,9 +125,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   href="/survey/"
                   onClick={() => trackSurveyCta("hero")}
                 >
-                  역할별 AI 준비도 정밀진단
+                  AI 업무 자가점검 시작
                 </Link>
-                <button className={styles.textLink} type="button" onClick={handleProductClick}>
+                <button
+                  className={styles.textLink}
+                  type="button"
+                  onClick={handleProductClick}
+                >
                   예시 화면 보기 ↘
                 </button>
               </div>
@@ -115,7 +141,11 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 <li>보안·정책 담당자</li>
               </ul>
 
-              <section id="product" className={styles.showcase} aria-label="제품 화면 미리보기">
+              <section
+                id="product"
+                className={styles.showcase}
+                aria-label="제품 화면 미리보기"
+              >
                 <div className={styles.showcaseHead}>
                   <p>예시 화면 · 문서·규정 검색 Agent</p>
                   <span>샘플 데이터 · 제품 콘셉트</span>
@@ -133,7 +163,11 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   </div>
                   <MobileDashboard />
                 </div>
-                <div className={styles.featureTabs} role="tablist" aria-label="핵심 기능">
+                <div
+                  className={styles.featureTabs}
+                  role="tablist"
+                  aria-label="핵심 기능"
+                >
                   {productTabs.map((tab) => {
                     const selected = tab.id === activeTabId;
                     return (
@@ -158,7 +192,11 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
             </div>
           </section>
 
-          <section id="roles" className={styles.rolesSection} aria-labelledby="roles-heading">
+          <section
+            id="roles"
+            className={styles.rolesSection}
+            aria-labelledby="roles-heading"
+          >
             <div className={styles.wrap}>
               <div className={styles.rolesHead}>
                 <div>
@@ -193,7 +231,12 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                           role: role.role,
                           problem: role.defaultProblem,
                         });
-                        trackSurveyCta(role.placement, role.surveyPath.replace("/survey/", "").replace("/", ""));
+                        trackSurveyCta(
+                          role.placement,
+                          role.surveyPath
+                            .replace("/survey/", "")
+                            .replace("/", ""),
+                        );
                       }}
                     >
                       이 문제 선택 <span aria-hidden="true">→</span>
@@ -204,7 +247,11 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
             </div>
           </section>
 
-          <section id="process" className={styles.processSection} aria-labelledby="process-heading">
+          <section
+            id="process"
+            className={styles.processSection}
+            aria-labelledby="process-heading"
+          >
             <div className={`${styles.wrap} ${styles.processGrid}`}>
               <div>
                 <p className={styles.darkKicker}>처음 검증할 업무</p>
@@ -236,7 +283,11 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <p>기밀자료 없이 상담할 수 있습니다.</p>
                 </div>
               </div>
-              <div className={styles.deliverable} role="region" aria-label="파일럿 결과물">
+              <div
+                className={styles.deliverable}
+                role="region"
+                aria-label="파일럿 결과물"
+              >
                 <header>
                   <b>받게 되는 것</b>
                   <span>확인하는 결과</span>
@@ -255,7 +306,10 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
             </div>
           </section>
 
-          <section className={styles.finalCta} aria-labelledby="final-cta-heading">
+          <section
+            className={styles.finalCta}
+            aria-labelledby="final-cta-heading"
+          >
             <div className={styles.wrap}>
               <div className={styles.finalPanel}>
                 <h2 id="final-cta-heading">
@@ -272,7 +326,10 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   >
                     역할별 진단 시작
                   </Link>
-                  <a className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`} href="#product">
+                  <a
+                    className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`}
+                    href="#product"
+                  >
                     예시 화면 다시 보기
                   </a>
                 </div>
@@ -325,8 +382,8 @@ function MobileDashboard() {
           <h4>근거가 있는 답변</h4>
           <strong>연차 사용은 어떻게 신청하나요?</strong>
           <p>
-            인사시스템에서 신청할 수 있으며, 최소 1일 전 신청이 필요합니다. 팀장 승인 후
-            인사팀 검토로 완료됩니다.
+            인사시스템에서 신청할 수 있으며, 최소 1일 전 신청이 필요합니다. 팀장
+            승인 후 인사팀 검토로 완료됩니다.
           </p>
           <dl>
             <div>
@@ -349,7 +406,13 @@ function MobileDashboard() {
           ].map(([label, status]) => (
             <div className={styles.mobileTest} key={label}>
               <span>{label}</span>
-              <b className={status === "경고" ? styles.statusWarn : styles.statusOk}>{status}</b>
+              <b
+                className={
+                  status === "경고" ? styles.statusWarn : styles.statusOk
+                }
+              >
+                {status}
+              </b>
             </div>
           ))}
         </article>
@@ -362,7 +425,15 @@ function MobileDashboard() {
   );
 }
 
-function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
+function Metric({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
   return (
     <div className={styles.mobileKpi}>
       <span>{label}</span>

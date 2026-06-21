@@ -95,7 +95,7 @@
 
 .roleCard {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   padding: 24px;
 }
 
@@ -108,18 +108,31 @@
 .roleCard h2,
 .noticeBand h2,
 .optinPanel h2,
-.resultCard h2 {
+.resultCard h2,
+.summaryCard h2,
+.detailSection h2,
+.fairnessNotice h2 {
   margin: 0;
   font-size: 24px;
   line-height: 1.2;
   letter-spacing: 0;
 }
 
+.cardQuestion {
+  color: var(--color-ink) !important;
+  font-size: 18px;
+  font-weight: 790;
+}
+
 .roleCard p,
 .roleCard dd,
 .noticeBand p,
 .resultCard p,
-.optinPanel p {
+.optinPanel p,
+.summaryCard p,
+.detailList p,
+.detailList li,
+.fairnessNotice p {
   color: #535d6b;
   line-height: 1.65;
   word-break: keep-all;
@@ -193,6 +206,42 @@
   flex: 0 0 auto;
   color: var(--color-accent);
   font-weight: 820;
+}
+
+.linkRow {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.linkRow a {
+  min-height: 44px;
+  align-items: center;
+}
+
+.helperBlock {
+  width: min(var(--max-content-width), calc(100% - 40px));
+  margin: 22px auto 0;
+  border-top: 1px solid rgb(17 19 25 / 10%);
+  border-bottom: 1px solid rgb(17 19 25 / 10%);
+  padding: 22px 0;
+}
+
+.helperBlock h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.helperBlock ul {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding-left: 22px;
+  color: #535d6b;
+  line-height: 1.65;
 }
 
 .surveyPanel,
@@ -457,6 +506,88 @@
   padding-left: 22px;
 }
 
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.summaryCard {
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: #fff;
+  padding: 18px;
+}
+
+.detailSection {
+  border-top: 1px solid rgb(17 19 25 / 10%);
+  margin-top: 28px;
+  padding-top: 24px;
+}
+
+.detailList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.detailList details {
+  border: 1px solid rgb(17 19 25 / 10%);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.detailList summary {
+  min-height: 44px;
+  cursor: pointer;
+  padding: 13px 16px;
+  color: var(--color-ink);
+  font-weight: 820;
+  line-height: 1.35;
+}
+
+.detailList details > div {
+  border-top: 1px solid rgb(17 19 25 / 8%);
+  padding: 0 16px 16px;
+}
+
+.detailList ul,
+.detailList ol {
+  display: grid;
+  gap: 8px;
+  padding-left: 22px;
+}
+
+.legalTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.legalTable th,
+.legalTable td {
+  border: 1px solid rgb(17 19 25 / 12%);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.legalTable th {
+  background: rgb(17 19 25 / 4%);
+  color: var(--color-ink);
+}
+
+.fairnessNotice {
+  border: 1px solid rgb(45 91 168 / 22%);
+  border-radius: 8px;
+  background: rgb(45 91 168 / 7%);
+  margin-top: 24px;
+  padding: 18px;
+}
+
 .optinForm {
   display: grid;
   gap: 12px;
@@ -487,11 +618,17 @@
   .roleGrid,
   .resultGrid,
   .scorePanel,
-  .optionList {
+  .optionList,
+  .summaryGrid {
     grid-template-columns: 1fr;
   }
 
   .noticeBand {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .linkRow {
     align-items: flex-start;
     flex-direction: column;
   }
@@ -507,6 +644,7 @@
   .resultHero,
   .noticeBand,
   .optinPanel,
+  .helperBlock,
   .roleGrid,
   .resultGrid {
     width: min(100% - 28px, var(--max-content-width));
@@ -522,9 +660,14 @@
   .resultHero,
   .noticeBand,
   .optinPanel,
+  .summaryCard,
   .roleCard,
   .resultCard {
     padding: 18px;
+  }
+
+  .legalTable {
+    font-size: 14px;
   }
 
   .actions > *,

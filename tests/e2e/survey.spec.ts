@@ -20,7 +20,11 @@ async function acceptRequiredSurveyConsents(page: Page) {
   await expect(page.getByTestId("survey-progress")).toContainText("1/");
 }
 
-async function completeSurvey(page: Page, personaPath: string, expectedCount: number) {
+async function completeSurvey(
+  page: Page,
+  personaPath: string,
+  expectedCount: number,
+) {
   await page.goto(personaPath);
   await expect(page.getByTestId("survey-shell")).toHaveAttribute(
     "data-question-count",
@@ -29,14 +33,20 @@ async function completeSurvey(page: Page, personaPath: string, expectedCount: nu
   await acceptRequiredSurveyConsents(page);
 
   for (let index = 0; index < expectedCount; index += 1) {
-    await expect(page.getByTestId("survey-progress")).toContainText(`${index + 1}/${expectedCount}`);
+    await expect(page.getByTestId("survey-progress")).toContainText(
+      `${index + 1}/${expectedCount}`,
+    );
     await answerCurrentQuestion(page);
   }
 
   await page.getByRole("button", { name: "결과 확인" }).click();
   await expect(page).toHaveURL(/\/survey\/result\/$/);
-  await expect(page.getByRole("heading", { name: /AI 준비도 결과/ })).toBeVisible();
-  await expect(page.locator("body")).toContainText("이메일 입력 없이 기본 결과 확인 가능");
+  await expect(
+    page.getByRole("heading", { name: /AI 준비도 결과/ }),
+  ).toBeVisible();
+  await expect(page.locator("body")).toContainText(
+    "이메일 입력 없이 기본 결과 확인 가능",
+  );
 }
 
 test("homepage CTAs route to the role-based survey instead of opening the old modal", async ({
@@ -44,13 +54,17 @@ test("homepage CTAs route to the role-based survey instead of opening the old mo
 }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ })).toHaveAttribute(
-    "href",
-    "/survey/",
-  );
-  await page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ }).click();
+  await expect(
+    page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ }),
+  ).toHaveAttribute("href", "/survey/");
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: /역할별 AI 준비도/ })
+    .click();
   await expect(page).toHaveURL(/\/survey\/$/);
-  await expect(page.getByRole("heading", { name: "역할별 AI 준비도 정밀진단" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "내 역할에 맞는 점검을 선택하세요" }),
+  ).toBeVisible();
 });
 
 test("survey hub preserves UTM and links each persona without putting answers in URLs", async ({
@@ -63,8 +77,8 @@ test("survey hub preserves UTM and links each persona without putting answers in
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText(/약 7–10분 동안/)).toBeVisible();
-  await page.getByRole("link", { name: /대표·도입 담당자 진단 시작/ }).click();
+  await expect(page.getByText(/약 7~10분이 걸리며/)).toBeVisible();
+  await page.getByRole("link", { name: "도입 준비 점검 시작" }).click();
   await expect(page).toHaveURL(/\/survey\/leader\/$/);
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
@@ -74,7 +88,9 @@ test("survey hub preserves UTM and links each persona without putting answers in
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
-test("completes all persona surveys and shows result without email", async ({ page }) => {
+test("completes all persona surveys and shows result without email", async ({
+  page,
+}) => {
   await completeSurvey(page, "/survey/practitioner/", 24);
   await page.goto("/");
   await completeSurvey(page, "/survey/leader/", 25);
@@ -89,27 +105,33 @@ test("requires consent before showing the first question", async ({ page }) => {
   await expect(page.getByTestId("survey-question")).toHaveCount(0);
 
   await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
-  await expect(page.locator('[role="alert"]').filter({ hasText: "필수 동의" })).toContainText(
-    "필수 동의",
-  );
+  await expect(
+    page.locator('[role="alert"]').filter({ hasText: "필수 동의" }),
+  ).toContainText("필수 동의");
 
   await acceptRequiredSurveyConsents(page);
   await expect(page.getByTestId("survey-question")).toBeVisible();
 });
 
-test("does not write survey drafts to localStorage by default", async ({ page }) => {
+test("does not write survey drafts to localStorage by default", async ({
+  page,
+}) => {
   await page.goto("/survey/practitioner/");
   await acceptRequiredSurveyConsents(page);
 
   await answerCurrentQuestion(page);
 
   const draftKeys = await page.evaluate(() =>
-    Object.keys(window.localStorage).filter((key) => key.startsWith("agentproof-survey-draft-")),
+    Object.keys(window.localStorage).filter((key) =>
+      key.startsWith("agentproof-survey-draft-"),
+    ),
   );
   expect(draftKeys).toEqual([]);
 });
 
-test("stores only non-sensitive result summary in sessionStorage", async ({ page }) => {
+test("stores only non-sensitive result summary in sessionStorage", async ({
+  page,
+}) => {
   await completeSurvey(page, "/survey/leader/", 25);
 
   const storageState = await page.evaluate(() => ({
@@ -119,7 +141,10 @@ test("stores only non-sensitive result summary in sessionStorage", async ({ page
 
   expect(storageState.localResult).toBeNull();
   expect(storageState.sessionResult).not.toBeNull();
-  const parsed = JSON.parse(storageState.sessionResult ?? "{}") as Record<string, unknown>;
+  const parsed = JSON.parse(storageState.sessionResult ?? "{}") as Record<
+    string,
+    unknown
+  >;
   expect(parsed).not.toHaveProperty("answers");
   expect(JSON.stringify(parsed)).not.toContain("C01");
   expect(JSON.stringify(parsed)).not.toContain("L07");
@@ -137,14 +162,18 @@ test("records beta, interview, and pilot actions separately without analytics PI
   await page.getByLabel("이메일").fill("qa+agentproof@example.com");
   await page.getByLabel(/초기 사용자 참여 안내/).check();
   await page.getByRole("button", { name: "베타 신청 기록" }).click();
-  await expect(page.getByRole("status")).toContainText("저장소가 연결되면 별도 기록됩니다");
+  await expect(page.getByRole("status")).toContainText(
+    "저장소가 연결되면 별도 기록됩니다",
+  );
 
   await page.getByRole("button", { name: "20분 고객 인터뷰 참여" }).click();
   await page.getByLabel("이메일").fill("qa+interview@example.com");
   await page.getByLabel(/후속 고객 인터뷰/).check();
   await page.getByRole("button", { name: "인터뷰 신청 기록" }).click();
 
-  await page.getByRole("button", { name: "우리 조직 파일럿 상담 신청" }).click();
+  await page
+    .getByRole("button", { name: "우리 조직 파일럿 상담 신청" })
+    .click();
   await page.getByLabel("이메일").fill("qa+pilot@example.com");
   await page.getByLabel("회사 또는 팀명").fill("QA 테스트 팀");
   await page.getByLabel(/파일럿 상담 요청/).check();
@@ -159,15 +188,20 @@ test("records beta, interview, and pilot actions separately without analytics PI
   expect(eventText).not.toContain("QA 테스트 팀");
 });
 
-test("privacy and beta terms pages expose the required contact email", async ({ page }) => {
+test("privacy and beta terms pages expose the required contact email", async ({
+  page,
+}) => {
   await page.goto("/privacy/request/");
-  await expect(page.getByRole("heading", { name: /권리 행사 요청/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /agentproof.ai@gmail.com/ })).toHaveAttribute(
-    "href",
-    /mailto:agentproof\.ai@gmail\.com/,
-  );
+  await expect(
+    page.getByRole("heading", { name: /개인정보 요청 방법/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /agentproof.ai@gmail.com/ }),
+  ).toHaveAttribute("href", /mailto:agentproof\.ai@gmail\.com/);
 
   await page.goto("/beta-terms/");
-  await expect(page.getByRole("heading", { name: /초기 사용자 참여 프로그램/ })).toBeVisible();
-  await expect(page.locator("body")).toContainText("현금 가치가 없습니다");
+  await expect(
+    page.getByRole("heading", { name: /초기 사용자 참여 안내/ }),
+  ).toBeVisible();
+  await expect(page.locator("body")).toContainText("현금으로 바꾸거나");
 });

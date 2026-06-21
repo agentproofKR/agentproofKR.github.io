@@ -10,7 +10,9 @@ for (const viewport of [
   { width: 360, height: 800 },
   { width: 320, height: 568 },
 ]) {
-  test(`has no horizontal overflow at ${viewport.width}px`, async ({ page }) => {
+  test(`has no horizontal overflow at ${viewport.width}px`, async ({
+    page,
+  }) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
     const metrics = await page.evaluate(() => ({
@@ -24,19 +26,25 @@ for (const viewport of [
 
 test("passes core automated accessibility checks", async ({ page }) => {
   await page.goto("/");
-  const results = await new AxeBuilder({ page }).exclude("#__next-route-announcer__").analyze();
+  const results = await new AxeBuilder({ page })
+    .exclude("#__next-route-announcer__")
+    .analyze();
 
   expect(results.violations).toEqual([]);
 });
 
-test("keyboard users can start the survey and move through the first question", async ({ page }) => {
+test("keyboard users can start the survey and move through the first question", async ({
+  page,
+}) => {
   await page.goto("/");
-  const opener = page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ });
+  const opener = page
+    .getByRole("banner")
+    .getByRole("link", { name: /역할별 AI 준비도/ });
   await opener.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const practitioner = page.getByRole("link", { name: /실무자 진단 시작/ });
+  const practitioner = page.getByRole("link", { name: "실무자 점검 시작" });
   await practitioner.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/practitioner\/$/);

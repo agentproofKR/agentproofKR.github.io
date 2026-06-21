@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 import { SurveyHub } from "@/components/survey/SurveyHub";
 
 export const metadata: Metadata = {
-  title: "역할별 AI 준비도 정밀진단 | AgentProof",
+  title: "AI 업무 자가점검 | AgentProof",
   description:
-    "실무자, 대표·도입 담당자, 보안·정책 담당자를 위한 AgentProof AI 준비도 정밀진단입니다.",
+    "실무자, 대표·도입 담당자, 보안·정책 담당자 중 내 역할에 맞는 AgentProof 점검을 선택합니다.",
   openGraph: {
-    title: "역할별 AI 준비도 정밀진단 | AgentProof",
-    description: "약 7–10분 설문 후 이메일 없이 기본 결과를 바로 확인합니다.",
+    title: "AI 업무 자가점검 | AgentProof",
+    description: "약 7~10분 동안 답하고 이메일 없이 결과를 볼 수 있습니다.",
     url: "/survey/",
   },
 };
