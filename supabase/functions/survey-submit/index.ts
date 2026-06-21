@@ -1,5 +1,6 @@
 const functionName = "survey-submit";
 const allowedOrigins = new Set([
+  "https://agentproof.ain99.net",
   "https://agentproofkr.github.io",
   "http://localhost:3000",
   "http://127.0.0.1:3000",

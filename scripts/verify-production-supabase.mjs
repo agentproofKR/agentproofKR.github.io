@@ -19,6 +19,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const accessToken = process.env.SUPABASE_ACCESS_TOKEN;
 const projectRef = process.env.SUPABASE_PROJECT_REF;
 const functionUrl = process.env.NEXT_PUBLIC_SURVEY_API_URL;
+const productionOrigin = process.env.PRODUCTION_ORIGIN ?? "https://agentproof.ain99.net";
 const qaPrefix = `qa-${Date.now()}`;
 const personas = ["practitioner", "leader", "security"];
 const managedSessionIds = new Set();
@@ -116,7 +117,7 @@ async function runVerification() {
     managedSessionIds.add(payload.sessionId);
     managedIdempotencyKeys.add(payload.idempotencyKey);
 
-    const response = await postFunction(payload, "https://agentproofkr.github.io");
+    const response = await postFunction(payload, productionOrigin);
     assert(response.status === 201, `${persona} survey submission failed: ${response.status}`);
 
     evidence.submissions[persona] = await verifyStoredSurvey(payload);
@@ -124,7 +125,7 @@ async function runVerification() {
     for (const requestType of ["beta", "interview", "pilot"]) {
       const contactPayload = buildContactPayload(payload, requestType);
       managedIdempotencyKeys.add(contactPayload.idempotencyKey);
-      const contactResponse = await postFunction(contactPayload, "https://agentproofkr.github.io");
+      const contactResponse = await postFunction(contactPayload, productionOrigin);
       assert(contactResponse.status === 201, `${persona} ${requestType} contact failed: ${contactResponse.status}`);
     }
 
@@ -139,12 +140,12 @@ async function runVerification() {
       String(row.encrypted_email ?? "").includes("@"),
     ).length;
 
-    const replay = await postFunction(payload, "https://agentproofkr.github.io");
+    const replay = await postFunction(payload, productionOrigin);
     evidence.security[`${persona}ReplayStatus`] = replay.status;
   }
 
   evidence.security.honeypotStatus = (
-    await postFunction({ ...buildSurveyPayload("leader"), honeypot: "filled" }, "https://agentproofkr.github.io")
+    await postFunction({ ...buildSurveyPayload("leader"), honeypot: "filled" }, productionOrigin)
   ).status;
   evidence.security.invalidQuestionStatus = (
     await postFunction(
@@ -154,7 +155,7 @@ async function runVerification() {
         sessionId: crypto.randomUUID(),
         answers: { X999: "forged" },
       },
-      "https://agentproofkr.github.io",
+      productionOrigin,
     )
   ).status;
   evidence.security.invalidAnswerStatus = (
@@ -165,13 +166,13 @@ async function runVerification() {
         sessionId: crypto.randomUUID(),
         answers: { ...personaAnswers("leader", commonAnswers("leader")), U01: "<script>" },
       },
-      "https://agentproofkr.github.io",
+      productionOrigin,
     )
   ).status;
   evidence.security.oversizedPayloadStatus = (
     await fetch(functionUrl, {
       method: "POST",
-      headers: { origin: "https://agentproofkr.github.io", "content-type": "application/json" },
+      headers: { origin: productionOrigin, "content-type": "application/json" },
       body: JSON.stringify({ fill: "x".repeat(90_000) }),
     })
   ).status;
@@ -395,7 +396,7 @@ async function triggerRateLimit() {
         sessionId: crypto.randomUUID(),
         answers: { X999: "forged" },
       },
-      "https://agentproofkr.github.io",
+      productionOrigin,
     );
     lastStatus = response.status;
     if (lastStatus === 429) return lastStatus;
