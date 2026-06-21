@@ -29,9 +29,11 @@ NEXT_PUBLIC_LANDING_VARIANT=v4.1
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 ```
 
-GitHub Pages에는 서버 런타임이 없으므로 `/api/leads`는 제공하지 않습니다. 리드 폼은
-클라이언트 검증 뒤 `agentproof.ai@gmail.com`로 보내는 `mailto:` fallback을 제공합니다.
-서버 저장이 연결되지 않은 상태에서 저장 성공 메시지를 표시하지 않습니다.
+GitHub Pages에는 자체 서버 런타임이 없으므로 `/api/leads`는 제공하지 않습니다. 과거 리드 폼은
+클라이언트 검증 뒤 `agentproof.ai@gmail.com`로 보내는 `mailto:` fallback을 사용합니다.
+역할별 설문 저장은 `NEXT_PUBLIC_SURVEY_API_URL`이 Supabase Edge Function으로 설정된 경우에만
+외부 함수로 전송합니다. 저장소가 연결되지 않은 상태에서는 저장 성공 메시지를 표시하지 않고,
+결과 요약만 현재 브라우저 세션에 표시합니다.
 
 ## 검증
 
@@ -74,5 +76,5 @@ GitHub Pages 배포는 `.github/workflows/deploy-pages.yml`에서 `main` push와
 GitHub Actions로 설정되어야 합니다.
 
 production smoke에서는 실제 도메인 HTTPS 접속, CSS/JS 로드, PC·모바일 렌더링,
-CTA·모달·메일 fallback, analytics PII 미노출을 확인합니다. DB 저장과 운영자 알림은
-GitHub Pages 정적 배포 범위 밖입니다.
+CTA·역할별 설문 진입, analytics PII 미노출을 확인합니다. Supabase 설문 저장, RLS,
+QA 데이터 삭제는 `verify:production:supabase`에서 별도로 검증합니다.

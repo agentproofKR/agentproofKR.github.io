@@ -148,7 +148,7 @@ const summary = {
   productionSmoke: {
     status: process.env.STAGING_BASE_URL || process.env.QA_BASE_URL ? "checked-target-url" : "local-default-url",
     note:
-      "This static GitHub Pages build has no server-side lead storage. Form submission is verified as a mailto fallback, not as DB persistence.",
+      "GitHub Pages hosts the static frontend. Survey storage is handled only through the configured external Supabase Edge Function; this smoke skips live QA writes and leaves storage verification to verify:production:supabase.",
   },
 };
 
