@@ -107,7 +107,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
 
   const goNext = () => {
     if (!isAnswered(currentQuestion, answers[currentQuestion.id])) {
-      setError("응답을 선택해주세요.");
+      setError("답변을 선택해주세요.");
       return;
     }
 
@@ -216,18 +216,19 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           <Link className={styles.backLink} href="/survey/">
             설문 소개로 돌아가기
           </Link>
-          <p className={styles.eyebrow}>3분 AI 업무 위험도 점검</p>
+          <p className={styles.eyebrow}>3분 AI 안전 체크</p>
           <h1 id="consent-title" ref={headingRef} tabIndex={-1}>
-            결과를 보여드리기 위해 필요한 확인이에요
+            결과를 보여주기 위한 확인입니다
           </h1>
           <p className={styles.lead}>
-            이 설문은 AI 업무 사용 상황을 점검하고 결과를 보여드리기 위해 사용됩니다.
-            이름, 전화번호, 회사 기밀은 묻지 않습니다. 이메일은 결과 확인 후 원할 때만 입력합니다.
+            이름, 전화번호, 회사 기밀은 묻지 않습니다.
+            <br />
+            이메일은 마지막에만 선택합니다.
           </p>
           <ConsentPanel consents={consents} onChange={setConsents} />
           <StorageNotice mode={submissionMode} />
           <p className={styles.policyLink}>
-            <Link href="/privacy/">개인정보처리방침 보기</Link>
+            <Link href="/privacy/">자세한 개인정보 안내 보기</Link>
           </p>
           {error ? (
             <p className={styles.errorBox} role="alert">
@@ -241,7 +242,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
               data-testid="survey-consent-continue"
               onClick={beginSurvey}
             >
-              동의하고 3분 점검 시작
+              동의하고 시작하기
             </button>
           </div>
         </section>
@@ -262,11 +263,10 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </Link>
           <p className={styles.eyebrow}>제출 전 확인</p>
           <h1 id="confirm-title" ref={headingRef} tabIndex={-1}>
-            제출 전 확인
+            이제 결과를 볼까요?
           </h1>
           <p className={styles.lead}>
-            결과는 즉시 계산되며, 이메일 입력 없이 기본 결과 확인 가능. 설문 답변은 URL에
-            포함되지 않습니다.
+            결과는 바로 계산됩니다. 설문 답변은 URL에 담기지 않고, 이메일도 묻지 않습니다.
           </p>
           <StorageNotice mode={submissionMode} />
           {error ? (
@@ -285,7 +285,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
               disabled={isSubmitting}
               onClick={submitForResult}
             >
-              {isSubmitting ? "저장 중" : "결과 확인"}
+              {isSubmitting ? "저장 중" : "결과 보기"}
             </button>
           </div>
         </section>
@@ -301,7 +301,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
     >
       <section className={styles.surveyPanel} aria-labelledby="question-title">
         <Link className={styles.backLink} href="/survey/">
-            설문 소개로 돌아가기
+          설문 소개로 돌아가기
         </Link>
         <div className={styles.progressRow}>
           <span data-testid="survey-progress">
@@ -408,14 +408,11 @@ function ConsentPanel({
           checked={consents.surveyProcessing}
           onChange={(event) => setConsent("surveyProcessing", event.currentTarget.checked)}
         />
-        <span>
-          [필수] AgentProof 고객조사 및 서비스 개발을 위한 개인정보 수집·이용 동의
-        </span>
+        <span>답변을 결과 계산에 사용하는 데 동의합니다.</span>
       </label>
       <p>
-        수집 항목은 조직 규모, AI 사용 상황, 설문 응답, 세션 식별자, 제출 시각,
-        UTM입니다. 이름, 전화번호, 회사명, 고객명, 회사 기밀은 묻지 않습니다.
-        보유 기간은 제출일로부터 6개월입니다.
+        수집 항목은 설문 답변, 결과 점수, 제출 시각, UTM입니다. 이름, 전화번호,
+        회사명, 고객명, 회사 기밀은 묻지 않습니다. 설문 답변은 6개월 보관합니다.
       </p>
     </div>
   );
@@ -423,7 +420,7 @@ function ConsentPanel({
 
 function StorageNotice({ mode }: { mode: SurveySubmissionMode }) {
   if (mode.mode === "live") {
-    return <p className={styles.infoBox}>설문 저장소가 연결되어 있으며, 제출 후 저장됩니다.</p>;
+    return <p className={styles.infoBox}>설문 저장소가 연결되어 있으며 제출 후 저장됩니다.</p>;
   }
   return <p className={styles.warningBox}>{mode.message}</p>;
 }

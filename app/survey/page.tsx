@@ -3,14 +3,14 @@ import type { Metadata } from "next";
 import { SurveyHub } from "@/components/survey/SurveyHub";
 
 export const metadata: Metadata = {
-  title: "3분 AI 업무 위험도 점검 | AgentProof",
+  title: "3분 AI 안전 체크 | AgentProof",
   description:
-    "ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent 사용 중 생길 수 있는 오답, 기밀 유출, 승인 책임, 보안 기준 문제를 3분 안에 점검합니다.",
+    "10문항으로 AI 사용 위험과 이번 주 할 일을 이메일 없이 확인합니다.",
   alternates: {
     canonical: "/survey/",
   },
   openGraph: {
-    title: "3분 AI 업무 위험도 점검 | AgentProof",
+    title: "3분 AI 안전 체크 | AgentProof",
     description: "10문항에 답하고 이메일 없이 결과를 볼 수 있습니다.",
     url: "/survey/",
     images: [

@@ -26,20 +26,20 @@ let cachedResultValue: StoredResult | null = null;
 
 const requestLabels = {
   beta: {
-    open: "체크리스트 이메일로 받기",
-    submit: "체크리스트 요청 기록",
+    open: "체크리스트 받기",
+    submit: "체크리스트 요청하기",
     consent: "[선택] AgentProof 초기 사용자 참여 안내 동의",
     event: "beta_optin",
   },
   interview: {
-    open: "20분 인터뷰 참여하기",
-    submit: "인터뷰 신청 기록",
+    open: "인터뷰하기",
+    submit: "인터뷰 신청하기",
     consent: "[선택] 후속 고객 인터뷰 참여 안내 동의",
     event: "interview_optin",
   },
   pilot: {
-    open: "우리 회사 AI 사용 기준 상담하기",
-    submit: "상담 요청 기록",
+    open: "우리 회사 상담하기",
+    submit: "상담 요청하기",
     consent: "[선택] 파일럿 상담 요청",
     event: "pilot_requested",
   },
@@ -69,10 +69,10 @@ export function SurveyResult() {
     return (
       <main className={styles.page}>
         <section className={styles.surveyPanel}>
-          <h1>AI 자가점검 결과</h1>
-          <p>저장된 결과가 없습니다. 역할별 진단을 먼저 완료해주세요.</p>
+          <h1>AI 안전 체크 결과</h1>
+          <p>저장된 결과가 없습니다. 3분 체크를 먼저 완료해주세요.</p>
           <Link className={styles.primaryLink} href="/survey/">
-            진단 시작
+            시작하기
           </Link>
         </section>
       </main>
@@ -85,18 +85,20 @@ export function SurveyResult() {
     <main className={styles.page}>
       <section className={styles.resultHero} aria-labelledby="result-title">
         <Link className={styles.backLink} href="/survey/">
-          새 진단 시작
+          새 체크 시작
         </Link>
-        <p className={styles.eyebrow}>자가점검 결과</p>
-        <h1 id="result-title">AI 업무 위험도: {result.displayRiskBand}</h1>
+        <p className={styles.eyebrow}>AI 안전 체크 결과</p>
+        <h1 id="result-title">AI 안전 체크 결과</h1>
         <p className={styles.lead}>
-          이메일 입력 없이 기본 결과 확인 가능. 현재 조직의 AI 사용 답변을 바탕으로
-          가장 먼저 확인할 위험과 이번 주 할 일을 정리했습니다. 본 결과는 보안 인증,
-          법률 자문 또는 규제 적합성 보증이 아닙니다.
+          지금 먼저 막아야 할 위험과
+          <br />
+          이번 주 할 일을 정리했습니다.
+          <br />
+          보안 인증이나 법률 자문은 아닙니다.
         </p>
         <div className={styles.scorePanel}>
           <div>
-            <span>현재 상태</span>
+            <span>점수</span>
             <strong>{result.displayRiskBand}</strong>
             <p>{getRiskSummary(result.displayRiskBand)}</p>
           </div>
@@ -110,7 +112,7 @@ export function SurveyResult() {
 
       <section className={styles.resultGrid} aria-label="결과 세부 항목">
         <article className={styles.resultCard}>
-          <h2>항목별 결과</h2>
+          <h2>점수</h2>
           {Object.entries(result.dimensionScores).map(([dimension, score]) => (
             <div className={styles.scoreRow} key={dimension}>
               <span>{dimension}</span>
@@ -120,7 +122,7 @@ export function SurveyResult() {
           ))}
         </article>
         <article className={styles.resultCard}>
-          <h2>가장 먼저 확인할 위험 3가지</h2>
+          <h2>먼저 볼 위험</h2>
           <ol>
             {result.topRisks.map((risk) => (
               <li key={risk}>{risk}</li>
@@ -136,22 +138,19 @@ export function SurveyResult() {
           </ol>
         </article>
         <article className={styles.resultCard}>
-          <h2>AgentProof가 도울 수 있는 부분</h2>
+          <h2>AgentProof로 관리하기</h2>
           <ol>
-            <li>답변 근거: AI 답변이 어떤 문서와 기준에 근거했는지 확인합니다.</li>
-            <li>위험 테스트: 오답, 개인정보, 권한 우회, 프롬프트 공격 가능성을 점검합니다.</li>
-            <li>승인 기록: 사람이 검토하고 승인해야 하는 과정을 남깁니다.</li>
+            <li>답변 근거 / 출처 없는 답을 걸러냅니다.</li>
+            <li>위험 테스트 / 오답·기밀·권한 문제를 찾습니다.</li>
+            <li>승인 기록 / 누가 확인했는지 남깁니다.</li>
           </ol>
         </article>
       </section>
 
       <section className={styles.noticeBand} aria-labelledby="reward-title">
         <div>
-          <h2 id="reward-title">결과를 다음 행동으로 이어가기</h2>
-          <p>
-            원하면 체크리스트를 이메일로 받거나 20분 인터뷰, 파일럿 상담을 선택할 수 있습니다.
-            이메일은 이 선택 CTA에서만 입력합니다.
-          </p>
+          <h2 id="reward-title">이제 뭘 하면 될까요?</h2>
+          <p>원하면 다음 단계로 이어갈 수 있어요.</p>
         </div>
         <div className={styles.inlineActions}>
           <button className={styles.secondaryButton} type="button" onClick={() => window.print()}>
@@ -164,7 +163,7 @@ export function SurveyResult() {
       </section>
 
       <section className={styles.optinPanel} aria-labelledby="optional-actions-title">
-        <h2 id="optional-actions-title">선택 참여</h2>
+        <h2 id="optional-actions-title">다음 단계</h2>
         <div className={styles.inlineActions}>
           {(Object.keys(requestLabels) as RequestType[]).map((requestType) => (
             <button

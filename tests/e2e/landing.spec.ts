@@ -11,12 +11,11 @@ test("renders the V6 landing baseline and routes CTAs to the unified survey", as
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: /회사에서 AI 쓰고 있는데,\s*어디까지 믿어도 될까요\?/,
+      name: /AI 답변,\s*그냥 믿고 쓰고 있나요\?/,
     }),
   ).toBeVisible();
-  await expect(page.locator("#product")).toContainText(
-    "결과 예시 · AI 업무 위험도",
-  );
+  await expect(page.locator("#result-example")).toContainText("결과는 이렇게 나옵니다");
+  await expect(page.locator("#product")).toContainText("AgentProof로 이렇게 관리합니다");
   await expect(page.locator("#product")).toContainText("SAMPLE DATA");
   await expect(
     page.getByRole("img", { name: /AgentProof 업무용 AI 검증 대시보드 샘플/ }),
@@ -24,19 +23,19 @@ test("renders the V6 landing baseline and routes CTAs to the unified survey", as
   await expect(
     page.getByRole("heading", {
       level: 2,
-      name: /AI를 쓰기 시작하면,\s*이런 문제가 먼저 생깁니다/,
+      name: /AI 쓸 때,\s*가장 많이 막히는 3가지/,
     }),
   ).toBeVisible();
 
   const headerCta = page
     .getByRole("banner")
-    .getByRole("link", { name: /3분 점검/ });
+    .getByRole("link", { name: /3분 체크/ });
   await expect(headerCta).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("link", { name: "AI 업무 자가점검 시작" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "무료로 AI 업무 위험도 확인하기" }).first(),
+    page.getByRole("link", { name: "바로 확인하기" }).first(),
   ).toHaveAttribute("href", "/survey/");
 
   const events = await page.evaluate(() => window.dataLayer);
@@ -51,19 +50,19 @@ test("links each landing problem card to the unified survey with problem intent"
   await expect(
     page
       .locator("article")
-      .filter({ hasText: "AI 답변을 믿어도 될지 모르겠어요" })
-      .getByRole("link", { name: /이 문제로 점검하기/ }),
+      .filter({ hasText: "AI가 틀리면" })
+      .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=trust");
   await expect(
     page
       .locator("article")
-      .filter({ hasText: "어떤 업무부터 도입해야 할지 모르겠어요" })
-      .getByRole("link", { name: /이 문제로 점검하기/ }),
+      .filter({ hasText: "AI 도입" })
+      .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=adoption");
   await expect(
     page
       .locator("article")
-      .filter({ hasText: "보안·개인정보·승인 기준이 없어요" })
-      .getByRole("link", { name: /이 문제로 점검하기/ }),
+      .filter({ hasText: "회사 자료" })
+      .getByRole("link", { name: /확인하기/ }),
   ).toHaveAttribute("href", "/survey/?problem=security");
 });

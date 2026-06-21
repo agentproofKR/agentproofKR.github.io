@@ -8,7 +8,7 @@ export const stageOptions = [
   "개인·팀에서 AI 사용 중",
   "조직 도입 검토 중",
   "파일럿 운영 중",
-  "정책·보안 기준 수립 중",
+  "정책·보안 기준 마련 중",
 ] as const;
 
 export const problemOptions = [
@@ -20,13 +20,13 @@ export const problemOptions = [
 ] as const;
 export type ProblemOption = (typeof problemOptions)[number];
 
-export const followupOptions = ["역할별 체크리스트", "예시 결과 요약", "파일럿 상담"] as const;
+export const followupOptions = ["체크리스트 받기", "결과 예시 요약", "우리 회사 상담"] as const;
 export type FollowupOption = (typeof followupOptions)[number];
 
 export const followupEventByOption = {
-  "역할별 체크리스트": "followup_checklist",
-  "예시 결과 요약": "followup_sample_report",
-  "파일럿 상담": "followup_pilot",
+  "체크리스트 받기": "followup_checklist",
+  "결과 예시 요약": "followup_sample_report",
+  "우리 회사 상담": "followup_pilot",
 } as const;
 
 export const productTabs = [
@@ -34,48 +34,48 @@ export const productTabs = [
     id: "evidence",
     number: "01",
     title: "답변 근거",
-    body: "답변과 함께 출처와 문서 버전을 확인합니다.",
+    body: "출처 없는 답은 걸러냅니다.",
   },
   {
     id: "risk",
     number: "02",
     title: "위험 테스트",
-    body: "오답·정책·권한 위험을 반복 테스트합니다.",
+    body: "오답·기밀·권한 문제를 찾습니다.",
   },
   {
     id: "approval",
     number: "03",
     title: "승인 기록",
-    body: "검토·승인·변경 이력을 기록합니다.",
+    body: "누가 확인했는지 남깁니다.",
   },
 ] as const;
 
 export const roleProblemCards = [
   {
     index: "01",
-    role: "AI 답변을 믿어도 될지 모르겠어요",
+    role: "AI가 틀리면\n누가 책임지죠?",
     placement: "problem_trust",
     surveyPath: "/survey/?problem=trust",
-    problem: "오답, 출처 부족, 보고서 오류가 걱정되는 경우",
-    outcome: "이 문제로 점검하기",
+    problem: "오답·출처·보고서 오류",
+    outcome: "믿어도 되는 답인지 확인",
     defaultProblem: "trust",
   },
   {
     index: "02",
-    role: "어떤 업무부터 도입해야 할지 모르겠어요",
+    role: "AI 도입,\n어디부터 하죠?",
     placement: "problem_adoption",
     surveyPath: "/survey/?problem=adoption",
-    problem: "효과, 비용, 우선순위, 파일럿 범위가 고민인 경우",
-    outcome: "이 문제로 점검하기",
+    problem: "업무·비용·우선순위",
+    outcome: "먼저 바꿀 업무 찾기",
     defaultProblem: "adoption",
   },
   {
     index: "03",
-    role: "보안·개인정보·승인 기준이 없어요",
+    role: "회사 자료,\n넣어도 되나요?",
     placement: "problem_security",
     surveyPath: "/survey/?problem=security",
-    problem: "회사 자료 입력, 미승인 AI 사용, 책임 소재가 걱정되는 경우",
-    outcome: "이 문제로 점검하기",
+    problem: "보안·개인정보·승인 기준",
+    outcome: "입력 금지 기준 정하기",
     defaultProblem: "security",
   },
 ] as const;
@@ -83,23 +83,23 @@ export const roleProblemCards = [
 export const processSteps = [
   {
     number: "01",
-    title: "3분 점검",
-    body: "AI 사용 상황과 가장 불안한 점을 선택합니다.",
+    title: "답하기",
+    body: "10문항만 선택합니다.",
   },
   {
     number: "02",
-    title: "결과 확인",
-    body: "위험도, 먼저 볼 문제, 이번 주 할 일을 확인합니다.",
+    title: "보기",
+    body: "위험과 할 일을 바로 봅니다.",
   },
   {
     number: "03",
-    title: "선택 참여",
-    body: "원하면 체크리스트, 인터뷰, 파일럿 상담을 신청합니다.",
+    title: "받기",
+    body: "원하면 체크리스트를 받습니다.",
   },
 ] as const;
 
 export const pilotDeliverables = [
   { number: "01", title: "업무별 위험 지도" },
-  { number: "02", title: "역할별 실행 기준" },
+  { number: "02", title: "할 일 실행 기준" },
   { number: "03", title: "자가진단 결과 요약" },
 ] as const;

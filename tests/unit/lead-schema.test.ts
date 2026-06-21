@@ -6,7 +6,7 @@ const validLead = {
   role: "대표·도입 담당자",
   stage: "조직 도입 검토 중",
   problem: "어떤 업무부터 도입해야 할지 모르겠다",
-  followup: "예시 결과 요약",
+  followup: "결과 예시 요약",
   email: "QA+AgentProof@Example.COM",
   focusArea: "  사내 문서 검색 Agent의 답변 근거와 권한을 검증하고 싶습니다.  ",
   consent: true,
@@ -27,7 +27,7 @@ describe("lead schema", () => {
 
     expect(parsed.email).toBe("qa+agentproof@example.com");
     expect(parsed.problem).toBe("어떤 업무부터 도입해야 할지 모르겠다");
-    expect(parsed.followup).toBe("예시 결과 요약");
+    expect(parsed.followup).toBe("결과 예시 요약");
     expect(parsed.focusArea).toBe(
       "사내 문서 검색 Agent의 답변 근거와 권한을 검증하고 싶습니다.",
     );

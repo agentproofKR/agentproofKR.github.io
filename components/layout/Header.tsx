@@ -36,10 +36,10 @@ export function Header({ onNavClick }: HeaderProps) {
             문제
           </a>
           <a href="#result-example" onClick={() => onNavClick("#result-example")}>
-            결과 예시
+            결과
           </a>
-          <a href="#process" onClick={() => onNavClick("#process")}>
-            진행 방식
+          <a href="#product" onClick={() => onNavClick("#product")}>
+            대시보드
           </a>
           <a href="#faq" onClick={() => onNavClick("#faq")}>
             FAQ
@@ -49,7 +49,7 @@ export function Header({ onNavClick }: HeaderProps) {
           className={`${styles.button} ${styles.buttonDark} ${styles.headerButton}`}
           href="/survey/"
         >
-          3분 점검
+          3분 체크
         </Link>
       </div>
     </header>

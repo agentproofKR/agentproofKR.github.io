@@ -45,11 +45,11 @@ const aiStageOptions = [
 ] as const satisfies readonly SurveyOption[];
 
 const aiTypeOptions = [
-  { value: "gen_ai", label: "ChatGPT, Gemini, Claude 등 생성형 AI" },
-  { value: "copilot", label: "Microsoft 365 Copilot 또는 유사 업무 Copilot" },
+  { value: "gen_ai", label: "ChatGPT·Claude·Gemini" },
+  { value: "copilot", label: "Copilot" },
   { value: "internal_chatbot", label: "사내 AI 챗봇" },
   { value: "rag", label: "문서검색·RAG" },
-  { value: "agent_automation", label: "AI Agent 또는 업무 자동화" },
+  { value: "agent_automation", label: "AI Agent·자동화" },
   { value: "coding", label: "개발·코딩 도구" },
   { value: "media_generation", label: "이미지·영상 생성 도구" },
   { value: "none", label: "아직 없음" },
@@ -178,7 +178,7 @@ const dataInputOptions = [
   { value: "public_only", label: "공개 정보만 입력한다", score: 4 },
   { value: "internal_general", label: "일반 사내자료를 입력한 적이 있다", score: 2 },
   { value: "customer_contract", label: "고객·계약 정보를 입력한 적이 있다", score: 1 },
-  { value: "personal_confidential", label: "개인정보나 회사 기밀을 입력한 적이 있다", score: 0 },
+  { value: "personal_confidential", label: "개인정보·기밀을 넣은 적 있다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
@@ -202,21 +202,21 @@ const followupPreferenceOptions = [
   { value: "result_only", label: "결과만 확인하고 싶다" },
   { value: "checklist", label: "체크리스트를 받고 싶다" },
   { value: "interview", label: "20분 인터뷰에 참여할 수 있다" },
-  { value: "pilot", label: "우리 회사 상황으로 파일럿 상담을 받고 싶다" },
+  { value: "pilot", label: "우리 회사 상담을 받고 싶다" },
   { value: "later", label: "나중에 다시 보고 싶다" },
 ] as const satisfies readonly SurveyOption[];
 
 export const unifiedCoreQuestions = [
-  { id: "U01", text: "지금 가장 가까운 상황은 무엇인가요?", type: "single", options: situationOptions, scored: false },
-  { id: "U02", text: "조직 규모는 어느 정도인가요?", type: "single", options: orgSizeOptions, scored: false },
-  { id: "U03", text: "현재 사용하거나 검토 중인 AI는 무엇인가요?", type: "multi", options: aiTypeOptions, maxSelections: 4, scored: false },
-  { id: "U04", text: "AI를 주로 어떤 업무에 쓰거나 쓰고 싶나요?", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
-  { id: "U05", text: "AI 사용에서 가장 불안한 점은 무엇인가요?", type: "single", options: concernOptions, scored: false },
-  { id: "U06", text: "AI에 회사 자료나 고객 정보를 입력한 적이 있나요?", type: "single", options: dataInputOptions, scored: true, dimension: "정보 입력 위험" },
-  { id: "U07", text: "AI 답변을 업무에 쓰기 전에 사람이 다시 확인하나요?", type: "single", options: humanReviewOptions, scored: true, dimension: "답변 검토 기준" },
-  { id: "U08", text: "회사나 팀에 AI 사용 기준이 있나요?", type: "single", options: policyOptions, scored: true, dimension: "사용 기준 성숙도" },
-  { id: "U09", text: "지금 가장 먼저 필요한 도움은 무엇인가요?", type: "single", options: supportOptions, scored: false },
-  { id: "U10", text: "결과를 본 뒤 어떤 후속 참여가 가장 편한가요?", type: "single", options: followupPreferenceOptions, scored: false },
+  { id: "U01", text: "지금 상황은?", type: "single", options: situationOptions, scored: false },
+  { id: "U02", text: "팀 규모는?", type: "single", options: orgSizeOptions, scored: false },
+  { id: "U03", text: "지금 쓰는 AI는?", type: "multi", options: aiTypeOptions, maxSelections: 4, scored: false },
+  { id: "U04", text: "AI로 하는 일은?", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
+  { id: "U05", text: "가장 불안한 건?", type: "single", options: concernOptions, scored: false },
+  { id: "U06", text: "회사 자료를 넣은 적 있나요?", type: "single", options: dataInputOptions, scored: true, dimension: "정보 입력 위험" },
+  { id: "U07", text: "사람이 다시 확인하나요?", type: "single", options: humanReviewOptions, scored: true, dimension: "답변 검토 기준" },
+  { id: "U08", text: "AI 사용 기준이 있나요?", type: "single", options: policyOptions, scored: true, dimension: "사용 기준 성숙도" },
+  { id: "U09", text: "지금 필요한 건?", type: "single", options: supportOptions, scored: false },
+  { id: "U10", text: "다음에 뭘 받을까요?", type: "single", options: followupPreferenceOptions, scored: false },
 ] as const satisfies readonly SurveyQuestion[];
 
 const unifiedDimensions = ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"] as const;
@@ -408,9 +408,9 @@ export const personaDefinitions = {
 
 const unifiedDefinition = {
   persona: "practitioner",
-  title: "AI 업무 위험도 3분 점검",
+  title: "3분 AI 안전 체크",
   description:
-    "ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent 사용 중 생길 수 있는 오답, 기밀 유출, 승인 책임, 보안 기준 문제를 점검합니다.",
+    "10문항으로 AI 사용 위험과 이번 주 할 일을 확인합니다.",
   questionCount: 10,
   estimatedMinutes: "약 3분",
   dimensions: unifiedDimensions,

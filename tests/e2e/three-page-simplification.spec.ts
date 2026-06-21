@@ -33,27 +33,27 @@ test.describe("three-page simplification", () => {
   }) => {
     await page.goto("/survey/");
 
-    await expect(page.getByText("AI 업무 자가점검")).toBeVisible();
+    await expect(page.getByText("3분 AI 안전 체크")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "3분 안에 AI 업무 위험도를 확인합니다",
+        name: /우리 팀 AI 사용,\s*안전할까요\?/,
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent",
+      "10문항으로 확인합니다.",
     );
     await expect(page.locator("body")).toContainText(
-      "약 3분이 걸리며, 이메일 없이 결과를 볼 수 있습니다.",
+      "이메일 없이 결과를 볼 수 있어요.",
     );
 
     await expect(
-      page.getByRole("link", { name: "3분 점검 시작" }),
+      page.getByRole("link", { name: "시작하기" }),
     ).toHaveAttribute("href", "/survey/practitioner/");
 
     await expect(page.getByRole("heading", { name: /역할/ })).toHaveCount(0);
     await expect(page.locator("main")).not.toContainText("결과물");
-    await expect(page.locator("main")).toContainText("10문항, 약 3분 소요");
+    await expect(page.locator("main")).toContainText("약 3분");
   });
 
   test("privacy page separates plain summary from detailed legal disclosures", async ({
@@ -65,10 +65,10 @@ test.describe("three-page simplification", () => {
       page.getByRole("heading", { level: 1, name: "개인정보 안내" }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "AgentProof는 설문에 꼭 필요한 정보만 받습니다.",
+      "이름 안 받아요. 전화번호 안 받아요. 회사 기밀 안 받아요.",
     );
     await expect(page.locator("body")).toContainText(
-      "원하지 않으면 이메일을 입력하지 않아도 됩니다.",
+      "이메일은 원할 때만 입력합니다.",
     );
 
     const summaryCards = page.getByTestId("privacy-summary-card");
@@ -122,16 +122,16 @@ test.describe("three-page simplification", () => {
     await page.goto("/beta-terms/");
 
     await expect(
-      page.getByRole("heading", { level: 1, name: "초기 사용자 참여 안내" }),
+      page.getByRole("heading", { level: 1, name: "초기 사용자 안내" }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "설문을 마치면 결과와 체크리스트를 바로 볼 수 있습니다.",
+      "설문 결과와 체크리스트는 바로 볼 수 있습니다.",
     );
     await expect(page.locator("body")).toContainText(
-      "신청하면 꼭 베타에 참여할 수 있나요?",
+      "참여는 어떻게 정해지나요?",
     );
     await expect(page.locator("body")).toContainText(
-      "설문 답변, 점수, 구매 의향에 따라 혜택을 다르게 주지 않습니다.",
+      "설문 답변, 점수, 구매 의향에 따라 다르게 대우하지 않습니다.",
     );
     await expect(page.locator("body")).not.toContainText("크레딧");
     await expect(page.locator("body")).not.toContainText("수용 인원");

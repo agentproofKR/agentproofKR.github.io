@@ -39,12 +39,12 @@ test("keyboard users can start the survey and move through the first question", 
   await page.goto("/");
   const opener = page
     .getByRole("banner")
-    .getByRole("link", { name: /3분 점검/ });
+    .getByRole("link", { name: /3분 체크/ });
   await opener.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const start = page.getByRole("link", { name: "3분 점검 시작" });
+  const start = page.getByRole("link", { name: "시작하기" });
   await start.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
@@ -56,7 +56,7 @@ test("keyboard users can start the survey and move through the first question", 
   await page.getByTestId("survey-processing-consent").focus();
   await page.keyboard.press("Space");
   await expect(page.getByTestId("survey-processing-consent")).toBeChecked();
-  await page.getByRole("button", { name: "동의하고 3분 점검 시작" }).focus();
+  await page.getByRole("button", { name: "동의하고 시작하기" }).focus();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("survey-progress")).toContainText("1/10");
 
