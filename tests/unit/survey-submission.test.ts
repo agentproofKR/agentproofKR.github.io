@@ -155,6 +155,15 @@ describe("survey submission validation", () => {
     });
   });
 
+  it("returns a controlled survey error when the live endpoint cannot be reached", async () => {
+    const submission = validateSurveySubmission(basePayload);
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("network unavailable"));
+
+    const result = await submitSurveyToEndpoint("https://example.supabase.co/functions/v1/survey-submit", submission);
+
+    expect(result).toMatchObject({ ok: false, code: "NETWORK_ERROR" });
+  });
+
   it("posts contact requests to the live endpoint and blocks honeypot submissions locally", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ ok: true, sessionId: "session_test_001" }), {

@@ -45,12 +45,18 @@ jobs:
         run: pnpm typecheck
 
       - name: Test
+        env:
+          NEXT_PUBLIC_SURVEY_API_URL: ""
+          NEXT_PUBLIC_SURVEY_API_MODE: disabled
         run: pnpm test
 
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
 
       - name: End-to-end test
+        env:
+          NEXT_PUBLIC_SURVEY_API_URL: ""
+          NEXT_PUBLIC_SURVEY_API_MODE: disabled
         run: pnpm test:e2e
 
       - name: Build

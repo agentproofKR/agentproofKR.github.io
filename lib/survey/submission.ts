@@ -163,11 +163,20 @@ export async function submitSurveyToEndpoint(
   endpoint: string,
   input: ValidSurveySubmission,
 ): Promise<SurveySubmitResult> {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ kind: "survey", ...input }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "survey", ...input }),
+    });
+  } catch {
+    return {
+      ok: false,
+      code: "NETWORK_ERROR",
+      message: "설문 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    };
+  }
   const body = await safeJson(response);
   if (!response.ok || body?.ok !== true) {
     return {
@@ -187,11 +196,20 @@ export async function submitContactRequestToEndpoint(
   if (parsed.honeypot.trim() !== "") {
     return { ok: false, code: "HONEYPOT", message: "요청을 저장하지 못했습니다." };
   }
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(parsed),
-  });
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(parsed),
+    });
+  } catch {
+    return {
+      ok: false,
+      code: "NETWORK_ERROR",
+      message: "선택 참여 요청을 저장하지 못했습니다.",
+    };
+  }
   const body = await safeJson(response);
   if (!response.ok || body?.ok !== true) {
     return {
