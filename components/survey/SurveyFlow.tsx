@@ -28,6 +28,8 @@ type DraftState = {
   consents: ConsentState;
 };
 
+type SurveyPhase = "consent" | "questions" | "confirm";
+
 const emptyConsents: ConsentState = {
   age14OrOlder: false,
   surveyProcessing: false,
@@ -43,7 +45,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   const [currentIndex, setCurrentIndex] = useState(initialDraft.currentIndex);
   const [answers, setAnswers] = useState<SurveyAnswerMap>(initialDraft.answers);
   const [consents, setConsents] = useState<ConsentState>(initialDraft.consents);
-  const [phase, setPhase] = useState<"questions" | "confirm">("questions");
+  const [phase, setPhase] = useState<SurveyPhase>("consent");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -87,6 +89,17 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
     setError("");
   };
 
+  const beginSurvey = () => {
+    const consentCheck = canSubmitSurvey(consents);
+    if (!consentCheck.ok) {
+      setError(`필수 동의: ${consentCheck.message}`);
+      return;
+    }
+
+    setPhase("questions");
+    setError("");
+  };
+
   const goNext = () => {
     if (!isAnswered(currentQuestion, answers[currentQuestion.id])) {
       setError("응답을 선택해주세요.");
@@ -106,6 +119,11 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   const goPrevious = () => {
     if (phase === "confirm") {
       setPhase("questions");
+      setError("");
+      return;
+    }
+    if (phase === "questions" && currentIndex === 0) {
+      setPhase("consent");
       setError("");
       return;
     }
@@ -177,6 +195,54 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
     window.location.assign("/survey/result/");
   };
 
+  if (phase === "consent") {
+    return (
+      <main
+        className={styles.page}
+        data-testid="survey-shell"
+        data-question-count={definition.questionCount}
+      >
+        <section
+          className={styles.surveyPanel}
+          data-testid="survey-consent-step"
+          aria-labelledby="consent-title"
+        >
+          <Link className={styles.backLink} href="/survey/">
+            역할 다시 선택
+          </Link>
+          <p className={styles.eyebrow}>개인정보 확인</p>
+          <h1 id="consent-title" ref={headingRef} tabIndex={-1}>
+            동의 후 진단을 시작합니다
+          </h1>
+          <p className={styles.lead}>
+            첫 응답 전에 필수 동의를 확인합니다. 이메일은 선택이며 입력하지 않아도 결과를
+            볼 수 있습니다. 응답과 선택 연락처는 목적별로 분리해 저장합니다.
+          </p>
+          <ConsentPanel consents={consents} onChange={setConsents} />
+          <StorageNotice mode={submissionMode} />
+          <p className={styles.policyLink}>
+            <Link href="/privacy/">개인정보처리방침 보기</Link>
+          </p>
+          {error ? (
+            <p className={styles.errorBox} role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className={styles.actions}>
+            <button
+              className={styles.primaryButton}
+              type="button"
+              data-testid="survey-consent-continue"
+              onClick={beginSurvey}
+            >
+              동의하고 진단 시작
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (phase === "confirm") {
     return (
       <main
@@ -196,7 +262,6 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             결과는 즉시 계산되며, 이메일 입력 없이 기본 결과 확인 가능. 설문 답변은 URL에
             포함되지 않습니다.
           </p>
-          <ConsentPanel consents={consents} onChange={setConsents} />
           <StorageNotice mode={submissionMode} />
           {error ? (
             <p className={styles.errorBox} role="alert">
@@ -291,7 +356,6 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             className={styles.secondaryButton}
             type="button"
             onClick={goPrevious}
-            disabled={currentIndex === 0}
           >
             이전
           </button>
@@ -352,7 +416,7 @@ function ConsentPanel({
 
 function StorageNotice({ mode }: { mode: SurveySubmissionMode }) {
   if (mode.mode === "live") {
-    return <p className={styles.successBox}>설문 저장소가 연결되어 있습니다.</p>;
+    return <p className={styles.infoBox}>설문 저장소가 연결되어 있으며, 제출 후 저장됩니다.</p>;
   }
   return <p className={styles.warningBox}>{mode.message}</p>;
 }

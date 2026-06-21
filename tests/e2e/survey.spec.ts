@@ -11,20 +11,28 @@ async function answerCurrentQuestion(page: Page) {
   await page.getByRole("button", { name: "계속" }).click();
 }
 
+async function acceptRequiredSurveyConsents(page: Page) {
+  await expect(page.getByTestId("survey-consent-step")).toBeVisible();
+  await expect(page.getByTestId("survey-question")).toHaveCount(0);
+  await page.getByLabel("만 14세 이상입니다.").check();
+  await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
+  await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
+  await expect(page.getByTestId("survey-progress")).toContainText("1/");
+}
+
 async function completeSurvey(page: Page, personaPath: string, expectedCount: number) {
   await page.goto(personaPath);
   await expect(page.getByTestId("survey-shell")).toHaveAttribute(
     "data-question-count",
     String(expectedCount),
   );
+  await acceptRequiredSurveyConsents(page);
 
   for (let index = 0; index < expectedCount; index += 1) {
     await expect(page.getByTestId("survey-progress")).toContainText(`${index + 1}/${expectedCount}`);
     await answerCurrentQuestion(page);
   }
 
-  await page.getByLabel("만 14세 이상입니다.").check();
-  await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
   await page.getByRole("button", { name: "결과 확인" }).click();
   await expect(page).toHaveURL(/\/survey\/result\/$/);
   await expect(page.getByRole("heading", { name: /AI 준비도 결과/ })).toBeVisible();
@@ -74,22 +82,24 @@ test("completes all persona surveys and shows result without email", async ({ pa
   await completeSurvey(page, "/survey/security/", 26);
 });
 
-test("blocks submission until required consents are checked", async ({ page }) => {
+test("requires consent before showing the first question", async ({ page }) => {
   await page.goto("/survey/practitioner/");
-  const count = Number(await page.getByTestId("survey-shell").getAttribute("data-question-count"));
 
-  for (let index = 0; index < count; index += 1) {
-    await answerCurrentQuestion(page);
-  }
+  await expect(page.getByTestId("survey-consent-step")).toBeVisible();
+  await expect(page.getByTestId("survey-question")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "결과 확인" }).click();
+  await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
   await expect(page.locator('[role="alert"]').filter({ hasText: "필수 동의" })).toContainText(
     "필수 동의",
   );
+
+  await acceptRequiredSurveyConsents(page);
+  await expect(page.getByTestId("survey-question")).toBeVisible();
 });
 
 test("does not write survey drafts to localStorage by default", async ({ page }) => {
   await page.goto("/survey/practitioner/");
+  await acceptRequiredSurveyConsents(page);
 
   await answerCurrentQuestion(page);
 

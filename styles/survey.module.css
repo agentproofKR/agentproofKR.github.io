@@ -282,7 +282,8 @@
 
 .errorBox,
 .warningBox,
-.successBox {
+.successBox,
+.infoBox {
   border-radius: 8px;
   margin-top: 18px;
   padding: 13px 14px;
@@ -307,6 +308,22 @@
   border: 1px solid rgb(11 125 95 / 24%);
   background: rgb(11 125 95 / 8%);
   color: #075c46;
+}
+
+.infoBox {
+  border: 1px solid rgb(45 91 168 / 22%);
+  background: rgb(45 91 168 / 7%);
+  color: #234a86;
+}
+
+.policyLink {
+  margin: 16px 0 0;
+  font-size: 14px;
+  font-weight: 780;
+}
+
+.policyLink a {
+  color: var(--color-accent);
 }
 
 .consentPanel {

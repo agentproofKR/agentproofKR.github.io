@@ -40,9 +40,19 @@ test("keyboard users can start the survey and move through the first question", 
   await practitioner.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
+
+  await expect(page.getByTestId("survey-consent-step")).toBeVisible();
+  await page.getByTestId("age-consent").focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("age-consent")).toBeChecked();
+  await page.getByTestId("survey-processing-consent").focus();
+  await page.keyboard.press("Space");
+  await expect(page.getByTestId("survey-processing-consent")).toBeChecked();
+  await page.getByRole("button", { name: "동의하고 진단 시작" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.getByTestId("survey-progress")).toContainText("1/24");
 
-  await page.keyboard.press("Tab");
+  await page.getByTestId("survey-question").getByRole("radio").first().focus();
   await page.keyboard.press("Space");
   await page.getByRole("button", { name: "계속" }).focus();
   await page.keyboard.press("Enter");
