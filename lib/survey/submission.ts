@@ -17,6 +17,14 @@ export type SurveyContactRequest = {
   freeText?: string;
 };
 
+export type SurveySubmitResult =
+  | { ok: true; status: "stored"; sessionId: string }
+  | { ok: false; code: string; message: string };
+
+export type ContactSubmitResult =
+  | { ok: true; status: "contact_stored"; sessionId: string }
+  | { ok: false; code: string; message: string };
+
 export type ValidSurveySubmission = {
   sessionId: string;
   persona: Persona;
@@ -38,6 +46,7 @@ export type ValidSurveySubmission = {
     interview: boolean;
     pilot: boolean;
     consentVersion: string;
+    consentTextHashes?: Record<string, string>;
   };
   contacts: SurveyContactRequest[];
   utm: {
@@ -59,6 +68,7 @@ const contactRequestSchema = z.object({
 });
 
 const submissionSchema = z.object({
+  kind: z.literal("survey").optional().default("survey"),
   sessionId: z.string().trim().min(8).max(120),
   persona: personaSchema,
   surveyVersion: z.string().trim().min(1).default(surveyVersion),
@@ -79,6 +89,7 @@ const submissionSchema = z.object({
     interview: z.boolean().default(false),
     pilot: z.boolean().default(false),
     consentVersion: z.string().trim().min(1).default(consentVersion),
+    consentTextHashes: z.record(z.string(), z.string()).optional(),
   }),
   contacts: z.array(contactRequestSchema).max(3).default([]),
   utm: z
@@ -89,6 +100,21 @@ const submissionSchema = z.object({
       content: optionalLimitedString(120),
     })
     .default({}),
+});
+
+const contactPayloadSchema = z.object({
+  kind: z.literal("contact_request"),
+  sessionId: z.string().trim().min(8).max(120),
+  idempotencyKey: z.string().trim().min(6).max(160),
+  persona: personaSchema,
+  consentVersion: z.string().trim().min(1),
+  consentTextHash: z.string().trim().min(1).max(160),
+  requestType: z.enum(["beta", "interview", "pilot"]),
+  email: z.string().trim().toLowerCase().email().max(254),
+  company: optionalLimitedString(120),
+  role: optionalLimitedString(80),
+  preferredContactPurpose: optionalLimitedString(120),
+  honeypot: z.string().max(120).optional().default(""),
 });
 
 export function getSurveySubmissionMode(config: {
@@ -131,6 +157,50 @@ export function validateSurveySubmission(input: unknown): ValidSurveySubmission 
       freeText: stripTags(contact.freeText),
     })),
   };
+}
+
+export async function submitSurveyToEndpoint(
+  endpoint: string,
+  input: ValidSurveySubmission,
+): Promise<SurveySubmitResult> {
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ kind: "survey", ...input }),
+  });
+  const body = await safeJson(response);
+  if (!response.ok || body?.ok !== true) {
+    return {
+      ok: false,
+      code: String(body?.code ?? response.status),
+      message: "설문 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    };
+  }
+  return { ok: true, status: "stored", sessionId: String(body.sessionId ?? input.sessionId) };
+}
+
+export async function submitContactRequestToEndpoint(
+  endpoint: string,
+  input: z.infer<typeof contactPayloadSchema>,
+): Promise<ContactSubmitResult> {
+  const parsed = contactPayloadSchema.parse(input);
+  if (parsed.honeypot.trim() !== "") {
+    return { ok: false, code: "HONEYPOT", message: "요청을 저장하지 못했습니다." };
+  }
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(parsed),
+  });
+  const body = await safeJson(response);
+  if (!response.ok || body?.ok !== true) {
+    return {
+      ok: false,
+      code: String(body?.code ?? response.status),
+      message: "선택 참여 요청을 저장하지 못했습니다.",
+    };
+  }
+  return { ok: true, status: "contact_stored", sessionId: String(body.sessionId ?? parsed.sessionId) };
 }
 
 export class MockSurveySubmissionStore {
@@ -194,4 +264,12 @@ function optionalLimitedString(max: number) {
     (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
     z.string().trim().max(max, `최대 ${max}자까지 입력할 수 있습니다.`).optional(),
   );
+}
+
+async function safeJson(response: Response): Promise<Record<string, unknown> | null> {
+  try {
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
 }

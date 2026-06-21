@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { sanitizeAnalyticsPayload } from "../../lib/analytics";
 import {
   MockSurveySubmissionStore,
   getSurveySubmissionMode,
+  submitContactRequestToEndpoint,
+  submitSurveyToEndpoint,
   validateSurveySubmission,
 } from "../../lib/survey/submission";
 
@@ -51,6 +53,10 @@ const basePayload = {
     campaign: "ai_readiness",
   },
 };
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("survey submission validation", () => {
   it("accepts a valid allow-listed survey payload", () => {
@@ -127,5 +133,70 @@ describe("survey submission validation", () => {
       persona: "leader",
       result_band: "통제 기반 확대 준비",
     });
+  });
+
+  it("posts a validated survey payload to the configured live endpoint", async () => {
+    const submission = validateSurveySubmission(basePayload);
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, sessionId: submission.sessionId }), {
+        status: 201,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const result = await submitSurveyToEndpoint("https://example.supabase.co/functions/v1/survey-submit", submission);
+
+    expect(result).toEqual({ ok: true, status: "stored", sessionId: submission.sessionId });
+    const [, request] = fetchMock.mock.calls[0];
+    expect(request?.method).toBe("POST");
+    expect(JSON.parse(String(request?.body))).toMatchObject({
+      kind: "survey",
+      sessionId: submission.sessionId,
+    });
+  });
+
+  it("posts contact requests to the live endpoint and blocks honeypot submissions locally", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, sessionId: "session_test_001" }), {
+        status: 201,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const result = await submitContactRequestToEndpoint("https://example.supabase.co/functions/v1/survey-submit", {
+      kind: "contact_request",
+      sessionId: "session_test_001",
+      idempotencyKey: "contact-idem-001",
+      persona: "leader",
+      consentVersion: "2026-06-21",
+      consentTextHash: "sha256:test",
+      requestType: "pilot",
+      email: "qa@example.com",
+      company: "QA Team",
+      preferredContactPurpose: "pilot",
+      honeypot: "",
+    });
+
+    expect(result).toEqual({ ok: true, status: "contact_stored", sessionId: "session_test_001" });
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body))).toMatchObject({
+      kind: "contact_request",
+      requestType: "pilot",
+      email: "qa@example.com",
+    });
+
+    const blocked = await submitContactRequestToEndpoint("https://example.supabase.co/functions/v1/survey-submit", {
+      kind: "contact_request",
+      sessionId: "session_test_001",
+      idempotencyKey: "contact-idem-002",
+      persona: "leader",
+      consentVersion: "2026-06-21",
+      consentTextHash: "sha256:test",
+      requestType: "beta",
+      email: "qa@example.com",
+      honeypot: "bot",
+    });
+
+    expect(blocked).toMatchObject({ ok: false, code: "HONEYPOT" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

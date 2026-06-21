@@ -82,7 +82,7 @@ create table if not exists public.rate_limit_keys (
 
 create table if not exists public.idempotency_keys (
   idempotency_key text primary key,
-  session_id uuid not null references public.survey_sessions(id) on delete cascade,
+  session_id uuid not null,
   created_at timestamptz not null default now()
 );
 
@@ -153,3 +153,34 @@ begin
     ('retention', 'survey_sessions', deleted_sessions);
 end;
 $$;
+
+revoke all on function public.delete_expired_agentproof_data() from public, anon, authenticated;
+grant execute on function public.delete_expired_agentproof_data() to service_role;
+
+create or replace function public.agentproof_rls_status()
+returns table(table_name text, relrowsecurity boolean)
+language sql
+security definer
+set search_path = public, pg_catalog
+as $$
+  select c.relname::text as table_name, c.relrowsecurity
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public'
+    and c.relkind = 'r'
+    and c.relname in (
+      'survey_sessions',
+      'survey_answers',
+      'survey_results',
+      'contact_requests',
+      'consent_events',
+      'analytics_events',
+      'deletion_audit_events',
+      'rate_limit_keys',
+      'idempotency_keys'
+    )
+  order by c.relname;
+$$;
+
+revoke all on function public.agentproof_rls_status() from public, anon, authenticated;
+grant execute on function public.agentproof_rls_status() to service_role;

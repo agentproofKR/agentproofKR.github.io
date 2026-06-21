@@ -21,6 +21,8 @@ jobs:
     env:
       NEXT_PUBLIC_SITE_URL: https://agentproofkr.github.io
       NEXT_PUBLIC_LANDING_VARIANT: v5.2
+      NEXT_PUBLIC_SURVEY_API_URL: ${{ vars.NEXT_PUBLIC_SURVEY_API_URL }}
+      LEGAL_OPERATOR_NAME: ${{ vars.LEGAL_OPERATOR_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

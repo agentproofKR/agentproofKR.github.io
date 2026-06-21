@@ -16,6 +16,7 @@
     "staging:smoke": "node scripts/run-staging-smoke.mjs",
     "survey:mock": "node scripts/mock-survey-backend.mjs",
     "survey:provision:supabase": "node scripts/provision-supabase.mjs",
+    "verify:production:supabase": "node scripts/verify-production-supabase.mjs",
     "format": "prettier --check \"app/**/*.{css,ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\" \"styles/**/*.css\" \"scripts/**/*.mjs\" \"tests/**/*.{ts,tsx}\" \"*.{js,json,md,mjs,ts}\"",
     "format:write": "prettier --write \"app/**/*.{css,ts,tsx}\" \"components/**/*.{ts,tsx}\" \"lib/**/*.ts\" \"styles/**/*.css\" \"scripts/**/*.mjs\" \"tests/**/*.{ts,tsx}\" \"*.{js,json,md,mjs,ts}\""
   },

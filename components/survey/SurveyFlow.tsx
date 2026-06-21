@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
-import { canSubmitSurvey, consentVersion } from "@/lib/survey/consent";
+import { canSubmitSurvey, consentTextHashes, consentVersion } from "@/lib/survey/consent";
 import { getSurveyDefinition } from "@/lib/survey/questions";
 import { scoreSurvey } from "@/lib/survey/scoring";
 import {
   getSurveySubmissionMode,
+  submitSurveyToEndpoint,
   type SurveySubmissionMode,
+  validateSurveySubmission,
 } from "@/lib/survey/submission";
 import type { ConsentState, Persona, SurveyAnswerMap, SurveyQuestion } from "@/lib/survey/types";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
@@ -42,6 +44,7 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
   const [consents, setConsents] = useState<ConsentState>(initialDraft.consents);
   const [phase, setPhase] = useState<"questions" | "confirm">("questions");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const currentQuestion = definition.questions[currentIndex];
   const submissionMode = getSurveySubmissionMode({
@@ -115,7 +118,7 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
     setError("");
   };
 
-  const submitForResult = () => {
+  const submitForResult = async () => {
     const consentCheck = canSubmitSurvey(consents);
     if (!consentCheck.ok) {
       setError(`필수 동의: ${consentCheck.message}`);
@@ -124,9 +127,41 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
 
     const result = scoreSurvey(persona, answers);
     const stored = getStoredUtm(window.sessionStorage);
+    const sessionId = crypto.randomUUID();
+    const idempotencyKey = crypto.randomUUID();
+    const submission = validateSurveySubmission({
+      sessionId,
+      persona,
+      surveyVersion: result.surveyVersion,
+      scoringVersion: result.scoringVersion,
+      idempotencyKey,
+      honeypot: "",
+      answers,
+      result: {
+        totalScore: result.totalScore,
+        resultBand: result.effectiveBand.label,
+        dimensionScores: result.dimensionScores,
+        riskFlags: result.riskFlags,
+      },
+      consents: { ...consents, consentVersion, consentTextHashes },
+      contacts: [],
+      utm: stored,
+    });
+
+    if (submissionMode.mode === "live") {
+      setIsSubmitting(true);
+      const storageResult = await submitSurveyToEndpoint(submissionMode.endpoint, submission);
+      setIsSubmitting(false);
+      if (!storageResult.ok) {
+        setError(storageResult.message);
+        return;
+      }
+    }
+
     window.localStorage.setItem(
       "agentproof-survey-result",
       JSON.stringify({
+        sessionId,
         persona,
         answers,
         result,
@@ -183,9 +218,10 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
               className={styles.primaryButton}
               type="button"
               data-testid="survey-result-submit"
+              disabled={isSubmitting}
               onClick={submitForResult}
             >
-              결과 확인
+              {isSubmitting ? "저장 중" : "결과 확인"}
             </button>
           </div>
         </section>

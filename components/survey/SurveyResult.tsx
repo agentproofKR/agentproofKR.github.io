@@ -5,12 +5,14 @@ import { FormEvent, useEffect, useMemo, useState, useSyncExternalStore } from "r
 
 import { trackEvent } from "@/lib/analytics";
 import { LEGAL_CONFIG } from "@/lib/legal";
-import { consentVersion } from "@/lib/survey/consent";
+import { consentTextHashes, consentVersion } from "@/lib/survey/consent";
 import { getSurveyDefinition } from "@/lib/survey/questions";
+import { submitContactRequestToEndpoint } from "@/lib/survey/submission";
 import type { Persona, SurveyScoreResult } from "@/lib/survey/types";
 import styles from "@/styles/survey.module.css";
 
 type StoredResult = {
+  sessionId: string;
   persona: Persona;
   result: SurveyScoreResult;
   completedAt: string;
@@ -181,8 +183,10 @@ export function SurveyResult() {
         {activeRequest ? (
           <OptInForm
             requestType={activeRequest}
+            sessionId={stored.sessionId}
             persona={stored.persona}
             resultBand={result.effectiveBand.label}
+            submissionMode={stored.submissionMode}
             onStatus={setStatus}
           />
         ) : null}
@@ -198,23 +202,28 @@ export function SurveyResult() {
 
 function OptInForm({
   requestType,
+  sessionId,
   persona,
   resultBand,
+  submissionMode,
   onStatus,
 }: {
   requestType: RequestType;
+  sessionId: string;
   persona: Persona;
   resultBand: string;
+  submissionMode: StoredResult["submissionMode"];
   onStatus: (status: string) => void;
 }) {
   const labels = requestLabels[requestType];
   const [error, setError] = useState("");
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const email = String(form.get("email") ?? "");
     const consent = form.get("consent") === "on";
+    const company = String(form.get("company") ?? "");
 
     if (!email.includes("@")) {
       setError("이메일 형식을 확인해주세요.");
@@ -225,13 +234,38 @@ function OptInForm({
       return;
     }
 
+    if (submissionMode.mode === "live") {
+      const saved = await submitContactRequestToEndpoint(submissionMode.endpoint, {
+        kind: "contact_request",
+        sessionId,
+        idempotencyKey: crypto.randomUUID(),
+        persona,
+        consentVersion,
+        consentTextHash: consentTextHashes[requestType],
+        requestType,
+        email,
+        company: requestType === "pilot" ? company : undefined,
+        role: persona,
+        preferredContactPurpose: labels.open,
+        honeypot: String(form.get("website") ?? ""),
+      });
+      if (!saved.ok) {
+        setError(saved.message);
+        return;
+      }
+    }
+
     trackEvent(labels.event, {
       persona,
       survey_version: "2026-06-21",
       result_band: resultBand,
     });
     setError("");
-    onStatus("저장소가 연결되면 별도 기록됩니다. 현재 화면에서는 개인정보를 전송하지 않습니다.");
+    onStatus(
+      submissionMode.mode === "live"
+        ? "선택 참여 요청이 별도 기록되었습니다."
+        : "저장소가 연결되면 별도 기록됩니다. 현재 화면에서는 개인정보를 전송하지 않습니다.",
+    );
     event.currentTarget.reset();
   };
 
@@ -248,6 +282,7 @@ function OptInForm({
           <input name="company" type="text" maxLength={120} />
         </label>
       ) : null}
+      <input name="website" type="text" tabIndex={-1} autoComplete="off" hidden />
       <p className={styles.fieldHint}>
         개인정보, 고객명, 회사 기밀, 접속정보 또는 실제 보안 취약점은 입력하지 마세요.
       </p>
