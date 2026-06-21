@@ -80,7 +80,7 @@ Deno.serve(async (request) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceRoleKey = getServiceRoleKey();
   if (!supabaseUrl || !serviceRoleKey) {
     return json({ ok: false, code: "BACKEND_NOT_CONFIGURED" }, 503, headers);
   }
@@ -402,7 +402,7 @@ function restHeaders(serviceRoleKey: string): HeadersInit {
 }
 
 async function encryptEmail(email: string): Promise<string> {
-  const secret = Deno.env.get("CONTACT_ENCRYPTION_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const secret = Deno.env.get("CONTACT_ENCRYPTION_KEY") ?? getServiceRoleKey();
   if (!secret) throw new Error("EMAIL_ENCRYPTION_NOT_CONFIGURED");
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
@@ -426,6 +426,23 @@ async function encryptEmail(email: string): Promise<string> {
     new TextEncoder().encode(email.trim().toLowerCase()),
   );
   return `aesgcm:${base64(salt)}:${base64(iv)}:${base64(new Uint8Array(ciphertext))}`;
+}
+
+function getServiceRoleKey(): string | undefined {
+  const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacyKey) return legacyKey;
+
+  const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (!secretKeys) return undefined;
+
+  try {
+    const parsed = JSON.parse(secretKeys) as Record<string, unknown>;
+    const defaultKey = parsed.default;
+    if (typeof defaultKey === "string" && defaultKey.length > 0) return defaultKey;
+    return Object.values(parsed).find((value): value is string => typeof value === "string" && value.length > 0);
+  } catch {
+    return undefined;
+  }
 }
 
 async function sha256Hex(input: string): Promise<string> {

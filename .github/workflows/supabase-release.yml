@@ -57,13 +57,6 @@ jobs:
       - name: Apply database migrations
         run: supabase db push --password "$SUPABASE_DB_PASSWORD" --include-all
 
-      - name: Configure Edge Function secrets
-        run: |
-          supabase secrets set \
-            SUPABASE_URL="$SUPABASE_URL" \
-            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
-            --project-ref "$PROJECT_REF"
-
       - name: Deploy survey submit function
         run: supabase functions deploy survey-submit --project-ref "$PROJECT_REF"
 
