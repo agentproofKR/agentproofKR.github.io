@@ -39,11 +39,11 @@ const sections = [
   },
   {
     title: "8. 개인정보 처리업무 위탁",
-    body: "현재 공개 사이트는 GitHub Pages 정적 배포로 제공됩니다. Supabase, 이메일 발송, 기타 저장·처리 사업자가 실제로 연결되면 제공자, 목적, 처리 항목, 보유 기간을 검증한 뒤 이 방침에 반영합니다.",
+    body: "공개 사이트는 GitHub, Inc.의 GitHub Pages 정적 호스팅으로 제공됩니다. 설문 제출, 동의 기록, 선택 연락처 저장은 Supabase, Inc.의 Edge Functions와 Supabase Postgres로 처리합니다. Supabase 프로젝트의 Postgres 저장 리전은 ap-northeast-2(서울)로 검증되었고, Edge Function은 Supabase Edge Runtime의 전 세계 엣지 인프라에서 요청 위치에 가까운 노드에서 실행될 수 있습니다. 선택 연락처 이메일은 별도 테이블에 암호화하여 보관합니다.",
   },
   {
     title: "9. 개인정보 국외 이전",
-    body: "현재 연결된 운영 저장소가 없어 국외 이전 세부 항목을 확정하지 않습니다. 향후 Supabase 등 외부 처리자가 실제 연결되면 저장 국가, 이전 항목, 이전 근거와 보유 기간을 검증해 고지합니다.",
+    body: "설문 응답, 세션 식별자, UTM, 동의 기록, 선택 연락처는 서비스 제공과 이용자 동의에 따른 위탁 처리 과정에서 GitHub 및 Supabase 인프라로 이전·처리될 수 있습니다. 현재 Supabase Postgres 저장 리전은 ap-northeast-2(서울)이며, Edge Function 실행은 Supabase의 글로벌 엣지 네트워크에서 처리될 수 있습니다. 보유 기간은 이 방침의 보유 및 이용 기간 조항을 따릅니다.",
   },
   {
     title: "10. 자동수집 정보 및 분석",

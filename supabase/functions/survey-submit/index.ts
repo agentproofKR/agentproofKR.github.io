@@ -150,10 +150,9 @@ async function handleSurvey(
     throw new Error("SESSION_STORAGE_FAILED");
   }
 
-  await tableRequest(supabaseUrl, serviceRoleKey, "idempotency_keys", {
-    method: "POST",
-    body: [{ idempotency_key: payload.idempotencyKey, session_id: payload.sessionId }],
-  });
+  await checkedTableRequest(supabaseUrl, serviceRoleKey, "idempotency_keys", [
+    { idempotency_key: payload.idempotencyKey, session_id: payload.sessionId },
+  ]);
 
   const answers = Object.entries(payload.answers).map(([question_id, answer]) => ({
     session_id: payload.sessionId,

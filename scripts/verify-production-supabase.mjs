@@ -22,6 +22,7 @@ const functionUrl = process.env.NEXT_PUBLIC_SURVEY_API_URL;
 const qaPrefix = `qa-${Date.now()}`;
 const personas = ["practitioner", "leader", "security"];
 const managedSessionIds = new Set();
+const managedIdempotencyKeys = new Set();
 let cleanupAttempted = false;
 
 const evidence = {
@@ -113,6 +114,7 @@ async function runVerification() {
   for (const persona of personas) {
     const payload = buildSurveyPayload(persona);
     managedSessionIds.add(payload.sessionId);
+    managedIdempotencyKeys.add(payload.idempotencyKey);
 
     const response = await postFunction(payload, "https://agentproofkr.github.io");
     assert(response.status === 201, `${persona} survey submission failed: ${response.status}`);
@@ -120,7 +122,9 @@ async function runVerification() {
     evidence.submissions[persona] = await verifyStoredSurvey(payload);
 
     for (const requestType of ["beta", "interview", "pilot"]) {
-      const contactResponse = await postFunction(buildContactPayload(payload, requestType), "https://agentproofkr.github.io");
+      const contactPayload = buildContactPayload(payload, requestType);
+      managedIdempotencyKeys.add(contactPayload.idempotencyKey);
+      const contactResponse = await postFunction(contactPayload, "https://agentproofkr.github.io");
       assert(contactResponse.status === 201, `${persona} ${requestType} contact failed: ${contactResponse.status}`);
     }
 
@@ -537,7 +541,6 @@ async function cleanupQaRecords() {
 
   for (const sessionId of managedSessionIds) {
     await deleteRows("analytics_events", `session_id=eq.${sessionId}`);
-    await deleteRows("idempotency_keys", `session_id=eq.${sessionId}`);
     await deleteRows("survey_sessions", `id=eq.${sessionId}`);
     await insertRows("deletion_audit_events", [
       {
@@ -548,6 +551,9 @@ async function cleanupQaRecords() {
       },
     ]);
   }
+  for (const idempotencyKey of managedIdempotencyKeys) {
+    await deleteRows("idempotency_keys", `idempotency_key=eq.${encodeURIComponent(idempotencyKey)}`);
+  }
 
   evidence.cleanup.remainingSessions = 0;
   evidence.cleanup.remainingAnalytics = 0;
@@ -555,7 +561,11 @@ async function cleanupQaRecords() {
   for (const sessionId of managedSessionIds) {
     evidence.cleanup.remainingSessions += await countRows(`survey_sessions?id=eq.${sessionId}&select=id`);
     evidence.cleanup.remainingAnalytics += await countRows(`analytics_events?session_id=eq.${sessionId}&select=id`);
-    evidence.cleanup.remainingIdempotencyKeys += await countRows(`idempotency_keys?session_id=eq.${sessionId}&select=id`);
+  }
+  for (const idempotencyKey of managedIdempotencyKeys) {
+    evidence.cleanup.remainingIdempotencyKeys += await countRows(
+      `idempotency_keys?idempotency_key=eq.${encodeURIComponent(idempotencyKey)}&select=idempotency_key`,
+    );
   }
   evidence.cleanup.qaDeletionAuditEvents = await countRows(`deletion_audit_events?request_type=eq.qa_cleanup&select=id`);
 }
