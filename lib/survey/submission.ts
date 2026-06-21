@@ -160,7 +160,7 @@ export function validateSurveySubmission(input: unknown): ValidSurveySubmission 
     answers: sanitizeAnswers(parsed.answers),
     result: {
       totalScore: computedResult.totalScore,
-      resultBand: computedResult.effectiveBand.label,
+      resultBand: computedResult.displayRiskBand,
       dimensionScores: computedResult.dimensionScores,
       riskFlags: computedResult.riskFlags,
     },

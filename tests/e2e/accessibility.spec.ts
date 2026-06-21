@@ -39,13 +39,13 @@ test("keyboard users can start the survey and move through the first question", 
   await page.goto("/");
   const opener = page
     .getByRole("banner")
-    .getByRole("link", { name: /역할별 AI 자가점검/ });
+    .getByRole("link", { name: /3분 점검/ });
   await opener.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const practitioner = page.getByRole("link", { name: "실무자 점검 시작" });
-  await practitioner.focus();
+  const start = page.getByRole("link", { name: "3분 점검 시작" });
+  await start.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
 
@@ -56,13 +56,13 @@ test("keyboard users can start the survey and move through the first question", 
   await page.getByTestId("survey-processing-consent").focus();
   await page.keyboard.press("Space");
   await expect(page.getByTestId("survey-processing-consent")).toBeChecked();
-  await page.getByRole("button", { name: "동의하고 진단 시작" }).focus();
+  await page.getByRole("button", { name: "동의하고 3분 점검 시작" }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("survey-progress")).toContainText("1/24");
+  await expect(page.getByTestId("survey-progress")).toContainText("1/10");
 
   await page.getByTestId("survey-question").getByRole("radio").first().focus();
   await page.keyboard.press("Space");
   await page.getByRole("button", { name: "계속" }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("survey-progress")).toContainText("2/24");
+  await expect(page.getByTestId("survey-progress")).toContainText("2/10");
 });

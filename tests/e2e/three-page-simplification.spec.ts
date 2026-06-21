@@ -28,7 +28,7 @@ test.describe("three-page simplification", () => {
     });
   }
 
-  test("survey page uses the approved simplified role-choice copy", async ({
+  test("survey page uses the approved unified 3-minute survey copy", async ({
     page,
   }) => {
     await page.goto("/survey/");
@@ -37,31 +37,23 @@ test.describe("three-page simplification", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "내 역할에 맞는 점검을 선택하세요",
+        name: "3분 안에 AI 업무 위험도를 확인합니다",
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "지금 맡고 있는 일과 가장 가까운 항목을 골라주세요.",
+      "ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent",
     );
     await expect(page.locator("body")).toContainText(
-      "약 7~10분이 걸리며, 이메일 없이 결과를 볼 수 있습니다.",
+      "약 3분이 걸리며, 이메일 없이 결과를 볼 수 있습니다.",
     );
 
     await expect(
-      page.getByRole("link", { name: "실무자 점검 시작" }),
+      page.getByRole("link", { name: "3분 점검 시작" }),
     ).toHaveAttribute("href", "/survey/practitioner/");
-    await expect(
-      page.getByRole("link", { name: "도입 준비 점검 시작" }),
-    ).toHaveAttribute("href", "/survey/leader/");
-    await expect(
-      page.getByRole("link", { name: "보안·정책 점검 시작" }),
-    ).toHaveAttribute("href", "/survey/security/");
 
-    const roleCards = page.locator("article");
-    await expect(roleCards).toHaveCount(3);
-    await expect(page.locator("main")).not.toContainText("문항");
+    await expect(page.getByRole("heading", { name: /역할/ })).toHaveCount(0);
     await expect(page.locator("main")).not.toContainText("결과물");
-    await expect(page.locator("main")).not.toContainText("소요");
+    await expect(page.locator("main")).toContainText("10문항, 약 3분 소요");
   });
 
   test("privacy page separates plain summary from detailed legal disclosures", async ({

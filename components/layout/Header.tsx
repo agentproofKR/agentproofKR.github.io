@@ -32,21 +32,24 @@ export function Header({ onNavClick }: HeaderProps) {
           />
         </a>
         <nav className={styles.navLinks} aria-label="주요 메뉴">
-          <a href="#product" onClick={() => onNavClick("#product")}>
-            예시 화면
+          <a href="#problem" onClick={() => onNavClick("#problem")}>
+            문제
           </a>
-          <a href="#roles" onClick={() => onNavClick("#roles")}>
-            역할별 고민
+          <a href="#result-example" onClick={() => onNavClick("#result-example")}>
+            결과 예시
           </a>
           <a href="#process" onClick={() => onNavClick("#process")}>
             진행 방식
+          </a>
+          <a href="#faq" onClick={() => onNavClick("#faq")}>
+            FAQ
           </a>
         </nav>
         <Link
           className={`${styles.button} ${styles.buttonDark} ${styles.headerButton}`}
           href="/survey/"
         >
-          역할별 AI 자가점검
+          3분 점검
         </Link>
       </div>
     </header>

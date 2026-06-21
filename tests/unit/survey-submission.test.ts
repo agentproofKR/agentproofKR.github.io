@@ -17,25 +17,24 @@ const basePayload = {
   idempotencyKey: "idem-001",
   honeypot: "",
   answers: {
-    C01: "executive",
-    C02: "51_300",
-    C03: "it_software",
-    C04: "pilot",
-    C05: ["gen_ai"],
-    C06: "time_saving",
-    L07: "operations",
-    L08: ["documents"],
-    L22: "range_review",
+    U01: "adoption_owner",
+    U02: "51_300",
+    U03: ["gen_ai"],
+    U04: ["documents"],
+    U05: "effect_cost",
+    U06: "internal_general",
+    U07: "important_only",
+    U08: "partial",
+    U09: "priority_report",
+    U10: "result_only",
   },
   result: {
     totalScore: 64,
     resultBand: "통제 기반 확대 준비",
     dimensionScores: {
-      "도입 목적 명확성": 75,
-      "업무 우선순위": 50,
-      "데이터·프로세스 준비": 60,
-      "위험관리": 70,
-      "파일럿 실행 준비도": 65,
+      "정보 입력 위험": 75,
+      "답변 검토 기준": 50,
+      "사용 기준 성숙도": 60,
     },
     riskFlags: [],
   },
@@ -63,8 +62,19 @@ describe("survey submission validation", () => {
     const parsed = validateSurveySubmission(basePayload);
 
     expect(parsed.persona).toBe("leader");
-    expect(parsed.answers.L22).toBe("range_review");
+    expect(parsed.answers.U09).toBe("priority_report");
     expect(parsed.consents.age14OrOlder).toBe(true);
+  });
+
+  it("accepts unified U01-U10 answers for every legacy persona URL", () => {
+    for (const persona of ["practitioner", "leader", "security"] as const) {
+      expect(
+        validateSurveySubmission({
+          ...basePayload,
+          persona,
+        }).persona,
+      ).toBe(persona);
+    }
   });
 
   it("rejects missing required consent, honeypot, invalid question IDs, and oversized free text", () => {
@@ -125,6 +135,7 @@ describe("survey submission validation", () => {
     expect(parsed.result.resultBand).not.toBe("운영 고도화 단계");
     expect(parsed.result.dimensionScores).not.toHaveProperty("forged");
     expect(parsed.result.riskFlags).not.toContain("forged");
+    expect(parsed.result.resultBand).toMatch(/주의|위험|즉시 점검 필요|낮음/);
   });
 
   it("disables live storage when no public endpoint is configured", () => {

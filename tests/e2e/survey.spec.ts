@@ -16,7 +16,7 @@ async function acceptRequiredSurveyConsents(page: Page) {
   await expect(page.getByTestId("survey-question")).toHaveCount(0);
   await page.getByLabel("만 14세 이상입니다.").check();
   await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
-  await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
+  await page.getByRole("button", { name: "동의하고 3분 점검 시작" }).click();
   await expect(page.getByTestId("survey-progress")).toContainText("1/");
 }
 
@@ -42,32 +42,32 @@ async function completeSurvey(
   await page.getByRole("button", { name: "결과 확인" }).click();
   await expect(page).toHaveURL(/\/survey\/result\/$/);
   await expect(
-    page.getByRole("heading", { name: /AI 자가점검 결과/ }),
+    page.getByRole("heading", { name: /AI 업무 위험도/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toContainText(
     "이메일 입력 없이 기본 결과 확인 가능",
   );
 }
 
-test("homepage CTAs route to the role-based survey instead of opening the old modal", async ({
+test("homepage CTAs route to the unified 3-minute survey", async ({
   page,
 }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("banner").getByRole("link", { name: /역할별 AI 자가점검/ }),
+    page.getByRole("banner").getByRole("link", { name: /3분 점검/ }),
   ).toHaveAttribute("href", "/survey/");
   await page
     .getByRole("banner")
-    .getByRole("link", { name: /역할별 AI 자가점검/ })
+    .getByRole("link", { name: /3분 점검/ })
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
-    page.getByRole("heading", { name: "내 역할에 맞는 점검을 선택하세요" }),
+    page.getByRole("heading", { name: "3분 안에 AI 업무 위험도를 확인합니다" }),
   ).toBeVisible();
 });
 
-test("survey hub preserves UTM and links each persona without putting answers in URLs", async ({
+test("survey hub preserves UTM and starts unified survey without putting answers in URLs", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -77,25 +77,26 @@ test("survey hub preserves UTM and links each persona without putting answers in
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText(/약 7~10분이 걸리며/)).toBeVisible();
-  await page.getByRole("link", { name: "도입 준비 점검 시작" }).click();
-  await expect(page).toHaveURL(/\/survey\/leader\/$/);
+  await expect(page.getByText(/약 3분이 걸리며/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
+  await page.getByRole("link", { name: "3분 점검 시작" }).click();
+  await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
 
   const events = await page.evaluate(() => window.dataLayer);
-  expect(JSON.stringify(events)).toContain("persona_selected");
+  expect(JSON.stringify(events)).toContain("survey_start_click");
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
-test("completes all persona surveys and shows result without email", async ({
+test("completes unified survey from all legacy persona URLs and shows result without email", async ({
   page,
 }) => {
-  await completeSurvey(page, "/survey/practitioner/", 24);
+  await completeSurvey(page, "/survey/practitioner/", 10);
   await page.goto("/");
-  await completeSurvey(page, "/survey/leader/", 25);
+  await completeSurvey(page, "/survey/leader/", 10);
   await page.goto("/");
-  await completeSurvey(page, "/survey/security/", 26);
+  await completeSurvey(page, "/survey/security/", 10);
 });
 
 test("requires consent before showing the first question", async ({ page }) => {
@@ -104,7 +105,7 @@ test("requires consent before showing the first question", async ({ page }) => {
   await expect(page.getByTestId("survey-consent-step")).toBeVisible();
   await expect(page.getByTestId("survey-question")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
+  await page.getByRole("button", { name: "동의하고 3분 점검 시작" }).click();
   await expect(
     page.locator('[role="alert"]').filter({ hasText: "필수 동의" }),
   ).toContainText("필수 동의");
@@ -132,7 +133,7 @@ test("does not write survey drafts to localStorage by default", async ({
 test("stores only non-sensitive result summary in sessionStorage", async ({
   page,
 }) => {
-  await completeSurvey(page, "/survey/leader/", 25);
+  await completeSurvey(page, "/survey/leader/", 10);
 
   const storageState = await page.evaluate(() => ({
     localResult: window.localStorage.getItem("agentproof-survey-result"),
@@ -146,8 +147,8 @@ test("stores only non-sensitive result summary in sessionStorage", async ({
     unknown
   >;
   expect(parsed).not.toHaveProperty("answers");
-  expect(JSON.stringify(parsed)).not.toContain("C01");
-  expect(JSON.stringify(parsed)).not.toContain("L07");
+  expect(JSON.stringify(parsed)).not.toContain("U01");
+  expect(JSON.stringify(parsed)).not.toContain("U07");
 });
 
 test("records beta, interview, and pilot actions separately without analytics PII", async ({
@@ -156,23 +157,23 @@ test("records beta, interview, and pilot actions separately without analytics PI
   await page.addInitScript(() => {
     window.dataLayer = [];
   });
-  await completeSurvey(page, "/survey/security/", 26);
+  await completeSurvey(page, "/survey/security/", 10);
 
-  await page.getByRole("button", { name: "초기 사용자 참여 신청" }).click();
+  await page.getByRole("button", { name: "체크리스트 이메일로 받기" }).click();
   await page.getByLabel("이메일").fill("qa+agentproof@example.com");
   await page.getByLabel(/초기 사용자 참여 안내/).check();
-  await page.getByRole("button", { name: "베타 신청 기록" }).click();
+  await page.getByRole("button", { name: "체크리스트 요청 기록" }).click();
   await expect(page.getByRole("status")).toContainText(
     "저장소가 연결되면 별도 기록됩니다",
   );
 
-  await page.getByRole("button", { name: "20분 고객 인터뷰 참여" }).click();
+  await page.getByRole("button", { name: "20분 인터뷰 참여하기" }).click();
   await page.getByLabel("이메일").fill("qa+interview@example.com");
   await page.getByLabel(/후속 고객 인터뷰/).check();
   await page.getByRole("button", { name: "인터뷰 신청 기록" }).click();
 
   await page
-    .getByRole("button", { name: "우리 조직 파일럿 상담 신청" })
+    .getByRole("button", { name: "우리 회사 AI 사용 기준 상담하기" })
     .click();
   await page.getByLabel("이메일").fill("qa+pilot@example.com");
   await page.getByLabel("회사 또는 팀명").fill("QA 테스트 팀");

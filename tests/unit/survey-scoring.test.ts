@@ -1,94 +1,117 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  inferPersonaFromAnswers,
   getReadinessBand,
   getSurveyDefinition,
+  getUnifiedSurveyDefinition,
   scoreSurvey,
   type SurveyAnswerMap,
 } from "../../lib/survey/scoring";
 
-describe("role-based survey question definitions", () => {
-  it("keeps the required question counts by persona", () => {
-    expect(getSurveyDefinition("practitioner").questions).toHaveLength(24);
-    expect(getSurveyDefinition("leader").questions).toHaveLength(25);
-    expect(getSurveyDefinition("security").questions).toHaveLength(26);
+describe("unified survey question definitions", () => {
+  it("uses one 10-question core survey for every visible entry point", () => {
+    const unified = getUnifiedSurveyDefinition();
+
+    expect(unified.questions).toHaveLength(10);
+    expect(getSurveyDefinition("practitioner").questions).toHaveLength(10);
+    expect(getSurveyDefinition("leader").questions).toHaveLength(10);
+    expect(getSurveyDefinition("security").questions).toHaveLength(10);
+    expect(unified.estimatedMinutes).toBe("약 3분");
   });
 
-  it("keeps common segmentation questions out of scoring", () => {
-    const practitioner = getSurveyDefinition("practitioner");
-    const leader = getSurveyDefinition("leader");
-    const segmentationIds = ["C01", "C02", "C03", "C04", "C05", "C06", "P07", "L22", "L23"];
+  it("infers persona from situation and concern answers", () => {
+    expect(inferPersonaFromAnswers({ U01: "direct_user" })).toBe("practitioner");
+    expect(inferPersonaFromAnswers({ U01: "adoption_owner" })).toBe("leader");
+    expect(inferPersonaFromAnswers({ U01: "security_owner" })).toBe("security");
+    expect(inferPersonaFromAnswers({ U05: "effect_cost" })).toBe("leader");
+    expect(inferPersonaFromAnswers({ U05: "data_leak" })).toBe("security");
+    expect(inferPersonaFromAnswers({ U05: "wrong_answer" })).toBe("practitioner");
+  });
 
-    for (const id of segmentationIds) {
-      const question =
-        practitioner.questions.find((candidate) => candidate.id === id) ??
-        leader.questions.find((candidate) => candidate.id === id);
-      expect(question?.scored).toBe(false);
-    }
+  it("keeps segmentation questions out of scoring", () => {
+    const unified = getUnifiedSurveyDefinition();
+    const segmentationIds = ["U01", "U02", "U03", "U04", "U09", "U10"];
+
+    expect(
+      unified.questions
+        .filter((question) => segmentationIds.includes(question.id))
+        .every((question) => question.scored === false),
+    ).toBe(true);
   });
 });
 
 describe("deterministic survey scoring", () => {
   it("normalizes maturity scores by dimension and excludes not-applicable answers", () => {
     const answers: SurveyAnswerMap = {
-      C04: "formal_some",
-      P07: "mostly",
-      P09: "established",
-      P13: "not_applicable",
-      P14: "mostly",
-      P15: "partial",
-      P16: "established",
-      P17: "mostly",
-      P18: "mostly",
-      P19: "partial",
-      P20: "mostly",
-      P21: "none",
-      P22: "mostly",
+      U01: "direct_user",
+      U02: "51_300",
+      U03: ["gen_ai", "copilot"],
+      U04: ["documents", "research"],
+      U05: "source_check",
+      U06: "public_only",
+      U07: "important_only",
+      U08: "partial",
+      U09: "checklist",
+      U10: "result_only",
     };
 
     const result = scoreSurvey("practitioner", answers);
 
     expect(result.totalScore).toBeGreaterThanOrEqual(60);
-    expect(result.dimensionScores["정책 인지도"]).toBeGreaterThanOrEqual(25);
-    expect(result.informationGapQuestionIds).not.toContain("P13");
-    expect(result.excludedQuestionIds).toContain("P13");
+    expect(result.dimensionScores["정보 입력 위험"]).toBeGreaterThanOrEqual(75);
+    expect(result.displayRiskBand).toBe("주의");
+    expect(result.inferredIntent).toBe("trust");
   });
 
   it("scores 모름 as zero and creates an information-gap flag", () => {
     const result = scoreSurvey("security", {
-      C04: "unknown",
-      S07: "unknown",
-      S08: "unknown",
-      S10: "unknown",
-      S16: "unknown",
-      S19: "unknown",
+      U01: "unclear",
+      U05: "unknown_usage",
+      U06: "unknown",
+      U07: "unknown",
+      U08: "unknown",
     });
 
     expect(result.totalScore).toBe(0);
     expect(result.informationGapQuestionIds).toEqual(
-      expect.arrayContaining(["S07", "S08", "S10", "S16", "S19"]),
+      expect.arrayContaining(["U06", "U07", "U08"]),
     );
-    expect(result.informationGapQuestionIds).not.toContain("C04");
     expect(result.riskFlags).toContain("정보 공백: 모름 응답이 있어 추가 확인이 필요합니다.");
+    expect(result.displayRiskBand).toBe("즉시 점검 필요");
   });
 
   it("reverse-scores unsafe behavior and raises critical warnings", () => {
     const result = scoreSurvey("practitioner", {
-      C04: "team",
-      P09: "no",
-      P11: ["personal_data", "confidential"],
-      P16: "none",
-      P18: "none",
+      U01: "direct_user",
+      U05: "data_leak",
+      U06: "personal_confidential",
+      U07: "rarely",
+      U08: "none",
     });
 
     expect(result.criticalWarnings).toEqual(
       expect.arrayContaining([
-        "소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.",
-        "외부 제출물이 사람 검토 없이 사용될 수 있습니다.",
-        "질문·답변·행동 로그가 없습니다.",
+        "회사 자료나 고객 정보가 AI에 입력될 가능성이 있습니다.",
+        "AI 답변을 사람 검토 없이 사용할 수 있습니다.",
+        "승인된 AI 도구 목록이나 사용정책이 명확하지 않습니다.",
       ]),
     );
     expect(result.effectiveBand.label).toBe("기준 정립 필요");
+    expect(result.displayRiskBand).toBe("즉시 점검 필요");
+  });
+
+  it("always returns three visible risk review prompts for the report", () => {
+    const result = scoreSurvey("practitioner", {
+      U01: "direct_user",
+      U05: "source_check",
+      U06: "public_only",
+      U07: "always",
+      U08: "clear",
+    });
+
+    expect(result.topRisks).toHaveLength(3);
+    expect(result.topRisks.every((risk) => risk.length > 0)).toBe(true);
   });
 
   it("maps all readiness bands", () => {

@@ -12,7 +12,6 @@ import styles from "@/styles/landing.module.css";
 
 import {
   landingVariant,
-  pilotDeliverables,
   processSteps,
   productTabs,
   roleProblemCards,
@@ -111,13 +110,13 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 초기 사용자 모집
               </div>
               <h1 id="hero-heading">
-                업무 AI,
+                회사에서 AI 쓰고 있는데,
                 <br />
-                어디까지 맡겨도 될까요?
+                어디까지 믿어도 될까요?
               </h1>
               <p className={styles.heroCopy}>
-                실무자의 사용 기준, 도입 담당자의 우선순위, 보안 담당자의 통제
-                기준을 진단합니다.
+                ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent 사용 중 생길 수 있는
+                오답, 기밀 유출, 승인 책임, 보안 기준 문제를 3분 안에 점검해보세요.
               </p>
               <div className={styles.heroActions}>
                 <Link
@@ -125,20 +124,20 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   href="/survey/"
                   onClick={() => trackSurveyCta("hero")}
                 >
-                  AI 업무 자가점검 시작
+                  무료로 AI 업무 위험도 확인하기
                 </Link>
                 <button
                   className={styles.textLink}
                   type="button"
                   onClick={handleProductClick}
                 >
-                  예시 화면 보기 ↘
+                  결과 예시 보기 ↘
                 </button>
               </div>
               <ul className={styles.heroMeta} aria-label="대상 안내">
-                <li>실무자</li>
-                <li>대표·도입 담당자</li>
-                <li>보안·정책 담당자</li>
+                <li>이메일 없이 결과 확인 가능</li>
+                <li>회사 기밀 입력 없음</li>
+                <li>약 3분 소요</li>
               </ul>
 
               <section
@@ -147,8 +146,8 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 aria-label="제품 화면 미리보기"
               >
                 <div className={styles.showcaseHead}>
-                  <p>예시 화면 · 문서·규정 검색 AI</p>
-                  <span>SAMPLE DATA · 예시 화면</span>
+                <p>결과 예시 · AI 업무 위험도</p>
+                <span>SAMPLE DATA · 예시 화면</span>
                 </div>
                 <div className={styles.productStage}>
                   <div className={styles.desktopDashboard}>
@@ -193,22 +192,22 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
           </section>
 
           <section
-            id="roles"
+            id="problem"
             className={styles.rolesSection}
             aria-labelledby="roles-heading"
           >
             <div className={styles.wrap}>
               <div className={styles.rolesHead}>
                 <div>
-                  <p className={styles.sectionKicker}>역할별 고민</p>
+                  <p className={styles.sectionKicker}>문제</p>
                   <h2 id="roles-heading" className={styles.sectionTitle}>
-                    어디에서 가장
+                    AI를 쓰기 시작하면,
                     <br />
-                    막히시나요?
+                    이런 문제가 먼저 생깁니다
                   </h2>
                 </div>
                 <p className={styles.sectionCopy}>
-                  역할마다 필요한 첫 서비스가 다릅니다.
+                  지금 가장 가까운 문제에서 바로 점검을 시작할 수 있습니다.
                 </p>
               </div>
 
@@ -217,7 +216,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <article className={styles.roleCard} key={role.index}>
                     <span>{role.index}</span>
                     <h3>{role.role}</h3>
-                    <p className={styles.roleQuestion}>“{role.problem}”</p>
+                    <p className={styles.roleQuestion}>{role.problem}</p>
                     <strong>
                       <i aria-hidden="true" />
                       {role.outcome}
@@ -228,7 +227,6 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                       onClick={() => {
                         trackEvent("role_problem_click", {
                           placement: role.placement,
-                          role: role.role,
                           problem: role.defaultProblem,
                         });
                         trackSurveyCta(
@@ -239,10 +237,25 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                         );
                       }}
                     >
-                      이 문제 선택 <span aria-hidden="true">→</span>
+                      이 문제로 점검하기 <span aria-hidden="true">→</span>
                     </Link>
                   </article>
                 ))}
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="result-example"
+            className={styles.finalCta}
+            aria-labelledby="result-example-heading"
+          >
+            <div className={styles.wrap}>
+              <div className={styles.finalPanel}>
+                <p className={styles.sectionKicker}>결과 예시</p>
+                <h2 id="result-example-heading">설문을 마치면 이런 결과를 바로 확인합니다</h2>
+                <p>AI 업무 위험도: 주의 · 가장 큰 위험: 회사 자료 입력 기준 부족 · 이번 주 할 일: 입력 금지 정보 5가지 정하기</p>
+                <p className={styles.finalNote}>추천 결과물: AI 사용 체크리스트 · SAMPLE DATA</p>
               </div>
             </div>
           </section>
@@ -254,14 +267,14 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
           >
             <div className={`${styles.wrap} ${styles.processGrid}`}>
               <div>
-                <p className={styles.darkKicker}>처음 검증할 업무</p>
+                <p className={styles.darkKicker}>진행 방식</p>
                 <h2 id="process-heading" className={styles.sectionTitle}>
-                  첫 파일럿은
+                  진행은
                   <br />
-                  문서·규정 검색부터.
+                  간단합니다
                 </h2>
                 <p className={styles.processCopy}>
-                  답변, 근거, 정책 위험을 실제 질문으로 검증합니다.
+                  결과를 먼저 보여드리고, 체크리스트와 인터뷰·파일럿 상담은 선택으로 받습니다.
                 </p>
                 <ol className={styles.processSteps}>
                   {processSteps.map((step) => (
@@ -278,9 +291,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     href="/survey/"
                     onClick={() => trackSurveyCta("process")}
                   >
-                    역할별 진단 시작
+                    3분 점검 시작
                   </Link>
-                  <p>기밀자료 없이 상담할 수 있습니다.</p>
+                  <p>기밀자료 없이 점검할 수 있습니다.</p>
                 </div>
               </div>
               <div
@@ -290,18 +303,36 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
               >
                 <header>
                   <b>받게 되는 것</b>
-                  <span>확인하는 결과</span>
+                  <span>AgentProof가 확인하는 것</span>
                 </header>
                 <ol>
-                  {pilotDeliverables.map((item) => (
-                    <li key={item.number}>
-                      <i>{item.number}</i>
-                      <div>
-                        <b>{item.title}</b>
-                      </div>
-                    </li>
-                  ))}
+                  <li><i>01</i><div><b>답변 근거</b></div></li>
+                  <li><i>02</i><div><b>위험 테스트</b></div></li>
+                  <li><i>03</i><div><b>승인 기록</b></div></li>
                 </ol>
+              </div>
+            </div>
+          </section>
+
+          <section
+            id="faq"
+            className={styles.rolesSection}
+            aria-labelledby="faq-heading"
+          >
+            <div className={styles.wrap}>
+              <p className={styles.sectionKicker}>FAQ</p>
+              <h2 id="faq-heading" className={styles.sectionTitle}>자주 묻는 질문</h2>
+              <div className={styles.roleGrid}>
+                {[
+                  ["이메일을 꼭 입력해야 하나요?", "아니요. 결과는 이메일 없이 바로 볼 수 있습니다."],
+                  ["회사 자료나 기밀을 입력해야 하나요?", "아니요. 회사명, 고객명, 기밀자료는 입력하지 않습니다."],
+                  ["AI Agent를 쓰지 않아도 참여할 수 있나요?", "네. ChatGPT, Copilot, Claude, Gemini, 사내 챗봇을 업무에 쓰거나 검토 중이어도 참여할 수 있습니다."],
+                ].map(([question, answer]) => (
+                  <article className={styles.roleCard} key={question}>
+                    <h3>{question}</h3>
+                    <p>{answer}</p>
+                  </article>
+                ))}
               </div>
             </div>
           </section>
@@ -317,24 +348,24 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <br />
                   알려주세요.
                 </h2>
-                <p>응답을 바탕으로 첫 고객과 기능 우선순위를 정합니다.</p>
+                <p>3분 점검으로 우리 회사 AI 사용 기준을 먼저 확인하세요.</p>
                 <div className={styles.finalActions}>
                   <Link
                     className={`${styles.button} ${styles.buttonDark} ${styles.buttonLarge}`}
                     href="/survey/"
                     onClick={() => trackSurveyCta("final")}
                   >
-                    역할별 진단 시작
+                    무료로 AI 업무 위험도 확인하기
                   </Link>
                   <a
                     className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`}
                     href="#product"
                   >
-                    예시 화면 다시 보기
+                    결과 예시 다시 보기
                   </a>
                 </div>
                 <p className={styles.finalNote}>
-                  참여자에게 역할별 체크리스트와 파일럿 안내를 보냅니다.
+                  체크리스트와 인터뷰·파일럿 상담은 결과 확인 후 선택할 수 있습니다.
                 </p>
               </div>
             </div>

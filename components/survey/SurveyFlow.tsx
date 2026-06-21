@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { trackEvent } from "@/lib/analytics";
 import { canSubmitSurvey, consentTextHashes, consentVersion } from "@/lib/survey/consent";
-import { getSurveyDefinition } from "@/lib/survey/questions";
+import { getSurveyDefinition, inferPersonaFromAnswers } from "@/lib/survey/questions";
 import { scoreSurvey } from "@/lib/survey/scoring";
 import {
   getSurveySubmissionMode,
@@ -67,6 +67,11 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
       utm_campaign: stored.campaign ?? "",
     });
 
+    trackEvent("survey_core_started", {
+      entry_persona: persona,
+      survey_version: "2026-06-21",
+      question_count: definition.questionCount,
+    });
   }, [definition.questionCount, persona]);
 
   useEffect(() => {
@@ -138,13 +143,14 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
       return;
     }
 
-    const result = scoreSurvey(persona, answers);
+    const inferredPersona = inferPersonaFromAnswers(answers);
+    const result = scoreSurvey(inferredPersona, answers);
     const stored = getStoredUtm(window.sessionStorage);
     const sessionId = crypto.randomUUID();
     const idempotencyKey = crypto.randomUUID();
     const submission = validateSurveySubmission({
       sessionId,
-      persona,
+      persona: inferredPersona,
       surveyVersion: result.surveyVersion,
       scoringVersion: result.scoringVersion,
       idempotencyKey,
@@ -176,7 +182,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
       "agentproof-survey-result",
       JSON.stringify({
         sessionId,
-        persona,
+        persona: inferredPersona,
         result,
         submissionMode,
         completedAt: new Date().toISOString(),
@@ -184,11 +190,11 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
     );
     window.localStorage.removeItem(draftKey);
     trackEvent("survey_completed", {
-      persona,
+      persona: inferredPersona,
       survey_version: result.surveyVersion,
       question_count: definition.questionCount,
-      completion_time_band: "7_10_min",
-      result_band: result.effectiveBand.label,
+      completion_time_band: "under_3_min",
+      result_band: result.displayRiskBand,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
@@ -208,15 +214,15 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           aria-labelledby="consent-title"
         >
           <Link className={styles.backLink} href="/survey/">
-            역할 다시 선택
+            설문 소개로 돌아가기
           </Link>
-          <p className={styles.eyebrow}>개인정보 확인</p>
+          <p className={styles.eyebrow}>3분 AI 업무 위험도 점검</p>
           <h1 id="consent-title" ref={headingRef} tabIndex={-1}>
-            동의 후 진단을 시작합니다
+            결과를 보여드리기 위해 필요한 확인이에요
           </h1>
           <p className={styles.lead}>
-            첫 응답 전에 필수 동의를 확인합니다. 이메일은 선택이며 입력하지 않아도 결과를
-            볼 수 있습니다. 응답과 선택 연락처는 목적별로 분리해 저장합니다.
+            이 설문은 AI 업무 사용 상황을 점검하고 결과를 보여드리기 위해 사용됩니다.
+            이름, 전화번호, 회사 기밀은 묻지 않습니다. 이메일은 결과 확인 후 원할 때만 입력합니다.
           </p>
           <ConsentPanel consents={consents} onChange={setConsents} />
           <StorageNotice mode={submissionMode} />
@@ -235,7 +241,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
               data-testid="survey-consent-continue"
               onClick={beginSurvey}
             >
-              동의하고 진단 시작
+              동의하고 3분 점검 시작
             </button>
           </div>
         </section>
@@ -252,7 +258,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
       >
         <section className={styles.surveyPanel} aria-labelledby="confirm-title">
           <Link className={styles.backLink} href="/survey/">
-            역할 다시 선택
+            설문 소개로 돌아가기
           </Link>
           <p className={styles.eyebrow}>제출 전 확인</p>
           <h1 id="confirm-title" ref={headingRef} tabIndex={-1}>
@@ -295,7 +301,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
     >
       <section className={styles.surveyPanel} aria-labelledby="question-title">
         <Link className={styles.backLink} href="/survey/">
-          역할 다시 선택
+            설문 소개로 돌아가기
         </Link>
         <div className={styles.progressRow}>
           <span data-testid="survey-progress">
@@ -407,8 +413,9 @@ function ConsentPanel({
         </span>
       </label>
       <p>
-        수집 항목은 역할, 조직 규모, 업종, AI 활용·도입 단계, 설문 응답, 세션 식별자,
-        제출 시각, UTM입니다. 보유 기간은 제출일로부터 6개월입니다.
+        수집 항목은 조직 규모, AI 사용 상황, 설문 응답, 세션 식별자, 제출 시각,
+        UTM입니다. 이름, 전화번호, 회사명, 고객명, 회사 기밀은 묻지 않습니다.
+        보유 기간은 제출일로부터 6개월입니다.
       </p>
     </div>
   );

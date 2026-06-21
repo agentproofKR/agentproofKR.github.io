@@ -1,9 +1,13 @@
 import {
+  inferIntentFromAnswers,
+  inferPersonaFromAnswers,
   getSurveyDefinition as getDefinition,
+  getUnifiedSurveyDefinition,
   scoringVersion,
   surveyVersion,
 } from "./questions";
 import type {
+  DisplayRiskBand,
   Persona,
   ReadinessBand,
   SurveyAnswerMap,
@@ -13,7 +17,11 @@ import type {
 } from "./types";
 
 export type { SurveyAnswerMap };
-export { getDefinition as getSurveyDefinition };
+export {
+  getDefinition as getSurveyDefinition,
+  getUnifiedSurveyDefinition,
+  inferPersonaFromAnswers,
+};
 
 const readinessBands: readonly ReadinessBand[] = [
   {
@@ -110,9 +118,12 @@ export function scoreSurvey(persona: Persona, answers: SurveyAnswerMap): SurveyS
   ];
   const band = getReadinessBand(totalScore);
   const effectiveBand = criticalWarnings.length > 0 ? readinessBands[0] : band;
+  const displayRiskBand = getDisplayRiskBand(effectiveBand);
+  const inferredPersona = inferPersonaFromAnswers(answers);
+  const inferredIntent = inferIntentFromAnswers(answers);
 
   return {
-    persona,
+    persona: inferredPersona,
     surveyVersion,
     scoringVersion,
     totalScore,
@@ -123,9 +134,11 @@ export function scoreSurvey(persona: Persona, answers: SurveyAnswerMap): SurveyS
     criticalWarnings,
     informationGapQuestionIds,
     excludedQuestionIds,
-    topRisks: unique(riskFlags).slice(0, 3),
+    topRisks: unique([...riskFlags, ...getDefaultRiskReviewPrompts()]).slice(0, 3),
     recommendedActions: getRecommendedActions(persona, dimensionScores, criticalWarnings),
     featureHypothesis: getFeatureHypothesis(persona, dimensionScores),
+    displayRiskBand,
+    inferredIntent,
   };
 }
 
@@ -162,35 +175,17 @@ function scoreAnswer(question: SurveyQuestion, answer: SurveyAnswerValue | undef
 
 function getCriticalWarnings(persona: Persona, answers: SurveyAnswerMap): string[] {
   const warnings: string[] = [];
-  const p11 = asArray(answers.P11);
-  const c05 = asArray(answers.C05);
 
-  if (
-    persona === "practitioner" &&
-    (p11.includes("personal_data") || p11.includes("confidential")) &&
-    (answers.P09 === "no" || answers.P10 === "personal" || c05.includes("gen_ai"))
-  ) {
-    warnings.push("소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.");
+  if (answers.U06 === "customer_contract" || answers.U06 === "personal_confidential") {
+    warnings.push("회사 자료나 고객 정보가 AI에 입력될 가능성이 있습니다.");
   }
 
-  if (answers.P16 === "none" || answers.L19 === "no") {
-    warnings.push("외부 제출물이 사람 검토 없이 사용될 수 있습니다.");
+  if (answers.U07 === "rarely" || answers.U07 === "no_standard") {
+    warnings.push("AI 답변을 사람 검토 없이 사용할 수 있습니다.");
   }
 
-  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "no") {
-    warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
-  }
-
-  if (answers.S22 === "no") {
-    warnings.push("행동 수행 Agent에 사람 승인 절차가 없습니다.");
-  }
-
-  if (answers.P18 === "none" || answers.S16 === "none") {
-    warnings.push("질문·답변·행동 로그가 없습니다.");
-  }
-
-  if (answers.S19 === "unknown") {
-    warnings.push("공급자의 모델 학습 또는 국외 이전 상태를 알 수 없습니다.");
+  if (answers.U08 === "none" || answers.U08 === "verbal" || answers.U08 === "unknown") {
+    warnings.push("승인된 AI 도구 목록이나 사용정책이 명확하지 않습니다.");
   }
 
   return unique(warnings);
@@ -202,26 +197,30 @@ function getDimensionRiskFlags(dimensionScores: Record<string, number>): string[
     .map(([dimension]) => `${dimension}: 기준 보완이 필요합니다.`);
 }
 
+function getDefaultRiskReviewPrompts(): string[] {
+  return [
+    "AI에 입력하면 안 되는 회사 자료와 고객 정보를 먼저 정하세요.",
+    "AI 답변을 외부 제출 전에 사람이 확인해야 하는 업무를 정하세요.",
+    "회사에서 허용하는 AI 도구와 사용 기준을 확인하세요.",
+  ];
+}
+
 function getRecommendedActions(
   persona: Persona,
   dimensionScores: Record<string, number>,
   criticalWarnings: string[],
 ): string[] {
-  const lowestDimensions = Object.entries(dimensionScores)
-    .sort(([, a], [, b]) => a - b)
-    .slice(0, 2)
-    .map(([dimension]) => `${dimension} 기준을 먼저 문서화하세요.`);
-  const personaAction =
-    persona === "practitioner"
-      ? "외부 제출 전 사람 검토와 출처 확인 체크리스트를 적용하세요."
-      : persona === "leader"
-        ? "파일럿 범위, 통과 기준, 종료 조건을 한 페이지로 정리하세요."
-        : "승인 도구 목록, 금지정보, 로그 보유 기간을 우선 확정하세요.";
-
   return unique([
-    ...(criticalWarnings.length > 0 ? ["중요 경고 항목은 파일럿 전에 차단 기준으로 전환하세요."] : []),
-    ...lowestDimensions,
-    personaAction,
+    ...(criticalWarnings.length > 0
+      ? ["AI에 입력하면 안 되는 정보 5가지를 정하세요."]
+      : []),
+    "외부 제출 전 사람이 반드시 확인해야 하는 업무를 정하세요.",
+    persona === "leader"
+      ? "AI를 먼저 도입할 업무 1개와 성공 기준을 정하세요."
+      : persona === "security"
+        ? "회사에서 허용하는 AI 도구 목록을 만드세요."
+        : "AI 답변의 근거와 출처를 확인하는 체크리스트를 만드세요.",
+    "회사에서 허용하는 AI 도구 목록을 만드세요.",
   ]).slice(0, 3);
 }
 
@@ -229,19 +228,25 @@ function getFeatureHypothesis(persona: Persona, dimensionScores: Record<string, 
   const lowest = Object.entries(dimensionScores).sort(([, a], [, b]) => a - b)[0]?.[0];
 
   if (persona === "practitioner") {
-    return `AgentProof는 ${lowest ?? "답변 신뢰성"}을 보완하는 업무별 안전 사용 체크리스트를 우선 제공해야 합니다.`;
+    return `AgentProof는 답변 근거 확인, 위험 테스트, 승인 기록으로 ${lowest ?? "답변 검토 기준"}을 보완할 수 있습니다.`;
   }
   if (persona === "leader") {
-    return `AgentProof는 ${lowest ?? "업무 우선순위"}을 설명하는 도입 우선순위 리포트를 우선 제공해야 합니다.`;
+    return `AgentProof는 도입 우선순위와 사람 검토 기준을 리포트로 정리해 ${lowest ?? "사용 기준 성숙도"}을 보완할 수 있습니다.`;
   }
-  return `AgentProof는 ${lowest ?? "정책 성숙도"}을 보완하는 AI 사용정책 스타터 체크리스트를 우선 제공해야 합니다.`;
+  return `AgentProof는 금지 정보, 허용 도구, 승인 기록 기준을 정리해 ${lowest ?? "정보 입력 위험"}을 보완할 수 있습니다.`;
 }
 
-function asArray(value: SurveyAnswerValue | undefined): string[] {
-  if (Array.isArray(value)) {
-    return value;
+function getDisplayRiskBand(band: ReadinessBand): DisplayRiskBand {
+  if (band.label === "기준 정립 필요") {
+    return "즉시 점검 필요";
   }
-  return value ? [value] : [];
+  if (band.label === "제한적 실험 적합") {
+    return "위험";
+  }
+  if (band.label === "통제 기반 확대 준비") {
+    return "주의";
+  }
+  return "낮음";
 }
 
 function unique(values: string[]): string[] {

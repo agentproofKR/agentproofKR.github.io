@@ -1,4 +1,6 @@
 export type Persona = "practitioner" | "leader" | "security";
+export type SurveyIntent = "trust" | "adoption" | "security" | "unknown";
+export type DisplayRiskBand = "낮음" | "주의" | "위험" | "즉시 점검 필요";
 
 export type QuestionType = "single" | "multi" | "scale" | "yes_no";
 
@@ -54,6 +56,8 @@ export type SurveyScoreResult = {
   topRisks: string[];
   recommendedActions: string[];
   featureHypothesis: string;
+  displayRiskBand: DisplayRiskBand;
+  inferredIntent: SurveyIntent;
 };
 
 export type ConsentState = {

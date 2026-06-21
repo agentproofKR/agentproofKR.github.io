@@ -1,4 +1,4 @@
-import type { Persona, SurveyDefinition, SurveyOption, SurveyQuestion } from "./types";
+import type { Persona, SurveyAnswerMap, SurveyDefinition, SurveyIntent, SurveyOption, SurveyQuestion } from "./types";
 
 export const surveyVersion = "2026-06-21";
 export const scoringVersion = "2026-06-21";
@@ -155,6 +155,71 @@ const supportOptions = [
   { value: "pilot_plan", label: "파일럿 실행 계획" },
   { value: "unknown", label: "아직 명확하지 않음" },
 ] as const satisfies readonly SurveyOption[];
+
+const situationOptions = [
+  { value: "direct_user", label: "내가 직접 AI를 업무에 쓰고 있다" },
+  { value: "adoption_owner", label: "팀이나 회사에 AI 도입을 검토하고 있다" },
+  { value: "security_owner", label: "AI 사용 기준, 보안, 개인정보가 걱정된다" },
+  { value: "unclear", label: "아직 명확하지 않지만 AI 사용이 불안하다" },
+] as const satisfies readonly SurveyOption[];
+
+const concernOptions = [
+  { value: "wrong_answer", label: "AI 답변이 틀릴까 봐 걱정된다", score: 1 },
+  { value: "source_check", label: "근거와 출처를 확인하기 어렵다", score: 1 },
+  { value: "data_leak", label: "개인정보나 회사 기밀이 들어갈까 봐 걱정된다", score: 0 },
+  { value: "approval_gap", label: "누가 승인하고 책임지는지 기준이 없다", score: 0 },
+  { value: "where_to_start", label: "어떤 업무부터 도입해야 할지 모르겠다", score: 1 },
+  { value: "effect_cost", label: "비용 대비 효과를 설명하기 어렵다", score: 1 },
+  { value: "unknown_usage", label: "직원들이 어떤 AI를 쓰는지 파악하기 어렵다", score: 0 },
+] as const satisfies readonly SurveyOption[];
+
+const dataInputOptions = [
+  { value: "none", label: "없다", score: 4 },
+  { value: "public_only", label: "공개 정보만 입력한다", score: 4 },
+  { value: "internal_general", label: "일반 사내자료를 입력한 적이 있다", score: 2 },
+  { value: "customer_contract", label: "고객·계약 정보를 입력한 적이 있다", score: 1 },
+  { value: "personal_confidential", label: "개인정보나 회사 기밀을 입력한 적이 있다", score: 0 },
+  { value: "unknown", label: "잘 모르겠다", score: 0 },
+] as const satisfies readonly SurveyOption[];
+
+const humanReviewOptions = [
+  { value: "always", label: "항상 확인한다", score: 4 },
+  { value: "important_only", label: "중요한 경우만 확인한다", score: 2 },
+  { value: "rarely", label: "거의 확인하지 않는다", score: 0 },
+  { value: "no_standard", label: "확인 기준이 없다", score: 0 },
+  { value: "unknown", label: "잘 모르겠다", score: 0 },
+] as const satisfies readonly SurveyOption[];
+
+const policyOptions = [
+  { value: "clear", label: "명확한 기준이 있고 안내되어 있다", score: 4 },
+  { value: "partial", label: "일부 기준은 있다", score: 2 },
+  { value: "verbal", label: "구두로만 안내되어 있다", score: 1 },
+  { value: "none", label: "기준이 없다", score: 0 },
+  { value: "unknown", label: "잘 모르겠다", score: 0 },
+] as const satisfies readonly SurveyOption[];
+
+const followupPreferenceOptions = [
+  { value: "result_only", label: "결과만 확인하고 싶다" },
+  { value: "checklist", label: "체크리스트를 받고 싶다" },
+  { value: "interview", label: "20분 인터뷰에 참여할 수 있다" },
+  { value: "pilot", label: "우리 회사 상황으로 파일럿 상담을 받고 싶다" },
+  { value: "later", label: "나중에 다시 보고 싶다" },
+] as const satisfies readonly SurveyOption[];
+
+export const unifiedCoreQuestions = [
+  { id: "U01", text: "지금 가장 가까운 상황은 무엇인가요?", type: "single", options: situationOptions, scored: false },
+  { id: "U02", text: "조직 규모는 어느 정도인가요?", type: "single", options: orgSizeOptions, scored: false },
+  { id: "U03", text: "현재 사용하거나 검토 중인 AI는 무엇인가요?", type: "multi", options: aiTypeOptions, maxSelections: 4, scored: false },
+  { id: "U04", text: "AI를 주로 어떤 업무에 쓰거나 쓰고 싶나요?", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
+  { id: "U05", text: "AI 사용에서 가장 불안한 점은 무엇인가요?", type: "single", options: concernOptions, scored: false },
+  { id: "U06", text: "AI에 회사 자료나 고객 정보를 입력한 적이 있나요?", type: "single", options: dataInputOptions, scored: true, dimension: "정보 입력 위험" },
+  { id: "U07", text: "AI 답변을 업무에 쓰기 전에 사람이 다시 확인하나요?", type: "single", options: humanReviewOptions, scored: true, dimension: "답변 검토 기준" },
+  { id: "U08", text: "회사나 팀에 AI 사용 기준이 있나요?", type: "single", options: policyOptions, scored: true, dimension: "사용 기준 성숙도" },
+  { id: "U09", text: "지금 가장 먼저 필요한 도움은 무엇인가요?", type: "single", options: supportOptions, scored: false },
+  { id: "U10", text: "결과를 본 뒤 어떤 후속 참여가 가장 편한가요?", type: "single", options: followupPreferenceOptions, scored: false },
+] as const satisfies readonly SurveyQuestion[];
+
+const unifiedDimensions = ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"] as const;
 
 const departmentOptions = [
   { value: "operations", label: "운영·관리" },
@@ -341,24 +406,79 @@ export const personaDefinitions = {
   },
 } as const satisfies Record<Persona, SurveyDefinition>;
 
+const unifiedDefinition = {
+  persona: "practitioner",
+  title: "AI 업무 위험도 3분 점검",
+  description:
+    "ChatGPT, Copilot, Claude, 사내 챗봇, AI Agent 사용 중 생길 수 있는 오답, 기밀 유출, 승인 책임, 보안 기준 문제를 점검합니다.",
+  questionCount: 10,
+  estimatedMinutes: "약 3분",
+  dimensions: unifiedDimensions,
+  questions: unifiedCoreQuestions,
+} as const satisfies SurveyDefinition;
+
 export function getSurveyDefinition(persona: Persona): SurveyDefinition {
-  return personaDefinitions[persona];
+  return {
+    ...unifiedDefinition,
+    persona,
+  };
+}
+
+export function getUnifiedSurveyDefinition(): SurveyDefinition {
+  return unifiedDefinition;
 }
 
 export function getAllQuestionIds(): Set<string> {
-  return new Set(
-    Object.values(personaDefinitions).flatMap((definition) =>
-      definition.questions.map((question) => question.id),
-    ),
-  );
+  return new Set(unifiedCoreQuestions.map((question) => question.id));
 }
 
 export function getQuestionById(persona: Persona, id: string): SurveyQuestion | undefined {
-  return personaDefinitions[persona].questions.find((question) => question.id === id);
+  return getSurveyDefinition(persona).questions.find((question) => question.id === id);
 }
 
 export function getPersonaPath(persona: Persona): string {
   return `/survey/${persona}/`;
+}
+
+export function inferPersonaFromAnswers(answers: SurveyAnswerMap): Persona {
+  if (answers.U01 === "direct_user") {
+    return "practitioner";
+  }
+  if (answers.U01 === "adoption_owner") {
+    return "leader";
+  }
+  if (answers.U01 === "security_owner") {
+    return "security";
+  }
+
+  if (answers.U05 === "where_to_start" || answers.U05 === "effect_cost") {
+    return "leader";
+  }
+  if (
+    answers.U05 === "data_leak" ||
+    answers.U05 === "approval_gap" ||
+    answers.U05 === "unknown_usage"
+  ) {
+    return "security";
+  }
+  return "practitioner";
+}
+
+export function inferIntentFromAnswers(answers: SurveyAnswerMap): SurveyIntent {
+  if (answers.U05 === "where_to_start" || answers.U05 === "effect_cost") {
+    return "adoption";
+  }
+  if (
+    answers.U05 === "data_leak" ||
+    answers.U05 === "approval_gap" ||
+    answers.U05 === "unknown_usage"
+  ) {
+    return "security";
+  }
+  if (answers.U05 === "wrong_answer" || answers.U05 === "source_check") {
+    return "trust";
+  }
+  return "unknown";
 }
 
 function withCommonDimensions(
