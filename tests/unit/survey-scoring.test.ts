@@ -75,7 +75,7 @@ describe("deterministic survey scoring", () => {
   it("reverse-scores unsafe behavior and raises critical warnings", () => {
     const result = scoreSurvey("practitioner", {
       C04: "team",
-      P09: "none",
+      P09: "no",
       P11: ["personal_data", "confidential"],
       P16: "none",
       P18: "none",

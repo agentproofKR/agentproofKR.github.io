@@ -317,7 +317,7 @@ function personaAnswers(persona, answers) {
       ...answers,
       P07: "daily",
       P08: ["documents"],
-      P09: "none",
+      P09: "no",
       P10: "personal",
       P11: ["personal_data", "confidential"],
       P12: "yes",

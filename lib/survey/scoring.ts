@@ -168,7 +168,7 @@ function getCriticalWarnings(persona: Persona, answers: SurveyAnswerMap): string
   if (
     persona === "practitioner" &&
     (p11.includes("personal_data") || p11.includes("confidential")) &&
-    (answers.P09 === "none" || answers.P10 === "personal" || c05.includes("gen_ai"))
+    (answers.P09 === "no" || answers.P10 === "personal" || c05.includes("gen_ai"))
   ) {
     warnings.push("소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.");
   }
@@ -177,7 +177,7 @@ function getCriticalWarnings(persona: Persona, answers: SurveyAnswerMap): string
     warnings.push("외부 제출물이 사람 검토 없이 사용될 수 있습니다.");
   }
 
-  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "none") {
+  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "no") {
     warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
   }
 

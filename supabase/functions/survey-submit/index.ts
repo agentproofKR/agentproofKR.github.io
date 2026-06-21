@@ -539,12 +539,12 @@ function criticalWarningsFor(payload: SurveyPayload): string[] {
   if (
     payload.persona === "practitioner" &&
     (p11.includes("personal_data") || p11.includes("confidential")) &&
-    (answers.P09 === "none" || answers.P10 === "personal" || c05.includes("gen_ai"))
+    (answers.P09 === "no" || answers.P10 === "personal" || c05.includes("gen_ai"))
   ) {
     warnings.push("소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.");
   }
   if (answers.P16 === "none" || answers.L19 === "no") warnings.push("외부 제출물이 사람 검토 없이 사용될 수 있습니다.");
-  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "none") warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
+  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "no") warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
   if (answers.S22 === "no") warnings.push("행동 수행 Agent에 사람 승인 절차가 없습니다.");
   if (answers.P18 === "none" || answers.S16 === "none") warnings.push("질문·답변·행동 로그가 없습니다.");
   if (answers.S19 === "unknown") warnings.push("공급자의 모델 학습 또는 국외 이전 상태를 알 수 없습니다.");
