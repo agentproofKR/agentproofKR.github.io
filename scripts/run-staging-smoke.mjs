@@ -80,19 +80,18 @@ await runCheck("Browser survey keeps disabled-storage results local and non-sens
     { waitUntil: "networkidle" },
   );
 
+  const storageNotice = await page.locator("body").textContent();
+  if (storageNotice?.includes("설문 저장소가 연결되어")) {
+    await browser.close();
+    return { skipped: "live storage configured; use verify:production:supabase for QA writes" };
+  }
+
+  await acceptRequiredSurveyConsents(page);
   const questionCount = Number(await page.getByTestId("survey-shell").getAttribute("data-question-count"));
   for (let index = 0; index < questionCount; index += 1) {
     await answerCurrentQuestion(page);
   }
 
-  const storageNotice = await page.locator("body").textContent();
-  if (storageNotice?.includes("설문 저장소가 연결되어 있습니다.")) {
-    await browser.close();
-    return { skipped: "live storage configured; use verify:production:supabase for QA writes" };
-  }
-
-  await page.getByLabel("만 14세 이상입니다.").check();
-  await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
   await page.getByRole("button", { name: "결과 확인" }).click();
   await page.waitForURL(/\/survey\/result\/$/);
 
@@ -206,6 +205,14 @@ async function answerCurrentQuestion(page) {
     await question.getByRole("radio").first().check();
   }
   await page.getByRole("button", { name: "계속" }).click();
+}
+
+async function acceptRequiredSurveyConsents(page) {
+  await page.getByTestId("survey-consent-step").waitFor();
+  await page.getByLabel("만 14세 이상입니다.").check();
+  await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
+  await page.getByRole("button", { name: "동의하고 진단 시작" }).click();
+  await page.getByTestId("survey-question").waitFor();
 }
 
 function renderMarkdown(summary) {
