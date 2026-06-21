@@ -26,9 +26,9 @@ let cachedResultValue: StoredResult | null = null;
 
 const requestLabels = {
   beta: {
-    open: "베타테스터 우선 신청",
+    open: "초기 사용자 참여 신청",
     submit: "베타 신청 기록",
-    consent: "[선택] AgentProof 베타테스트 및 참여 리워드 안내 동의",
+    consent: "[선택] AgentProof 초기 사용자 참여 안내 동의",
     event: "beta_optin",
   },
   interview: {
@@ -95,11 +95,7 @@ export function SurveyResult() {
         </p>
         <div className={styles.scorePanel}>
           <div>
-            <span>총점</span>
-            <strong>{result.totalScore}</strong>
-          </div>
-          <div>
-            <span>판정</span>
+            <span>현재 상태</span>
             <strong>{result.effectiveBand.label}</strong>
             <p>{result.effectiveBand.summary}</p>
           </div>
@@ -113,7 +109,7 @@ export function SurveyResult() {
 
       <section className={styles.resultGrid} aria-label="결과 세부 항목">
         <article className={styles.resultCard}>
-          <h2>5개 차원 점수</h2>
+          <h2>항목별 결과</h2>
           {Object.entries(result.dimensionScores).map(([dimension, score]) => (
             <div className={styles.scoreRow} key={dimension}>
               <span>{dimension}</span>
@@ -123,7 +119,7 @@ export function SurveyResult() {
           ))}
         </article>
         <article className={styles.resultCard}>
-          <h2>상위 위험 3개</h2>
+          <h2>먼저 확인할 3가지</h2>
           <ol>
             {result.topRisks.map((risk) => (
               <li key={risk}>{risk}</li>
@@ -131,7 +127,7 @@ export function SurveyResult() {
           </ol>
         </article>
         <article className={styles.resultCard}>
-          <h2>권장 액션 3개</h2>
+          <h2>이번 주에 할 일</h2>
           <ol>
             {result.recommendedActions.map((action) => (
               <li key={action}>{action}</li>
@@ -146,10 +142,10 @@ export function SurveyResult() {
 
       <section className={styles.noticeBand} aria-labelledby="reward-title">
         <div>
-          <h2 id="reward-title">AgentProof Founding Researcher</h2>
+          <h2 id="reward-title">AgentProof 초기 사용자 참여 프로그램</h2>
           <p>
             유효한 완료 참여자는 역할별 체크리스트와 즉시 결과를 받을 수 있습니다. 베타
-            초대와 체험 크레딧은 선택 동의 후 안내되며, 선정은 보장되지 않습니다.
+            초대와 체험 조건은 선택 동의 후 안내되며, 선정은 보장되지 않습니다.
           </p>
         </div>
         <div className={styles.inlineActions}>
@@ -307,10 +303,9 @@ function downloadChecklist(stored: StoredResult) {
   const body = [
     "AgentProof 역할별 AI 준비도 결과",
     `역할: ${getSurveyDefinition(stored.persona).title}`,
-    `총점: ${result.totalScore}`,
-    `판정: ${result.effectiveBand.label}`,
+    `현재 상태: ${result.effectiveBand.label}`,
     "",
-    "권장 액션",
+    "이번 주에 할 일",
     ...result.recommendedActions.map((action, index) => `${index + 1}. ${action}`),
     "",
     `문의: ${LEGAL_CONFIG.contactEmail}`,
@@ -329,7 +324,7 @@ function readStoredResult(): StoredResult | null {
     return null;
   }
 
-  const raw = window.localStorage.getItem("agentproof-survey-result");
+  const raw = window.sessionStorage.getItem("agentproof-survey-result");
   if (!raw) {
     cachedResultRaw = null;
     cachedResultValue = null;
@@ -344,7 +339,7 @@ function readStoredResult(): StoredResult | null {
     cachedResultValue = JSON.parse(raw) as StoredResult;
     return cachedResultValue;
   } catch {
-    window.localStorage.removeItem("agentproof-survey-result");
+    window.sessionStorage.removeItem("agentproof-survey-result");
     cachedResultRaw = null;
     cachedResultValue = null;
     return null;

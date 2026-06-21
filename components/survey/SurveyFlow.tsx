@@ -66,13 +66,6 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
   }, [definition.questionCount, persona]);
 
   useEffect(() => {
-    window.localStorage.setItem(
-      draftKey,
-      JSON.stringify({ currentIndex, answers, consents } satisfies DraftState),
-    );
-  }, [answers, consents, currentIndex, draftKey]);
-
-  useEffect(() => {
     headingRef.current?.focus();
   }, [currentIndex, phase]);
 
@@ -158,17 +151,15 @@ export function SurveyFlow({ persona }: SurveyFlowProps) {
       }
     }
 
-    window.localStorage.setItem(
+    window.localStorage.removeItem("agentproof-survey-result");
+    window.sessionStorage.setItem(
       "agentproof-survey-result",
       JSON.stringify({
         sessionId,
         persona,
-        answers,
         result,
         submissionMode,
         completedAt: new Date().toISOString(),
-        consents: { ...consents, consentVersion },
-        utm: stored,
       }),
     );
     window.localStorage.removeItem(draftKey);
@@ -380,20 +371,6 @@ function readDraft(draftKey: string): DraftState {
     return { currentIndex: 0, answers: {}, consents: emptyConsents };
   }
 
-  const rawDraft = window.localStorage.getItem(draftKey);
-  if (!rawDraft) {
-    return { currentIndex: 0, answers: {}, consents: emptyConsents };
-  }
-
-  try {
-    const draft = JSON.parse(rawDraft) as Partial<DraftState>;
-    return {
-      currentIndex: Number.isInteger(draft.currentIndex) ? draft.currentIndex ?? 0 : 0,
-      answers: draft.answers ?? {},
-      consents: { ...emptyConsents, ...(draft.consents ?? {}) },
-    };
-  } catch {
-    window.localStorage.removeItem(draftKey);
-    return { currentIndex: 0, answers: {}, consents: emptyConsents };
-  }
+  window.localStorage.removeItem(draftKey);
+  return { currentIndex: 0, answers: {}, consents: emptyConsents };
 }

@@ -1,3 +1,7 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -30,7 +34,7 @@ describe("survey consent gating", () => {
     ).toBe(false);
   });
 
-  it("keeps each consent purpose separately hashable", () => {
+  it("keeps each consent purpose backed by a real source-text SHA-256 digest", () => {
     expect(Object.keys(consentTextHashes)).toEqual([
       "age14OrOlder",
       "surveyProcessing",
@@ -39,6 +43,28 @@ describe("survey consent gating", () => {
       "pilot",
     ]);
     expect(new Set(Object.values(consentTextHashes)).size).toBe(5);
+
+    const filesByConsent = {
+      age14OrOlder: "age-confirmation-ko-2026-06-21.md",
+      surveyProcessing: "survey-processing-ko-2026-06-21.md",
+      beta: "beta-ko-2026-06-21.md",
+      interview: "interview-ko-2026-06-21.md",
+      pilot: "pilot-ko-2026-06-21.md",
+    } as const;
+
+    for (const [consentType, fileName] of Object.entries(filesByConsent)) {
+      const source = readFileSync(resolve("legal", "consent", fileName), "utf8");
+      const normalized = source
+        .replace(/\r\n/g, "\n")
+        .split("\n")
+        .map((line) => line.replace(/[ \t]+$/g, ""))
+        .join("\n")
+        .trimEnd();
+      const digest = createHash("sha256").update(normalized, "utf8").digest("hex");
+      expect(consentTextHashes[consentType as keyof typeof consentTextHashes]).toBe(
+        `sha256:${digest}`,
+      );
+    }
   });
 
   it("does not tie reward eligibility to score, purchase intent, or pilot interest", () => {

@@ -37,30 +37,31 @@ declare global {
   }
 }
 
-const blockedKeys = new Set([
-  "email",
-  "company",
-  "companyName",
-  "focusArea",
-  "memo",
-  "message",
-  "phone",
-  "freeText",
-  "individualAnswer",
-  "incidentDetail",
-  "documentName",
-  "vulnerabilityDetail",
+const allowedKeys = new Set([
+  "persona",
+  "survey_version",
+  "scoring_version",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "question_count",
+  "completion_time_band",
+  "result_band",
 ]);
 
 export function sanitizeAnalyticsPayload(payload: AnalyticsPayload = {}): AnalyticsPayload {
   return Object.fromEntries(
-    Object.entries(payload).filter(([key]) => !blockedKeys.has(key)),
+    Object.entries(payload).filter(([key]) => allowedKeys.has(key)),
   ) as AnalyticsPayload;
 }
 
 export function trackEvent(event: AnalyticsEvent, payload: AnalyticsPayload = {}): void {
-  if (typeof window === "undefined" || !Array.isArray(window.dataLayer)) {
+  if (typeof window === "undefined") {
     return;
+  }
+  if (!Array.isArray(window.dataLayer)) {
+    window.dataLayer = [];
   }
   window.dataLayer.push({ event, ...sanitizeAnalyticsPayload(payload) });
 }

@@ -61,17 +61,12 @@ try {
   captures.push({ name: "mobile-full-390", path: mobilePath });
   await captureSections(page, "mobile");
 
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto(visualBaselineUrl(), { waitUntil: "networkidle" });
-  await addStableCaptureStyles(page);
-  await page.getByRole("button", { name: "내 과제 3분 진단" }).click();
-  await page.locator('[role="dialog"]').screenshot({
-    path: resolve(artifactsDir, "modal-default-pc.png"),
-  });
-  await page.getByRole("button", { name: "진단 제출" }).click();
-  await page.locator('[role="dialog"]').screenshot({
-    path: resolve(artifactsDir, "modal-error-pc.png"),
-  });
+  await capturePath(page, "/survey/", { width: 1440, height: 1000 }, "survey-hub-pc.png");
+  await capturePath(page, "/survey/", { width: 390, height: 844 }, "survey-hub-mobile.png");
+  await captureSurveyStates(page);
+  await capturePath(page, "/privacy/", { width: 1440, height: 1000 }, "privacy-policy-pc.png");
+  await capturePath(page, "/privacy/request/", { width: 1440, height: 1000 }, "privacy-request-pc.png");
+  await capturePath(page, "/beta-terms/", { width: 1440, height: 1000 }, "beta-terms-pc.png");
 
   const axeResults = await new AxeBuilder({ page }).exclude("#__next-route-announcer__").analyze();
   await writeFile(
@@ -153,6 +148,54 @@ async function captureSections(page, prefix) {
   ]) {
     const locator = page.locator(selector).first();
     await locator.screenshot({ path: resolve(artifactsDir, `${prefix}-${name}.png`) });
+  }
+}
+
+async function capturePath(page, path, viewport, fileName) {
+  await page.setViewportSize(viewport);
+  const url = new URL(path, baseUrl);
+  await page.goto(url.toString(), { waitUntil: "networkidle" });
+  await addStableCaptureStyles(page);
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: resolve(artifactsDir, fileName), fullPage: true });
+}
+
+async function captureSurveyStates(page) {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(new URL("/survey/practitioner/", baseUrl).toString(), { waitUntil: "networkidle" });
+  await addStableCaptureStyles(page);
+  await page.screenshot({
+    path: resolve(artifactsDir, "practitioner-start-pc.png"),
+    fullPage: true,
+  });
+
+  for (let index = 0; index < 12; index += 1) {
+    await answerCurrentQuestion(page);
+  }
+  await page.screenshot({
+    path: resolve(artifactsDir, "practitioner-mid-survey-pc.png"),
+    fullPage: true,
+  });
+
+  const questionCount = Number(await page.getByTestId("survey-shell").getAttribute("data-question-count"));
+  for (let index = 12; index < questionCount; index += 1) {
+    await answerCurrentQuestion(page);
+  }
+  await page.screenshot({
+    path: resolve(artifactsDir, "confirmation-pc.png"),
+    fullPage: true,
+  });
+
+  const storageNotice = await page.locator("body").textContent();
+  if (!storageNotice?.includes("설문 저장소가 연결되어 있습니다.")) {
+    await page.getByLabel("만 14세 이상입니다.").check();
+    await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
+    await page.getByRole("button", { name: "결과 확인" }).click();
+    await page.waitForURL(/\/survey\/result\/$/);
+    await page.screenshot({
+      path: resolve(artifactsDir, "result-page-pc.png"),
+      fullPage: true,
+    });
   }
 }
 
@@ -391,4 +434,15 @@ function terminateProcessTree(childProcess) {
     return;
   }
   childProcess.kill("SIGTERM");
+}
+
+async function answerCurrentQuestion(page) {
+  const question = page.getByTestId("survey-question");
+  const checkbox = question.getByRole("checkbox").first();
+  if ((await checkbox.count()) > 0) {
+    await checkbox.check();
+  } else {
+    await question.getByRole("radio").first().check();
+  }
+  await page.getByRole("button", { name: "계속" }).click();
 }

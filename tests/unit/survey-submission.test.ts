@@ -110,6 +110,23 @@ describe("survey submission validation", () => {
     expect(first.sessionId).toBe(second.sessionId);
   });
 
+  it("recomputes the stored survey result from answers instead of trusting supplied client scores", () => {
+    const parsed = validateSurveySubmission({
+      ...basePayload,
+      result: {
+        totalScore: 100,
+        resultBand: "운영 고도화 단계",
+        dimensionScores: { forged: 100 },
+        riskFlags: ["forged"],
+      },
+    });
+
+    expect(parsed.result.totalScore).not.toBe(100);
+    expect(parsed.result.resultBand).not.toBe("운영 고도화 단계");
+    expect(parsed.result.dimensionScores).not.toHaveProperty("forged");
+    expect(parsed.result.riskFlags).not.toContain("forged");
+  });
+
   it("disables live storage when no public endpoint is configured", () => {
     expect(getSurveySubmissionMode({ publicApiUrl: undefined })).toEqual({
       mode: "disabled",
@@ -129,7 +146,6 @@ describe("survey submission validation", () => {
         result_band: "통제 기반 확대 준비",
       }),
     ).toEqual({
-      event: "pilot_requested",
       persona: "leader",
       result_band: "통제 기반 확대 준비",
     });

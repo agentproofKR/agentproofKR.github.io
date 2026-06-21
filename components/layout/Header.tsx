@@ -33,13 +33,13 @@ export function Header({ onNavClick }: HeaderProps) {
         </a>
         <nav className={styles.navLinks} aria-label="주요 메뉴">
           <a href="#product" onClick={() => onNavClick("#product")}>
-            MVP
+            예시 화면
           </a>
           <a href="#roles" onClick={() => onNavClick("#roles")}>
-            고객 가설
+            역할별 고민
           </a>
           <a href="#process" onClick={() => onNavClick("#process")}>
-            파일럿
+            진행 방식
           </a>
         </nav>
         <Link

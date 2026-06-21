@@ -64,49 +64,57 @@ await runCheck("GET /api/leads is absent on static Pages build", async () => {
   return { statusCode: response.status };
 });
 
-await runCheck("Browser form produces mailto fallback without API calls", async () => {
+await runCheck("Browser survey keeps disabled-storage results local and non-sensitive", async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage();
-  let apiCalls = 0;
-  await page.route("**/api/leads", async (route) => {
-    apiCalls += 1;
+  let storageCalls = 0;
+  await page.route("**/functions/v1/survey-submit", async (route) => {
+    storageCalls += 1;
     await route.fulfill({ status: 500, body: "static smoke should not call API" });
   });
   await page.addInitScript(() => {
     window.dataLayer = [];
   });
   await page.goto(
-    `${baseUrl}/?utm_source=smoke&utm_medium=local&utm_campaign=pages&utm_content=static`,
+    `${baseUrl}/survey/leader/?utm_source=smoke&utm_medium=local&utm_campaign=pages&utm_content=static`,
     { waitUntil: "networkidle" },
   );
-  await page.getByRole("button", { name: "내 과제 3분 진단" }).click();
-  await page.getByLabel("나는").selectOption("대표·도입 담당자");
-  await page.getByLabel("현재 단계").selectOption("조직 도입 검토 중");
-  await page.getByLabel("가장 가까운 문제").selectOption("어떤 업무부터 도입해야 할지 모르겠다");
-  await page.getByLabel("원하는 다음 단계").selectOption("MVP 샘플 리포트");
-  await page.getByLabel("업무 이메일").fill("qa+agentproof@example.com");
-  await page.getByLabel(/적용하고 싶은 업무/).fill("정적 Pages smoke test입니다.");
-  await page.getByLabel(/개인정보 수집·이용/).check();
-  await page.getByRole("button", { name: "진단 제출" }).click();
 
-  const statusText = await page.getByRole("status").textContent();
-  const href = await page
-    .getByRole("link", { name: "업무 이메일로 신청 내용 보내기" })
-    .getAttribute("href");
+  const questionCount = Number(await page.getByTestId("survey-shell").getAttribute("data-question-count"));
+  for (let index = 0; index < questionCount; index += 1) {
+    await answerCurrentQuestion(page);
+  }
+
+  const storageNotice = await page.locator("body").textContent();
+  if (storageNotice?.includes("설문 저장소가 연결되어 있습니다.")) {
+    await browser.close();
+    return { skipped: "live storage configured; use verify:production:supabase for QA writes" };
+  }
+
+  await page.getByLabel("만 14세 이상입니다.").check();
+  await page.getByLabel(/고객조사 및 서비스 개발을 위한/).check();
+  await page.getByRole("button", { name: "결과 확인" }).click();
+  await page.waitForURL(/\/survey\/result\/$/);
+
+  const storage = await page.evaluate(() => ({
+    localResult: window.localStorage.getItem("agentproof-survey-result"),
+    sessionResult: window.sessionStorage.getItem("agentproof-survey-result"),
+    draftKeys: Object.keys(window.localStorage).filter((key) =>
+      key.startsWith("agentproof-survey-draft-"),
+    ),
+  }));
   const eventText = JSON.stringify(await page.evaluate(() => window.dataLayer));
   await browser.close();
 
-  assert(apiCalls === 0, `expected 0 API calls, received ${apiCalls}`);
-  assert(
-    statusText?.includes("GitHub Pages 정적 배포에서는 서버 저장이 연결되어 있지 않습니다."),
-    "static fallback status was not shown",
-  );
-  assert(href?.startsWith("mailto:"), "mailto handoff link missing");
-  assert(!eventText.includes("qa+agentproof@example.com"), "analytics leaked email");
-  assert(!eventText.includes("정적 Pages smoke"), "analytics leaked focus area");
+  assert(storageCalls === 0, `expected 0 storage calls, received ${storageCalls}`);
+  assert(storage.localResult === null, "survey result was written to localStorage");
+  assert(storage.sessionResult, "survey result summary missing from sessionStorage");
+  assert(storage.draftKeys.length === 0, "draft keys were written without opt-in");
+  assert(!storage.sessionResult.includes('"answers"'), "raw answers leaked into result storage");
+  assert(!storage.sessionResult.includes("C01"), "question IDs leaked into result storage");
   assert(!eventText.includes("lead_form_success"), "analytics emitted false success");
 
-  return { apiCalls, handoff: "mailto", analyticsPii: false };
+  return { storageCalls, resultStorage: "sessionStorage-summary", analyticsPii: false };
 });
 
 await runCheck("Mobile widths have no horizontal overflow", async () => {
@@ -187,6 +195,17 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+async function answerCurrentQuestion(page) {
+  const question = page.getByTestId("survey-question");
+  const checkbox = question.getByRole("checkbox").first();
+  if ((await checkbox.count()) > 0) {
+    await checkbox.check();
+  } else {
+    await question.getByRole("radio").first().check();
+  }
+  await page.getByRole("button", { name: "계속" }).click();
 }
 
 function renderMarkdown(summary) {

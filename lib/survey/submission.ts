@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { consentVersion } from "./consent";
 import { getSurveyDefinition, scoringVersion, surveyVersion } from "./questions";
+import { scoreSurvey } from "./scoring";
 import type { ContactRequestType, Persona, SurveyAnswerMap } from "./types";
 
 export type SurveySubmissionMode =
@@ -144,11 +145,18 @@ export function validateSurveySubmission(input: unknown): ValidSurveySubmission 
   }
 
   validateQuestionIds(parsed.persona, parsed.answers);
+  const computedResult = scoreSurvey(parsed.persona, parsed.answers);
 
   return {
     ...parsed,
     honeypot: "",
     answers: sanitizeAnswers(parsed.answers),
+    result: {
+      totalScore: computedResult.totalScore,
+      resultBand: computedResult.effectiveBand.label,
+      dimensionScores: computedResult.dimensionScores,
+      riskFlags: computedResult.riskFlags,
+    },
     contacts: parsed.contacts.map((contact) => ({
       ...contact,
       company: stripTags(contact.company),

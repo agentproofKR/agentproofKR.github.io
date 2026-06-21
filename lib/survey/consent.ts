@@ -3,11 +3,11 @@ import type { ConsentState } from "./types";
 export const consentVersion = "2026-06-21";
 
 export const consentTextHashes = {
-  age14OrOlder: "sha256:age-2026-06-21-agentproof",
-  surveyProcessing: "sha256:survey-processing-2026-06-21-agentproof",
-  beta: "sha256:beta-reward-2026-06-21-agentproof",
-  interview: "sha256:interview-2026-06-21-agentproof",
-  pilot: "sha256:pilot-consultation-2026-06-21-agentproof",
+  age14OrOlder: "sha256:d39eed1321988754efc37dab031913f9d3c378a408a75bd2218139d7aa79ce7f",
+  surveyProcessing: "sha256:c4d1e2bfc621188a300bdd22de2d94d9e5e4ca5c559dc55302202da1686618fa",
+  beta: "sha256:166cfbbfc9c5d7bb40ab7affbcc39efc725ddd1519952e76711cdb593f7e6597",
+  interview: "sha256:2cd9f947527029ef6a780871515cf289408d44526c3458daad866e4b5d49ac4c",
+  pilot: "sha256:1315a75cb25ad92b09421da279e21d3351be684c23f10a878ecc588282161247",
 } as const;
 
 export function canSubmitSurvey(consents: ConsentState): { ok: true } | { ok: false; message: string } {

@@ -20,12 +20,12 @@ export const problemOptions = [
 ] as const;
 export type ProblemOption = (typeof problemOptions)[number];
 
-export const followupOptions = ["역할별 체크리스트", "MVP 샘플 리포트", "파일럿 상담"] as const;
+export const followupOptions = ["역할별 체크리스트", "예시 결과 요약", "파일럿 상담"] as const;
 export type FollowupOption = (typeof followupOptions)[number];
 
 export const followupEventByOption = {
   "역할별 체크리스트": "followup_checklist",
-  "MVP 샘플 리포트": "followup_sample_report",
+  "예시 결과 요약": "followup_sample_report",
   "파일럿 상담": "followup_pilot",
 } as const;
 
@@ -101,5 +101,5 @@ export const processSteps = [
 export const pilotDeliverables = [
   { number: "01", title: "업무별 위험 지도" },
   { number: "02", title: "역할별 실행 기준" },
-  { number: "03", title: "MVP 검증 리포트" },
+  { number: "03", title: "자가진단 결과 요약" },
 ] as const;

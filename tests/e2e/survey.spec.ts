@@ -88,6 +88,33 @@ test("blocks submission until required consents are checked", async ({ page }) =
   );
 });
 
+test("does not write survey drafts to localStorage by default", async ({ page }) => {
+  await page.goto("/survey/practitioner/");
+
+  await answerCurrentQuestion(page);
+
+  const draftKeys = await page.evaluate(() =>
+    Object.keys(window.localStorage).filter((key) => key.startsWith("agentproof-survey-draft-")),
+  );
+  expect(draftKeys).toEqual([]);
+});
+
+test("stores only non-sensitive result summary in sessionStorage", async ({ page }) => {
+  await completeSurvey(page, "/survey/leader/", 25);
+
+  const storageState = await page.evaluate(() => ({
+    localResult: window.localStorage.getItem("agentproof-survey-result"),
+    sessionResult: window.sessionStorage.getItem("agentproof-survey-result"),
+  }));
+
+  expect(storageState.localResult).toBeNull();
+  expect(storageState.sessionResult).not.toBeNull();
+  const parsed = JSON.parse(storageState.sessionResult ?? "{}") as Record<string, unknown>;
+  expect(parsed).not.toHaveProperty("answers");
+  expect(JSON.stringify(parsed)).not.toContain("C01");
+  expect(JSON.stringify(parsed)).not.toContain("L07");
+});
+
 test("records beta, interview, and pilot actions separately without analytics PII", async ({
   page,
 }) => {
@@ -96,9 +123,9 @@ test("records beta, interview, and pilot actions separately without analytics PI
   });
   await completeSurvey(page, "/survey/security/", 26);
 
-  await page.getByRole("button", { name: "베타테스터 우선 신청" }).click();
+  await page.getByRole("button", { name: "초기 사용자 참여 신청" }).click();
   await page.getByLabel("이메일").fill("qa+agentproof@example.com");
-  await page.getByLabel(/베타테스트 및 참여 리워드/).check();
+  await page.getByLabel(/초기 사용자 참여 안내/).check();
   await page.getByRole("button", { name: "베타 신청 기록" }).click();
   await expect(page.getByRole("status")).toContainText("저장소가 연결되면 별도 기록됩니다");
 
@@ -131,6 +158,6 @@ test("privacy and beta terms pages expose the required contact email", async ({ 
   );
 
   await page.goto("/beta-terms/");
-  await expect(page.getByRole("heading", { name: /Founding Researcher/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /초기 사용자 참여 프로그램/ })).toBeVisible();
   await expect(page.locator("body")).toContainText("현금 가치가 없습니다");
 });

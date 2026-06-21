@@ -259,7 +259,7 @@ export function LeadForm({ placement, initialRole, initialProblem }: LeadFormPro
         {submitState.kind === "submitting" ? "신청 중…" : "진단 제출"}
       </button>
 
-      <p className={styles.formHint}>Private beta 고객검증용 화면입니다.</p>
+      <p className={styles.formHint}>초기 고객검증용 화면입니다.</p>
 
       {submitState.kind === "handoff" ? (
         <p className={styles.successMessage} role="status">

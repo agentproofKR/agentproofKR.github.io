@@ -202,7 +202,7 @@ const commonQuestions = [
     text: "현재 AI 활용·도입 단계는 어디에 가깝나요?",
     type: "single",
     options: aiStageOptions,
-    scored: true,
+    scored: false,
   },
   {
     id: "C05",
@@ -246,7 +246,7 @@ const securityDimensions = [
 ] as const;
 
 const practitionerQuestions = [
-  { id: "P07", text: "업무에서 AI를 얼마나 자주 사용하나요?", type: "single", options: frequencyOptions, scored: true, dimension: "업무 적합성" },
+  { id: "P07", text: "업무에서 AI를 얼마나 자주 사용하나요?", type: "single", options: frequencyOptions, scored: false },
   { id: "P08", text: "AI를 사용하는 업무를 최대 3개 선택해주세요.", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
   { id: "P09", text: "사용하는 AI 도구는 회사가 승인한 도구인가요?", type: "single", options: yesPartialNoOptions, scored: true, dimension: "정책 인지도" },
   { id: "P10", text: "개인 계정과 회사 계정 중 무엇을 주로 사용하나요?", type: "single", options: accountOptions, scored: true, dimension: "정보보호" },
@@ -282,8 +282,8 @@ const leaderQuestions = [
   { id: "L19", text: "AI 결과를 사람이 검토해야 하는 업무가 정의되어 있나요?", type: "single", options: yesPartialNoOptions, scored: true, dimension: "위험관리" },
   { id: "L20", text: "정확도·근거·오류율 등 통과 기준이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "위험관리" },
   { id: "L21", text: "파일럿의 범위와 종료 조건이 정해져 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "파일럿 실행 준비도" },
-  { id: "L22", text: "AI 도입에 사용할 예산 범위가 있나요?", type: "single", options: budgetOptions, scored: true, dimension: "파일럿 실행 준비도" },
-  { id: "L23", text: "목표 도입 시점은 언제인가요?", type: "single", options: timingOptions, scored: true, dimension: "도입 목적 명확성" },
+  { id: "L22", text: "AI 도입에 사용할 예산 범위가 있나요?", type: "single", options: budgetOptions, scored: false },
+  { id: "L23", text: "목표 도입 시점은 언제인가요?", type: "single", options: timingOptions, scored: false },
   { id: "L24", text: "가장 큰 도입 장벽을 최대 2개 선택해주세요.", type: "multi", options: barrierOptions, maxSelections: 2, scored: false },
   { id: "L25", text: "가장 필요한 결과물은 무엇인가요?", type: "single", options: supportOptions, scored: false },
 ] as const satisfies readonly SurveyQuestion[];

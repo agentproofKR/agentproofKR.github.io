@@ -11,7 +11,9 @@ export const metadata = {
 const sections = [
   {
     title: "1. 개인정보처리자 및 보호책임자",
-    body: `서비스명은 AgentProof이며 운영 형태는 ${LEGAL_CONFIG.operatorType}입니다. 개인정보처리자는 ${LEGAL_CONFIG.operatorName}이고 개인정보 문의 및 권리행사 연락처는 ${LEGAL_CONFIG.contactEmail}입니다.`,
+    body: LEGAL_CONFIG.operatorName
+      ? `서비스명은 AgentProof이며 운영 형태는 ${LEGAL_CONFIG.operatorType}입니다. 개인정보처리자와 개인정보 보호책임자는 ${LEGAL_CONFIG.operatorName}입니다. 개인정보 문의 및 권리행사 연락처는 ${LEGAL_CONFIG.contactEmail}입니다.`
+      : `서비스명은 AgentProof이며 운영 형태는 ${LEGAL_CONFIG.operatorType}입니다. 검증된 법적 표시명이 제공되기 전에는 공개 수집 기능을 활성화하지 않습니다. 개인정보 문의 및 권리행사 연락처는 ${LEGAL_CONFIG.contactEmail}입니다.`,
   },
   {
     title: "2. 개인정보 처리 목적",

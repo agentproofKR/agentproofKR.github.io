@@ -67,7 +67,7 @@ export function SurveyHub() {
         <Link className={styles.backLink} href="/">
           AgentProof 홈
         </Link>
-        <p className={styles.eyebrow}>AI READINESS ASSESSMENT</p>
+        <p className={styles.eyebrow}>역할별 진단</p>
         <h1 id="survey-hub-title">역할별 AI 준비도 정밀진단</h1>
         <p className={styles.lead}>
           약 7–10분 동안 현재 AI 활용, 도입 준비, 정책·보안 기준을 점검하고 완료 즉시
@@ -76,7 +76,7 @@ export function SurveyHub() {
         <div className={styles.summaryStrip} aria-label="진단 안내">
           <span>완료 즉시 결과 확인</span>
           <span>설문 답변은 URL에 저장하지 않음</span>
-          <span>Founding Researcher 혜택 선택 가능</span>
+          <span>초기 사용자 프로그램 선택 가능</span>
         </div>
       </section>
 

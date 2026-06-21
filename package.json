@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:content": "node scripts/generate-content-artifacts.mjs --check",
     "qa:artifacts": "node scripts/generate-qa-artifacts.mjs",
     "staging:smoke": "node scripts/run-staging-smoke.mjs",
     "survey:mock": "node scripts/mock-survey-backend.mjs",

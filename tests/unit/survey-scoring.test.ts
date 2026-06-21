@@ -15,11 +15,15 @@ describe("role-based survey question definitions", () => {
   });
 
   it("keeps common segmentation questions out of scoring", () => {
-    const definition = getSurveyDefinition("practitioner");
-    const segmentationIds = ["C01", "C02", "C03", "C05", "C06"];
+    const practitioner = getSurveyDefinition("practitioner");
+    const leader = getSurveyDefinition("leader");
+    const segmentationIds = ["C01", "C02", "C03", "C04", "C05", "C06", "P07", "L22", "L23"];
 
     for (const id of segmentationIds) {
-      expect(definition.questions.find((question) => question.id === id)?.scored).toBe(false);
+      const question =
+        practitioner.questions.find((candidate) => candidate.id === id) ??
+        leader.questions.find((candidate) => candidate.id === id);
+      expect(question?.scored).toBe(false);
     }
   });
 });
@@ -62,8 +66,9 @@ describe("deterministic survey scoring", () => {
 
     expect(result.totalScore).toBe(0);
     expect(result.informationGapQuestionIds).toEqual(
-      expect.arrayContaining(["C04", "S07", "S08", "S10", "S16", "S19"]),
+      expect.arrayContaining(["S07", "S08", "S10", "S16", "S19"]),
     );
+    expect(result.informationGapQuestionIds).not.toContain("C04");
     expect(result.riskFlags).toContain("정보 공백: 모름 응답이 있어 추가 확인이 필요합니다.");
   });
 

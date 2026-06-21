@@ -86,7 +86,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
             <div className={styles.wrap}>
               <div className={styles.betaPill}>
                 <i aria-hidden="true" />
-                Private beta · 초기 고객 모집
+                초기 사용자 모집
               </div>
               <h1 id="hero-heading">
                 업무 AI,
@@ -106,7 +106,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   역할별 AI 준비도 정밀진단
                 </Link>
                 <button className={styles.textLink} type="button" onClick={handleProductClick}>
-                  MVP 화면 보기 ↘
+                  예시 화면 보기 ↘
                 </button>
               </div>
               <ul className={styles.heroMeta} aria-label="대상 안내">
@@ -117,7 +117,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
 
               <section id="product" className={styles.showcase} aria-label="제품 화면 미리보기">
                 <div className={styles.showcaseHead}>
-                  <p>MVP preview · 문서·규정 검색 Agent</p>
+                  <p>예시 화면 · 문서·규정 검색 Agent</p>
                   <span>샘플 데이터 · 제품 콘셉트</span>
                 </div>
                 <div className={styles.productStage}>
@@ -162,7 +162,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
             <div className={styles.wrap}>
               <div className={styles.rolesHead}>
                 <div>
-                  <p className={styles.sectionKicker}>CUSTOMER HYPOTHESES</p>
+                  <p className={styles.sectionKicker}>역할별 고민</p>
                   <h2 id="roles-heading" className={styles.sectionTitle}>
                     어디에서 가장
                     <br />
@@ -207,7 +207,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
           <section id="process" className={styles.processSection} aria-labelledby="process-heading">
             <div className={`${styles.wrap} ${styles.processGrid}`}>
               <div>
-                <p className={styles.darkKicker}>FIRST MVP</p>
+                <p className={styles.darkKicker}>처음 검증할 업무</p>
                 <h2 id="process-heading" className={styles.sectionTitle}>
                   첫 파일럿은
                   <br />
@@ -239,7 +239,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
               <div className={styles.deliverable} role="region" aria-label="파일럿 결과물">
                 <header>
                   <b>받게 되는 것</b>
-                  <span>FIXED SCOPE</span>
+                  <span>확인하는 결과</span>
                 </header>
                 <ol>
                   {pilotDeliverables.map((item) => (
@@ -273,7 +273,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     역할별 진단 시작
                   </Link>
                   <a className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`} href="#product">
-                    MVP 다시 보기
+                    예시 화면 다시 보기
                   </a>
                 </div>
                 <p className={styles.finalNote}>
