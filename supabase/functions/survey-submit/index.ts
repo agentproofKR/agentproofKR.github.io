@@ -58,11 +58,12 @@ type ContactPayload = {
   honeypot?: string;
 };
 
+const unifiedIds = rangeIds("U", 1, 10);
 const commonIds = ["C01", "C02", "C03", "C04", "C05", "C06"];
 const allowedQuestionIds: Record<Persona, Set<string>> = {
-  practitioner: new Set([...commonIds, ...rangeIds("P", 7, 24)]),
-  leader: new Set([...commonIds, ...rangeIds("L", 7, 25)]),
-  security: new Set([...commonIds, ...rangeIds("S", 7, 26)]),
+  practitioner: new Set([...unifiedIds, ...commonIds, ...rangeIds("P", 7, 24)]),
+  leader: new Set([...unifiedIds, ...commonIds, ...rangeIds("L", 7, 25)]),
+  security: new Set([...unifiedIds, ...commonIds, ...rangeIds("S", 7, 26)]),
 };
 
 type QuestionRule = {
@@ -162,9 +163,60 @@ const workflow = unscored([
 ]);
 const barrier = unscored(["security", "accuracy", "budget", "ownership", "data", "change", "unknown"]);
 const support = unscored(["checklist", "policy_template", "priority_report", "risk_review", "pilot_plan", "unknown"]);
+const unifiedRules: Record<string, QuestionRule> = {
+  U01: rule(unscored(["direct_user", "adoption_owner", "security_owner", "unclear"])),
+  U02: rule(unscored(["1_10", "11_50", "51_300", "301_1000", "1001_plus", "prefer_not"])),
+  U03: rule(commonRules.C05.options, { multi: true, maxSelections: 4 }),
+  U04: rule(workflow, { multi: true, maxSelections: 3 }),
+  U05: rule(
+    scoreOptions({
+      wrong_answer: 1,
+      source_check: 1,
+      data_leak: 0,
+      approval_gap: 0,
+      where_to_start: 1,
+      effect_cost: 1,
+      unknown_usage: 0,
+    }),
+  ),
+  U06: rule(
+    scoreOptions({
+      none: 4,
+      public_only: 4,
+      internal_general: 2,
+      customer_contract: 1,
+      personal_confidential: 0,
+      unknown: 0,
+    }),
+    { scored: true, dimension: "정보 입력 위험" },
+  ),
+  U07: rule(
+    scoreOptions({
+      always: 4,
+      important_only: 2,
+      rarely: 0,
+      no_standard: 0,
+      unknown: 0,
+    }),
+    { scored: true, dimension: "답변 검토 기준" },
+  ),
+  U08: rule(
+    scoreOptions({
+      clear: 4,
+      partial: 2,
+      verbal: 1,
+      none: 0,
+      unknown: 0,
+    }),
+    { scored: true, dimension: "사용 기준 성숙도" },
+  ),
+  U09: rule(support),
+  U10: rule(unscored(["result_only", "checklist", "interview", "pilot", "later"])),
+};
 
 const questionRules: Record<Persona, Record<string, QuestionRule>> = {
   practitioner: {
+    ...unifiedRules,
     ...commonRules,
     P07: rule(unscored(["none", "monthly", "weekly", "several_weekly", "daily", "unknown"])),
     P08: rule(workflow, { multi: true, maxSelections: 3 }),
@@ -186,6 +238,7 @@ const questionRules: Record<Persona, Record<string, QuestionRule>> = {
     P24: rule(support),
   },
   leader: {
+    ...unifiedRules,
     ...commonRules,
     L07: rule(unscored(["operations", "sales_cs", "hr", "finance", "product_it", "companywide", "unknown"])),
     L08: rule(workflow, { multi: true, maxSelections: 3 }),
@@ -208,6 +261,7 @@ const questionRules: Record<Persona, Record<string, QuestionRule>> = {
     L25: rule(support),
   },
   security: {
+    ...unifiedRules,
     ...commonRules,
     ...Object.fromEntries(
       rangeIds("S", 7, 21).map((id) => [
@@ -224,9 +278,9 @@ const questionRules: Record<Persona, Record<string, QuestionRule>> = {
 };
 
 const dimensionsByPersona: Record<Persona, string[]> = {
-  practitioner: ["업무 적합성", "답변 신뢰성", "정보보호", "정책 인지도", "안전한 활용 준비도"],
-  leader: ["도입 목적 명확성", "업무 우선순위", "데이터·프로세스 준비", "위험관리", "파일럿 실행 준비도"],
-  security: ["AI 사용 현황", "정책 성숙도", "데이터·접근통제", "검증·모니터링", "공급자·사고대응"],
+  practitioner: ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"],
+  leader: ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"],
+  security: ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"],
 };
 
 const readinessBands = [
@@ -449,7 +503,7 @@ function validateSurveyPayload(payload: SurveyPayload): void {
 
   const allowed = allowedQuestionIds[payload.persona];
   const rules = questionRules[payload.persona];
-  for (const questionId of Object.keys(rules)) {
+  for (const questionId of unifiedIds) {
     if (payload.answers?.[questionId] === undefined) {
       throw new Error("MISSING_REQUIRED_ANSWER");
     }
@@ -524,32 +578,36 @@ function computeServerResult(payload: SurveyPayload): {
     ...Object.entries(dimensionScores)
       .filter(([, score]) => score < 40)
       .map(([dimension]) => `${dimension}: 기준 보완이 필요합니다.`),
+    ...defaultRiskReviewPrompts(),
   ]).slice(0, 6);
   const band = criticalWarnings.length > 0 ? readinessBands[0] : readinessBandFor(totalScore);
 
-  return { totalScore, resultBand: band.label, dimensionScores, riskFlags };
+  return { totalScore, resultBand: displayRiskBandFor(band.label), dimensionScores, riskFlags };
 }
 
 function criticalWarningsFor(payload: SurveyPayload): string[] {
   const answers = payload.answers;
   const warnings: string[] = [];
-  const p11 = asArray(answers.P11);
-  const c05 = asArray(answers.C05);
 
-  if (
-    payload.persona === "practitioner" &&
-    (p11.includes("personal_data") || p11.includes("confidential")) &&
-    (answers.P09 === "no" || answers.P10 === "personal" || c05.includes("gen_ai"))
-  ) {
-    warnings.push("소비자용 AI에 개인정보 또는 기밀정보를 입력할 수 있습니다.");
+  if (answers.U06 === "customer_contract" || answers.U06 === "personal_confidential") {
+    warnings.push("회사 자료나 고객 정보가 AI에 입력될 가능성이 있습니다.");
   }
-  if (answers.P16 === "none" || answers.L19 === "no") warnings.push("외부 제출물이 사람 검토 없이 사용될 수 있습니다.");
-  if (answers.S08 === "none" || answers.S10 === "none" || answers.P09 === "no") warnings.push("승인된 AI 목록 또는 사용정책이 없습니다.");
-  if (answers.S22 === "no") warnings.push("행동 수행 Agent에 사람 승인 절차가 없습니다.");
-  if (answers.P18 === "none" || answers.S16 === "none") warnings.push("질문·답변·행동 로그가 없습니다.");
-  if (answers.S19 === "unknown") warnings.push("공급자의 모델 학습 또는 국외 이전 상태를 알 수 없습니다.");
+  if (answers.U07 === "rarely" || answers.U07 === "no_standard") {
+    warnings.push("AI 답변을 사람 검토 없이 사용할 수 있습니다.");
+  }
+  if (answers.U08 === "none" || answers.U08 === "verbal" || answers.U08 === "unknown") {
+    warnings.push("승인된 AI 도구 목록이나 사용정책이 명확하지 않습니다.");
+  }
 
   return unique(warnings);
+}
+
+function defaultRiskReviewPrompts(): string[] {
+  return [
+    "AI에 입력하면 안 되는 회사 자료와 고객 정보를 먼저 정하세요.",
+    "AI 답변을 외부 제출 전에 사람이 확인해야 하는 업무를 정하세요.",
+    "회사에서 허용하는 AI 도구와 사용 기준을 확인하세요.",
+  ];
 }
 
 function readinessBandFor(score: number): { min: number; max: number; label: string } {
@@ -557,9 +615,11 @@ function readinessBandFor(score: number): { min: number; max: number; label: str
   return readinessBands.find((band) => normalized >= band.min && normalized <= band.max) ?? readinessBands[0];
 }
 
-function asArray(value: AnswerValue | undefined): string[] {
-  if (Array.isArray(value)) return value;
-  return value ? [value] : [];
+function displayRiskBandFor(label: string): string {
+  if (label === "기준 정립 필요") return "즉시 점검 필요";
+  if (label === "제한적 실험 적합") return "위험";
+  if (label === "통제 기반 확대 준비") return "주의";
+  return "낮음";
 }
 
 function validateContactPayload(payload: ContactPayload): void {

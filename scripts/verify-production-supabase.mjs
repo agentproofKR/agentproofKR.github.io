@@ -163,7 +163,7 @@ async function runVerification() {
         ...buildSurveyPayload("leader"),
         idempotencyKey: crypto.randomUUID(),
         sessionId: crypto.randomUUID(),
-        answers: { ...personaAnswers("leader", commonAnswers("leader")), L07: "<script>" },
+        answers: { ...personaAnswers("leader", commonAnswers("leader")), U01: "<script>" },
       },
       "https://agentproofkr.github.io",
     )
@@ -225,7 +225,8 @@ function assertEvidence() {
   for (const persona of personas) {
     const item = evidence.submissions[persona];
     assert(item.sessionRows === 1, `${persona}: missing session row`);
-    assert(item.answerRows > 0, `${persona}: missing answer rows`);
+    assert(item.answerRows === 10, `${persona}: expected 10 unified answer rows`);
+    assert(item.questionIds.every((id) => /^U\d{2}$/.test(id)), `${persona}: non-unified question IDs stored`);
     assert(item.resultRows === 1, `${persona}: missing result row`);
     assert(item.requiredConsentRows >= 2, `${persona}: missing required consent rows`);
     assert(item.contactRequests === 3, `${persona}: expected three separate contact requests`);
@@ -302,86 +303,21 @@ function buildSurveyPayload(persona) {
 
 function commonAnswers(persona) {
   return {
-    C01: persona === "security" ? "security_policy" : persona === "leader" ? "executive" : "practitioner",
-    C02: "51_300",
-    C03: "it_software",
-    C04: "team",
-    C05: ["gen_ai"],
-    C06: "time_saving",
+    U01: persona === "security" ? "security_owner" : persona === "leader" ? "adoption_owner" : "direct_user",
+    U02: "51_300",
+    U03: ["gen_ai", "copilot"],
+    U04: ["documents", "research"],
+    U05: persona === "security" ? "data_leak" : persona === "leader" ? "effect_cost" : "wrong_answer",
+    U06: "personal_confidential",
+    U07: "rarely",
+    U08: "none",
+    U09: persona === "security" ? "risk_review" : persona === "leader" ? "priority_report" : "checklist",
+    U10: persona === "leader" ? "pilot" : persona === "security" ? "interview" : "checklist",
   };
 }
 
 function personaAnswers(persona, answers) {
-  if (persona === "practitioner") {
-    return {
-      ...answers,
-      P07: "daily",
-      P08: ["documents"],
-      P09: "no",
-      P10: "personal",
-      P11: ["personal_data", "confidential"],
-      P12: "yes",
-      P13: "none",
-      P14: "partial",
-      P15: "partial",
-      P16: "none",
-      P17: "partial",
-      P18: "none",
-      P19: "partial",
-      P20: "partial",
-      P21: "yes",
-      P22: "partial",
-      P23: ["security"],
-      P24: "checklist",
-    };
-  }
-  if (persona === "leader") {
-    return {
-      ...answers,
-      L07: "operations",
-      L08: ["documents"],
-      L09: "partial",
-      L10: "partial",
-      L11: ["time_saving"],
-      L12: "partial",
-      L13: "partial",
-      L14: "partial",
-      L15: "partial",
-      L16: "partial",
-      L17: "partial",
-      L18: "partial",
-      L19: "no",
-      L20: "partial",
-      L21: "partial",
-      L22: "range_review",
-      L23: "within_6m",
-      L24: ["security"],
-      L25: "priority_report",
-    };
-  }
-  return {
-    ...answers,
-    S07: "none",
-    S08: "none",
-    S09: "none",
-    S10: "none",
-    S11: "none",
-    S12: "none",
-    S13: "none",
-    S14: "none",
-    S15: "none",
-    S16: "none",
-    S17: "none",
-    S18: "none",
-    S19: "unknown",
-    S20: "none",
-    S21: "none",
-    S22: "no",
-    S23: "none",
-    S24: "none",
-    S25: "none",
-    S26: "policy_template",
-  };
+  return answers;
 }
 
 function buildContactPayload(surveyPayload, requestType) {
@@ -420,6 +356,7 @@ async function verifyStoredSurvey(payload) {
   return {
     sessionRows: sessionRows.length,
     answerRows: answerRows.length,
+    questionIds: answerRows.map((row) => row.question_id).sort(),
     resultRows: resultRows.length,
     requiredConsentRows: consentRows.filter(
       (row) => ["age14OrOlder", "surveyProcessing"].includes(row.consent_type) && row.accepted === true,
