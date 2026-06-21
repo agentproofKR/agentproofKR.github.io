@@ -238,7 +238,7 @@ const leaderDimensions = [
 ] as const;
 
 const securityDimensions = [
-  "AI 자산 가시성",
+  "AI 사용 현황",
   "정책 성숙도",
   "데이터·접근통제",
   "검증·모니터링",
@@ -289,9 +289,9 @@ const leaderQuestions = [
 ] as const satisfies readonly SurveyQuestion[];
 
 const securityQuestions = [
-  { id: "S07", text: "조직에서 사용하는 AI 도구와 Agent 목록이 관리되고 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 자산 가시성" },
-  { id: "S08", text: "승인된 AI 도구 목록이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 자산 가시성" },
-  { id: "S09", text: "미승인 AI 사용을 파악할 방법이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 자산 가시성" },
+  { id: "S07", text: "조직에서 사용하는 AI 도구 목록이 관리되고 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 사용 현황" },
+  { id: "S08", text: "승인된 AI 도구 목록이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 사용 현황" },
+  { id: "S09", text: "미승인 AI 사용을 파악할 방법이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "AI 사용 현황" },
   { id: "S10", text: "공식 AI 사용정책이 마련되어 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "정책 성숙도" },
   { id: "S11", text: "데이터 등급별 AI 입력 기준이 있나요?", type: "single", options: maturityOptions, scored: true, dimension: "정책 성숙도" },
   { id: "S12", text: "금지정보와 허용정보가 직원에게 명확히 안내되나요?", type: "single", options: maturityOptions, scored: true, dimension: "정책 성숙도" },
@@ -333,11 +333,11 @@ export const personaDefinitions = {
   security: {
     persona: "security",
     title: "보안·정책 담당자 AI 통제 성숙도 진단",
-    description: "AI 자산 가시성, 정책, 접근통제, 검증·모니터링, 공급자·사고대응을 점검합니다.",
+    description: "AI 사용 현황, 정책, 접근통제, 검증·모니터링, 공급자·사고대응을 점검합니다.",
     questionCount: 26,
     estimatedMinutes: "약 7–10분",
     dimensions: securityDimensions,
-    questions: withCommonDimensions(commonQuestions, "AI 자산 가시성").concat(securityQuestions),
+    questions: withCommonDimensions(commonQuestions, "AI 사용 현황").concat(securityQuestions),
   },
 } as const satisfies Record<Persona, SurveyDefinition>;
 

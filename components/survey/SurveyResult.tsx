@@ -69,7 +69,7 @@ export function SurveyResult() {
     return (
       <main className={styles.page}>
         <section className={styles.surveyPanel}>
-          <h1>AI 준비도 결과</h1>
+          <h1>AI 자가점검 결과</h1>
           <p>저장된 결과가 없습니다. 역할별 진단을 먼저 완료해주세요.</p>
           <Link className={styles.primaryLink} href="/survey/">
             진단 시작
@@ -87,8 +87,8 @@ export function SurveyResult() {
         <Link className={styles.backLink} href="/survey/">
           새 진단 시작
         </Link>
-        <p className={styles.eyebrow}>ASSESSMENT RESULT</p>
-        <h1 id="result-title">AI 준비도 결과</h1>
+        <p className={styles.eyebrow}>자가점검 결과</p>
+        <h1 id="result-title">AI 자가점검 결과</h1>
         <p className={styles.lead}>
           이메일 입력 없이 기본 결과 확인 가능. 본 결과는 입력한 응답을 바탕으로 한
           자가진단이며, 보안 인증, 법률 자문 또는 규제 적합성 보증이 아닙니다.
@@ -135,7 +135,7 @@ export function SurveyResult() {
           </ol>
         </article>
         <article className={styles.resultCard}>
-          <h2>AgentProof 기능 가설</h2>
+          <h2>AgentProof가 도울 수 있는 부분</h2>
           <p>{result.featureHypothesis}</p>
         </article>
       </section>
@@ -301,7 +301,7 @@ function OptInForm({
 function downloadChecklist(stored: StoredResult) {
   const result = stored.result;
   const body = [
-    "AgentProof 역할별 AI 준비도 결과",
+    "AgentProof 역할별 AI 자가점검 결과",
     `역할: ${getSurveyDefinition(stored.persona).title}`,
     `현재 상태: ${result.effectiveBand.label}`,
     "",

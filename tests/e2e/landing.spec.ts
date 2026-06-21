@@ -15,9 +15,9 @@ test("renders the landing baseline and routes CTAs to the role-based survey", as
     }),
   ).toBeVisible();
   await expect(page.locator("#product")).toContainText(
-    "예시 화면 · 문서·규정 검색 Agent",
+    "예시 화면 · 문서·규정 검색 AI",
   );
-  await expect(page.locator("#product")).toContainText("예시 데이터");
+  await expect(page.locator("#product")).toContainText("SAMPLE DATA");
   await expect(
     page.getByRole("img", { name: /AgentProof 업무용 AI 검증 대시보드 샘플/ }),
   ).toBeAttached();
@@ -30,7 +30,7 @@ test("renders the landing baseline and routes CTAs to the role-based survey", as
 
   const headerCta = page
     .getByRole("banner")
-    .getByRole("link", { name: /역할별 AI 준비도/ });
+    .getByRole("link", { name: /역할별 AI 자가점검/ });
   await expect(headerCta).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("link", { name: "AI 업무 자가점검 시작" }),

@@ -7,6 +7,12 @@ import { getSurveyDefinition } from "@/lib/survey/questions";
 import type { Persona } from "@/lib/survey/types";
 
 const personas: Persona[] = ["practitioner", "leader", "security"];
+const ogImage = {
+  url: "/og-agentproof.png",
+  width: 1200,
+  height: 630,
+  alt: "AgentProof AI 자가점검 예시 화면",
+} as const;
 
 export const dynamicParams = false;
 
@@ -27,10 +33,14 @@ export async function generateMetadata({ params }: PersonaPageProps): Promise<Me
   return {
     title: `${definition.title} | AgentProof`,
     description: definition.description,
+    alternates: {
+      canonical: `/survey/${persona}/`,
+    },
     openGraph: {
       title: `${definition.title} | AgentProof`,
       description: definition.description,
       url: `/survey/${persona}/`,
+      images: [ogImage],
     },
   };
 }

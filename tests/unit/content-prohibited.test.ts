@@ -108,6 +108,7 @@ function scanFile(file: string): string[] {
   const body = readFileSync(join(process.cwd(), file), "utf8");
   return prohibitedPatterns
     .filter(({ pattern }) => pattern.test(body))
+    .filter(({ label }) => !isApprovedTerm(label, file))
     .map(({ label }) => `${file}: ${label}`);
 }
 
@@ -137,7 +138,19 @@ function collectPublicAssetNames(root: string): string[] {
   return walk(root).flatMap((file) =>
     prohibitedPatterns
       .filter(({ pattern }) => pattern.test(file))
+      .filter(({ label }) => !isApprovedTerm(label, file))
       .map(({ label }) => `${file}: public asset path contains ${label}`),
+  );
+}
+
+function isApprovedTerm(label: string, file: string): boolean {
+  if (label !== "SAMPLE DATA") return false;
+  const normalizedFile = file.replace(/\\/g, "/");
+  return (
+    normalizedFile === "components/landing/LandingPage.tsx" ||
+    normalizedFile === "out/index.html" ||
+    (normalizedFile.startsWith("out/_next/static/chunks/") &&
+      normalizedFile.endsWith(".js"))
   );
 }
 

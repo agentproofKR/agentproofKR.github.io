@@ -39,7 +39,7 @@ test("keyboard users can start the survey and move through the first question", 
   await page.goto("/");
   const opener = page
     .getByRole("banner")
-    .getByRole("link", { name: /역할별 AI 준비도/ });
+    .getByRole("link", { name: /역할별 AI 자가점검/ });
   await opener.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);

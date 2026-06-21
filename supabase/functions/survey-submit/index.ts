@@ -226,7 +226,7 @@ const questionRules: Record<Persona, Record<string, QuestionRule>> = {
 const dimensionsByPersona: Record<Persona, string[]> = {
   practitioner: ["업무 적합성", "답변 신뢰성", "정보보호", "정책 인지도", "안전한 활용 준비도"],
   leader: ["도입 목적 명확성", "업무 우선순위", "데이터·프로세스 준비", "위험관리", "파일럿 실행 준비도"],
-  security: ["AI 자산 가시성", "정책 성숙도", "데이터·접근통제", "검증·모니터링", "공급자·사고대응"],
+  security: ["AI 사용 현황", "정책 성숙도", "데이터·접근통제", "검증·모니터링", "공급자·사고대응"],
 };
 
 const readinessBands = [
@@ -765,7 +765,7 @@ function rule(
 }
 
 function securityDimensionFor(questionId: string): string {
-  if (["S07", "S08", "S09"].includes(questionId)) return "AI 자산 가시성";
+  if (["S07", "S08", "S09"].includes(questionId)) return "AI 사용 현황";
   if (["S10", "S11", "S12"].includes(questionId)) return "정책 성숙도";
   if (["S13", "S14", "S15"].includes(questionId)) return "데이터·접근통제";
   if (["S16", "S17", "S20", "S21"].includes(questionId)) return "검증·모니터링";

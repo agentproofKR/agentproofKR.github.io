@@ -147,8 +147,8 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 aria-label="제품 화면 미리보기"
               >
                 <div className={styles.showcaseHead}>
-                  <p>예시 화면 · 문서·규정 검색 Agent</p>
-                  <span>샘플 데이터 · 제품 콘셉트</span>
+                  <p>예시 화면 · 문서·규정 검색 AI</p>
+                  <span>SAMPLE DATA · 예시 화면</span>
                 </div>
                 <div className={styles.productStage}>
                   <div className={styles.desktopDashboard}>
@@ -364,13 +364,13 @@ function MobileDashboard() {
           />
           AgentProof
         </div>
-        <div>예시 데이터</div>
+        <div>SAMPLE DATA</div>
       </div>
       <div className={styles.mobileBody}>
         <div className={styles.mobileTitle}>
           <small>AI 사용 현황</small>
-          <h3>업무 Agent 검증 현황</h3>
-          <p>문서 검색 · 정책 검증 · 배포 승인</p>
+          <h3>업무 AI 사용 현황</h3>
+          <p>문서 검색 · 사용 기준 · 승인 기록</p>
         </div>
         <div className={styles.mobileKpis}>
           <Metric label="위험 점수" value="32" detail="↓ 12% 지난 7일" />

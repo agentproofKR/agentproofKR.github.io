@@ -562,6 +562,7 @@
 .legalTable {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   margin-top: 14px;
   font-size: 15px;
   line-height: 1.55;
@@ -573,6 +574,8 @@
   padding: 10px;
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .legalTable th {
@@ -668,6 +671,72 @@
 
   .legalTable {
     font-size: 14px;
+  }
+
+  .legalTable,
+  .legalTable thead,
+  .legalTable tbody,
+  .legalTable tr,
+  .legalTable th,
+  .legalTable td {
+    display: block;
+  }
+
+  .legalTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .legalTable tr {
+    border: 1px solid rgb(17 19 25 / 12%);
+    border-radius: 8px;
+    margin-top: 10px;
+    background: #fff;
+  }
+
+  .legalTable td {
+    border: 0;
+    border-bottom: 1px solid rgb(17 19 25 / 8%);
+  }
+
+  .legalTable td::before {
+    display: block;
+    margin-bottom: 4px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 820;
+  }
+
+  .legalTable td:nth-child(1)::before {
+    content: "어떤 회사인가요";
+  }
+
+  .legalTable td:nth-child(2)::before {
+    content: "어떤 정보를 처리하나요";
+  }
+
+  .legalTable td:nth-child(3)::before {
+    content: "왜 필요한가요";
+  }
+
+  .legalTable td:nth-child(4)::before {
+    content: "어디에서 처리될 수 있나요";
+  }
+
+  .legalTable td:nth-child(5)::before {
+    content: "얼마나 보관하나요";
+  }
+
+  .legalTable td:nth-child(6)::before {
+    content: "원하지 않으면 어떻게 하나요";
+  }
+
+  .legalTable td:last-child {
+    border-bottom: 0;
   }
 
   .actions > *,

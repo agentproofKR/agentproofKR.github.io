@@ -1,6 +1,6 @@
 # AgentProof Landing V5
 
-AgentProof의 공개 랜딩페이지와 역할별 AI 준비도 자가진단입니다.
+AgentProof의 공개 랜딩페이지와 역할별 AI 자가점검입니다.
 운영 URL은 `https://agentproofkr.github.io/`이며, GitHub Pages 정적 프런트엔드와
 Supabase Edge Function 기반 설문 저장 경로로 운영됩니다.
 
@@ -44,9 +44,10 @@ npx -y pnpm@11.8.0 install
 npx -y pnpm@11.8.0 lint
 npx -y pnpm@11.8.0 typecheck
 npx -y pnpm@11.8.0 test
-npx -y pnpm@11.8.0 build
 npx -y pnpm@11.8.0 test:content
 npx -y pnpm@11.8.0 test:e2e
+npx -y pnpm@11.8.0 test:security
+npx -y pnpm@11.8.0 build
 ```
 
 운영 HTML까지 포함한 콘텐츠 검사는 배포 뒤 실행합니다.

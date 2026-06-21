@@ -42,7 +42,7 @@ async function completeSurvey(
   await page.getByRole("button", { name: "결과 확인" }).click();
   await expect(page).toHaveURL(/\/survey\/result\/$/);
   await expect(
-    page.getByRole("heading", { name: /AI 준비도 결과/ }),
+    page.getByRole("heading", { name: /AI 자가점검 결과/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toContainText(
     "이메일 입력 없이 기본 결과 확인 가능",
@@ -55,11 +55,11 @@ test("homepage CTAs route to the role-based survey instead of opening the old mo
   await page.goto("/");
 
   await expect(
-    page.getByRole("banner").getByRole("link", { name: /역할별 AI 준비도/ }),
+    page.getByRole("banner").getByRole("link", { name: /역할별 AI 자가점검/ }),
   ).toHaveAttribute("href", "/survey/");
   await page
     .getByRole("banner")
-    .getByRole("link", { name: /역할별 AI 준비도/ })
+    .getByRole("link", { name: /역할별 AI 자가점검/ })
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(

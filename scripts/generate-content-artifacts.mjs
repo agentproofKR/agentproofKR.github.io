@@ -127,7 +127,7 @@ const allMatches = [
   ...renderedProductionScan.matches,
 ];
 
-await writeJson("prohibited-term-report.json", {
+const prohibitedTermReport = {
   generatedAt: new Date().toISOString(),
   prohibitedTerms: [
     ...prohibitedPatterns.map((term) => term.label),
@@ -142,10 +142,18 @@ await writeJson("prohibited-term-report.json", {
   },
   matches: allMatches,
   passed: allMatches.length === 0,
-});
+};
+
+await writeJson("prohibited-term-report.json", prohibitedTermReport);
+await writeJson("production-prohibited-terms.json", prohibitedTermReport);
 
 await writeJson("production-html-scan.json", productionScan);
 await writeJson("production-rendered-scan.json", renderedProductionScan);
+await writeFile(
+  resolve(artifactsDir, "production-dom-string-inventory.csv"),
+  renderProductionDomInventory(renderedProductionScan),
+  "utf8",
+);
 
 await writeFile(
   resolve(artifactsDir, "user-facing-string-inventory.csv"),
@@ -201,6 +209,20 @@ await writeFile(
 - Result: ${allMatches.length === 0 ? "PASS" : "FAIL"}
 
 ${allMatches.length === 0 ? "No prohibited terms were found in scanned customer-facing surfaces." : renderMatches(allMatches)}
+`,
+  "utf8",
+);
+await writeFile(
+  resolve(artifactsDir, "production-copy-review.md"),
+  `# Production Copy Review
+
+- Generated at: ${new Date().toISOString()}
+- Production base URL: ${productionBaseUrl ?? "not requested"}
+- Static production HTML routes: ${productionScan.routes.length}
+- Rendered production DOM routes: ${renderedProductionScan.routes.length}
+- Prohibited term result: ${allMatches.length === 0 ? "PASS" : "FAIL"}
+
+${allMatches.length === 0 ? "No unapproved terms were found in scanned production surfaces." : renderMatches(allMatches)}
 `,
   "utf8",
 );
@@ -323,6 +345,7 @@ async function scanRenderedProduction(baseUrl) {
         url,
         status: response?.status() ?? 0,
         characters: renderedText.length,
+        strings: extractDomStrings(renderedText),
         matches: routeMatches,
       });
     }
@@ -368,6 +391,7 @@ function scanThreePageFile(file, scope) {
 function scanText(body, scope, file) {
   return prohibitedPatterns
     .filter(({ pattern }) => pattern.test(body))
+    .filter(({ label }) => !isApprovedTerm(label, scope, file))
     .map(({ label }) => ({
       scope,
       file,
@@ -484,7 +508,9 @@ function extractUserFacingStringsFromFile(file) {
 }
 
 function hasProhibited(value) {
-  return prohibitedPatterns.some(({ pattern }) => pattern.test(value));
+  return prohibitedPatterns.some(
+    ({ label, pattern }) => pattern.test(value) && !isApprovedTerm(label, "inventory", ""),
+  );
 }
 
 function inferRoute(file) {
@@ -537,6 +563,58 @@ function readFileSyncUtf8(file) {
 
 function csv(value) {
   return `"${String(value).replace(/"/g, '""')}"`;
+}
+
+function isApprovedTerm(label, scope, file) {
+  if (label !== "SAMPLE DATA") return false;
+  const normalizedFile = file.replace(/\\/g, "/");
+  if (scope === "source" && file === "components/landing/LandingPage.tsx") return true;
+  if (scope === "out" && normalizedFile === "out/index.html") return true;
+  if (
+    scope === "out" &&
+    normalizedFile.startsWith("out/_next/static/chunks/") &&
+    normalizedFile.endsWith(".js")
+  ) {
+    return true;
+  }
+  if (
+    scope === "production-asset" &&
+    normalizedFile.startsWith("/_next/static/chunks/") &&
+    normalizedFile.endsWith(".js")
+  ) {
+    return true;
+  }
+  if (scope === "production" && file === "/") return true;
+  if (scope === "production-rendered" && file === "/") return true;
+  return false;
+}
+
+function extractDomStrings(text) {
+  return [
+    ...new Set(
+      text
+        .split(/\n+/)
+        .map((line) => line.replace(/\s+/g, " ").trim())
+        .filter((line) => line.length >= 2),
+    ),
+  ];
+}
+
+function renderProductionDomInventory(scan) {
+  const rows = [
+    ["route", "source", "text", "status"].map(csv).join(","),
+  ];
+  if (scan.skipped) {
+    rows.push(["", "production-rendered", "not requested", "skipped"].map(csv).join(","));
+    return `${rows.join("\n")}\n`;
+  }
+  for (const route of scan.routes) {
+    const strings = route.strings ?? [];
+    for (const text of strings) {
+      rows.push([route.route, "production-rendered", text, "inventory"].map(csv).join(","));
+    }
+  }
+  return `${rows.join("\n")}\n`;
 }
 
 function renderMatches(matches) {

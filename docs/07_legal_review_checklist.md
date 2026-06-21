@@ -10,6 +10,6 @@
 - beta reward terms의 표시광고·경품 규정 검토
 - 만 14세 미만 제한 문구 검토
 
-## Current fallback
+## Current collection gate
 
-`LEGAL_OPERATOR_NAME`이 없으면 공개 UI는 `AgentProof 운영자`를 사용한다. 검증된 법적 이름이 제공되면 `LEGAL_OPERATOR_NAME`으로 대체한다.
+`LEGAL_OPERATOR_NAME`이 없으면 공개 UI에 임의 표시명을 쓰지 않는다. 이 경우 설문 저장은 비활성화하고, 개인정보처리자와 개인정보 보호책임자 표시는 검증된 법적 이름이 설정된 뒤에만 노출한다.

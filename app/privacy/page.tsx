@@ -25,7 +25,7 @@ const summaryCards = [
   },
   {
     title: "누가 처리하나요?",
-    body: "AgentProof 운영자가 관리합니다. 사이트 제공에는 GitHub를, 설문 저장에는 Supabase를 사용합니다.",
+    body: "개인정보처리자와 연락처는 아래 상세 항목에서 확인할 수 있습니다. 사이트 제공에는 GitHub를, 설문 저장에는 Supabase를 사용합니다.",
   },
   {
     title: "삭제해 달라고 할 수 있나요?",
@@ -36,6 +36,31 @@ const summaryCards = [
 const operatorNotice = LEGAL_CONFIG.operatorName
   ? `개인정보처리자와 개인정보 보호책임자는 ${LEGAL_CONFIG.operatorName}입니다.`
   : "검증된 법적 표시명이 아직 설정되지 않아 공개 설문 저장은 비활성화됩니다.";
+
+const providerRows = [
+  {
+    provider: "GitHub, Inc.",
+    info: "정적 웹페이지, 이미지 파일, 방문 보안 로그에 필요한 기술 정보",
+    purpose: "agentproofkr.github.io 사이트를 안정적으로 보여주기 위해 필요합니다.",
+    location:
+      "GitHub Pages 방문 시 IP 주소가 보안 목적으로 기록됩니다. GitHub 공식 하위처리자 목록에는 미국 처리 위치가 공시된 인프라 제공자가 포함됩니다.",
+    retention:
+      "AgentProof가 기간을 정하지 않습니다. GitHub의 보안과 서비스 운영 정책에 따릅니다.",
+    refusal:
+      "GitHub Pages 처리를 원하지 않으면 이 공개 사이트를 이용할 수 없습니다. 개인정보 요청은 AgentProof 연락처로 접수할 수 있습니다.",
+  },
+  {
+    provider: "Supabase, Inc.",
+    info: "설문 세션, 설문 답변, 결과 요약, 동의 기록, 선택 연락처, 비식별 운영 이벤트",
+    purpose: "자가점검 결과 저장, 중복 제출 방지, 선택한 베타·인터뷰·파일럿 연락을 처리하기 위해 필요합니다.",
+    location:
+      "Postgres 프로젝트 리전은 ap-northeast-2(서울)로 검증되었습니다. Edge Function은 요청 위치에 가까운 Supabase 엣지 인프라에서 실행될 수 있으며, 현재 공개 호출은 특정 실행 리전을 고정하지 않습니다.",
+    retention:
+      "설문 원문은 6개월, 인터뷰 연락처는 90일, 파일럿 연락처는 1년, 베타 연락처는 12개월 또는 베타 종료 후 90일 중 빠른 날까지 보관합니다.",
+    refusal:
+      "필수 설문 처리에 동의하지 않으면 설문 저장과 결과 생성이 진행되지 않습니다. 선택 연락은 언제든지 철회할 수 있습니다.",
+  },
+] as const;
 
 const detailSections: Array<{ title: string; body: ReactNode }> = [
   {
@@ -157,18 +182,37 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
     ),
   },
   {
-    title: "국외 이전",
+    title: "국외 처리와 이전",
     body: (
       <>
         <p>
-          GitHub와 Supabase 인프라를 통해 서비스 제공에 필요한 정보가 처리될 수
-          있습니다. Supabase Postgres 저장 리전은 ap-northeast-2(서울)로
-          검증되었습니다.
+          아래 내용은 실제 배포 구성과 공식 문서를 대조해 정리했습니다. 근거는
+          저장소의 <code>docs/privacy-provider-evidence.md</code>에 남깁니다.
         </p>
-        <p>
-          설문을 안전하게 받아 저장하는 서버 기능인 Supabase Edge Function은
-          요청 위치에 가까운 Supabase 엣지 인프라에서 실행될 수 있습니다.
-        </p>
+        <table className={styles.legalTable}>
+          <thead>
+            <tr>
+              <th scope="col">어떤 회사인가요</th>
+              <th scope="col">어떤 정보를 처리하나요</th>
+              <th scope="col">왜 필요한가요</th>
+              <th scope="col">어디에서 처리될 수 있나요</th>
+              <th scope="col">얼마나 보관하나요</th>
+              <th scope="col">원하지 않으면 어떻게 하나요</th>
+            </tr>
+          </thead>
+          <tbody>
+            {providerRows.map((row) => (
+              <tr key={row.provider}>
+                <td>{row.provider}</td>
+                <td>{row.info}</td>
+                <td>{row.purpose}</td>
+                <td>{row.location}</td>
+                <td>{row.retention}</td>
+                <td>{row.refusal}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </>
     ),
   },

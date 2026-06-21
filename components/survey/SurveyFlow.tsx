@@ -254,7 +254,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           <Link className={styles.backLink} href="/survey/">
             역할 다시 선택
           </Link>
-          <p className={styles.eyebrow}>CONFIRMATION</p>
+          <p className={styles.eyebrow}>제출 전 확인</p>
           <h1 id="confirm-title" ref={headingRef} tabIndex={-1}>
             제출 전 확인
           </h1>
