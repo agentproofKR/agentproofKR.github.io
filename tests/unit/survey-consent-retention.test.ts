@@ -17,6 +17,7 @@ describe("survey consent gating", () => {
       canSubmitSurvey({
         age14OrOlder: true,
         surveyProcessing: true,
+        personalInfoCollection: true,
         beta: false,
         interview: false,
         pilot: false,
@@ -27,6 +28,7 @@ describe("survey consent gating", () => {
       canSubmitSurvey({
         age14OrOlder: false,
         surveyProcessing: true,
+        personalInfoCollection: true,
         beta: true,
         interview: true,
         pilot: true,
@@ -38,15 +40,17 @@ describe("survey consent gating", () => {
     expect(Object.keys(consentTextHashes)).toEqual([
       "age14OrOlder",
       "surveyProcessing",
+      "personalInfoCollection",
       "beta",
       "interview",
       "pilot",
     ]);
-    expect(new Set(Object.values(consentTextHashes)).size).toBe(5);
+    expect(new Set(Object.values(consentTextHashes)).size).toBe(6);
 
     const filesByConsent = {
       age14OrOlder: "age-confirmation-ko-2026-06-21.md",
       surveyProcessing: "survey-processing-ko-2026-06-21.md",
+      personalInfoCollection: "personal-info-collection-ko-2026-06-22.md",
       beta: "beta-ko-2026-06-21.md",
       interview: "interview-ko-2026-06-21.md",
       pilot: "pilot-ko-2026-06-21.md",
@@ -100,6 +104,9 @@ describe("retention calculations", () => {
   });
 
   it("calculates optional contact retention by request type", () => {
+    expect(calculateContactExpiry("survey_followup", submittedAt).toISOString()).toBe(
+      "2026-08-21T00:00:00.000Z",
+    );
     expect(calculateContactExpiry("interview", submittedAt).toISOString()).toBe(
       "2026-09-19T00:00:00.000Z",
     );

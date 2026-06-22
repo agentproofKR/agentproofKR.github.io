@@ -13,19 +13,19 @@ export const metadata = {
 const summaryCards = [
   {
     title: "받는 것",
-    body: "설문 답변, AI 사용 상황",
+    body: "성명, 연락처, 설문 답변",
   },
   {
     title: "안 받는 것",
-    body: "이름, 전화번호, 회사 기밀",
+    body: "회사 기밀, 실제 업무자료",
   },
   {
-    title: "이메일",
-    body: "체크리스트나 상담을 원할 때만",
+    title: "연락처",
+    body: "결과 안내와 후속 연락에만 사용",
   },
   {
     title: "보관",
-    body: "설문 답변은 6개월",
+    body: "성명·연락처는 2개월",
   },
   {
     title: "삭제",
@@ -51,12 +51,12 @@ const providerRows = [
   },
   {
     provider: "Supabase, Inc.",
-    info: "설문 세션, 설문 답변, 결과 요약, 동의 기록, 선택 연락처, 비식별 운영 이벤트",
-    purpose: "자가점검 결과 저장, 중복 제출 방지, 선택한 베타·인터뷰·파일럿 연락을 처리하기 위해 필요합니다.",
+    info: "설문 세션, 설문 답변, 결과 요약, 동의 기록, 성명, 연락처, 선택 연락처, 비식별 운영 이벤트",
+    purpose: "자가점검 결과 저장, 중복 제출 방지, AI 안전 체크 결과 안내와 선택한 베타·인터뷰·파일럿 연락을 처리하기 위해 필요합니다.",
     location:
       "Postgres 프로젝트 리전은 ap-northeast-2(서울)로 검증되었습니다. Edge Function은 요청 위치에 가까운 Supabase 엣지 인프라에서 실행될 수 있으며, 현재 공개 호출은 특정 실행 리전을 고정하지 않습니다.",
     retention:
-      "설문 원문은 6개월, 인터뷰 연락처는 90일, 파일럿 연락처는 1년, 베타 연락처는 12개월 또는 베타 종료 후 90일 중 빠른 날까지 보관합니다.",
+      "설문 시작 시 입력한 성명·연락처는 2개월, 설문 원문은 6개월, 인터뷰 연락처는 90일, 파일럿 연락처는 1년, 베타 연락처는 12개월 또는 베타 종료 후 90일 중 빠른 날까지 보관합니다.",
     refusal:
       "필수 설문 처리에 동의하지 않으면 설문 저장과 결과 생성이 진행되지 않습니다. 선택 연락은 언제든지 철회할 수 있습니다.",
   },
@@ -82,6 +82,7 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
     body: (
       <ul>
         <li>역할에 맞는 자가점검 결과를 보여드립니다.</li>
+        <li>AI 안전 체크 결과 안내와 필요한 후속 연락을 드립니다.</li>
         <li>어떤 기능과 안내가 필요한지 파악합니다.</li>
         <li>중복 제출과 오남용을 줄입니다.</li>
         <li>베타, 인터뷰, 상담을 신청한 경우 연락을 드립니다.</li>
@@ -92,6 +93,7 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
     title: "수집 항목",
     body: (
       <ul>
+        <li>성명과 연락처를 받습니다.</li>
         <li>역할, 조직 규모, 업종, AI 사용 상황, 설문 답변을 받습니다.</li>
         <li>설문 제출을 구분하기 위한 임시 번호와 제출 시각을 저장합니다.</li>
         <li>
@@ -99,7 +101,7 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
           있습니다.
         </li>
         <li>
-          이메일과 회사명은 베타, 인터뷰, 상담을 선택한 경우에만 받습니다.
+          이메일과 회사명은 베타, 인터뷰, 상담을 추가로 선택한 경우에도 받을 수 있습니다.
         </li>
       </ul>
     ),
@@ -117,6 +119,9 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
     title: "보관 기간",
     body: (
       <ul>
+        <li>
+          설문 시작 시 입력한 성명과 연락처는 수집일로부터 2개월 동안 보관합니다.
+        </li>
         <li>
           설문 원문 답변과 연결 정보는 제출일로부터 6개월 동안 보관합니다.
         </li>
@@ -174,7 +179,7 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
             <tr>
               <td>Supabase, Inc.</td>
               <td>설문 저장</td>
-              <td>설문 제출, 동의 기록, 선택 연락처를 저장합니다.</td>
+              <td>설문 제출, 동의 기록, 성명, 연락처, 선택 연락처를 저장합니다.</td>
             </tr>
           </tbody>
         </table>
@@ -293,14 +298,14 @@ export default function PrivacyPage() {
         <p className={styles.eyebrow}>개인정보</p>
         <h1>개인정보 안내</h1>
         <p className={styles.lead}>
-          이름 안 받아요.
+          성명과 연락처를 받습니다.
           <br />
-          전화번호 안 받아요.
+          결과 안내와 후속 연락에만 사용합니다.
           <br />
           회사 기밀 안 받아요.
           <br />
           <br />
-          이메일은 원할 때만 입력합니다.
+          성명과 연락처는 수집 후 2개월 동안 보관합니다.
           <br />
           삭제 요청도 할 수 있어요.
         </p>

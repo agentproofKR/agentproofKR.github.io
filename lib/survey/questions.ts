@@ -157,20 +157,20 @@ const supportOptions = [
 ] as const satisfies readonly SurveyOption[];
 
 const situationOptions = [
-  { value: "direct_user", label: "내가 직접 쓴다" },
-  { value: "adoption_owner", label: "팀·회사 도입 검토" },
-  { value: "security_owner", label: "보안·개인정보 걱정" },
-  { value: "unclear", label: "AI 사용이 불안하다" },
+  { value: "direct_user", label: "업무에서 직접 사용 중" },
+  { value: "adoption_owner", label: "팀·회사 도입 검토 중" },
+  { value: "security_owner", label: "보안·개인정보 기준 점검 중" },
+  { value: "unclear", label: "무엇부터 정해야 할지 모르겠음" },
 ] as const satisfies readonly SurveyOption[];
 
 const concernOptions = [
-  { value: "wrong_answer", label: "AI 답변 오류", score: 1 },
+  { value: "wrong_answer", label: "AI 답변의 오류 가능성", score: 1 },
   { value: "source_check", label: "근거·출처 확인 어려움", score: 1 },
   { value: "data_leak", label: "개인정보·기밀 유출", score: 0 },
-  { value: "approval_gap", label: "승인·책임 기준 없음", score: 0 },
-  { value: "where_to_start", label: "어디부터 도입할지 모름", score: 1 },
+  { value: "approval_gap", label: "승인·책임 기준 부재", score: 0 },
+  { value: "where_to_start", label: "도입 우선순위 불명확", score: 1 },
   { value: "effect_cost", label: "비용 대비 효과 설명 어려움", score: 1 },
-  { value: "unknown_usage", label: "직원 AI 사용 파악 어려움", score: 0 },
+  { value: "unknown_usage", label: "조직 내 AI 사용 현황 파악 어려움", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
 const dataInputOptions = [
@@ -186,13 +186,13 @@ const humanReviewOptions = [
   { value: "always", label: "항상 확인한다", score: 4 },
   { value: "important_only", label: "중요할 때만 확인한다", score: 2 },
   { value: "rarely", label: "거의 확인하지 않는다", score: 0 },
-  { value: "no_standard", label: "확인 기준이 없다", score: 0 },
+  { value: "no_standard", label: "확인 기준이 정해져 있지 않다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
 ] as const satisfies readonly SurveyOption[];
 
 const policyOptions = [
-  { value: "clear", label: "명확한 기준 있음", score: 4 },
-  { value: "partial", label: "일부 기준 있음", score: 2 },
+  { value: "clear", label: "명확한 기준이 있다", score: 4 },
+  { value: "partial", label: "일부 기준이 있다", score: 2 },
   { value: "verbal", label: "말로만 안내됨", score: 1 },
   { value: "none", label: "기준이 없다", score: 0 },
   { value: "unknown", label: "잘 모르겠다", score: 0 },
@@ -207,16 +207,16 @@ const followupPreferenceOptions = [
 ] as const satisfies readonly SurveyOption[];
 
 export const unifiedCoreQuestions = [
-  { id: "U01", text: "지금 상황은?", type: "single", options: situationOptions, scored: false },
-  { id: "U02", text: "팀 규모는?", type: "single", options: orgSizeOptions, scored: false },
-  { id: "U03", text: "지금 쓰는 AI는?", type: "multi", options: aiTypeOptions, maxSelections: 4, scored: false },
-  { id: "U04", text: "AI로 하는 일은?", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
-  { id: "U05", text: "가장 불안한 건?", type: "single", options: concernOptions, scored: false },
-  { id: "U06", text: "회사 자료를 넣은 적 있나요?", type: "single", options: dataInputOptions, scored: true, dimension: "정보 입력 위험" },
-  { id: "U07", text: "사람이 다시 확인하나요?", type: "single", options: humanReviewOptions, scored: true, dimension: "답변 검토 기준" },
-  { id: "U08", text: "AI 사용 기준이 있나요?", type: "single", options: policyOptions, scored: true, dimension: "사용 기준 성숙도" },
-  { id: "U09", text: "지금 필요한 건?", type: "single", options: supportOptions, scored: false },
-  { id: "U10", text: "다음에 뭘 받을까요?", type: "single", options: followupPreferenceOptions, scored: false },
+  { id: "U01", text: "현재 상황과 가장 가까운 것은 무엇인가요?", type: "single", options: situationOptions, scored: false },
+  { id: "U02", text: "함께 일하는 팀 또는 조직 규모는 어느 정도인가요?", type: "single", options: orgSizeOptions, scored: false },
+  { id: "U03", text: "현재 사용하거나 검토 중인 AI 도구를 선택해주세요.", type: "multi", options: aiTypeOptions, maxSelections: 4, scored: false },
+  { id: "U04", text: "AI를 활용 중이거나 활용하려는 업무를 선택해주세요.", type: "multi", options: workflowOptions, maxSelections: 3, scored: false },
+  { id: "U05", text: "가장 먼저 해결하고 싶은 문제는 무엇인가요?", type: "single", options: concernOptions, scored: false },
+  { id: "U06", text: "AI에 회사 자료나 고객 정보를 입력한 적이 있나요?", type: "single", options: dataInputOptions, scored: true, dimension: "정보 입력 위험" },
+  { id: "U07", text: "AI 답변을 업무에 쓰기 전 사람이 확인하나요?", type: "single", options: humanReviewOptions, scored: true, dimension: "답변 검토 기준" },
+  { id: "U08", text: "조직 안에 AI 사용 기준이 마련되어 있나요?", type: "single", options: policyOptions, scored: true, dimension: "사용 기준 성숙도" },
+  { id: "U09", text: "지금 가장 필요한 지원은 무엇인가요?", type: "single", options: supportOptions, scored: false },
+  { id: "U10", text: "결과 확인 후 어떤 후속 안내를 원하시나요?", type: "single", options: followupPreferenceOptions, scored: false },
 ] as const satisfies readonly SurveyQuestion[];
 
 const unifiedDimensions = ["정보 입력 위험", "답변 검토 기준", "사용 기준 성숙도"] as const;
@@ -410,7 +410,7 @@ const unifiedDefinition = {
   persona: "practitioner",
   title: "3분 AI 안전 체크",
   description:
-    "10문항으로 AI 사용 위험과 이번 주 할 일을 확인합니다.",
+    "10문항으로 AI 사용 위험과 바로 정해야 할 기준을 확인합니다.",
   questionCount: 10,
   estimatedMinutes: "약 3분",
   dimensions: unifiedDimensions,

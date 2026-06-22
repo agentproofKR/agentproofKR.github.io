@@ -63,9 +63,10 @@ export type SurveyScoreResult = {
 export type ConsentState = {
   age14OrOlder: boolean;
   surveyProcessing: boolean;
+  personalInfoCollection: boolean;
   beta: boolean;
   interview: boolean;
   pilot: boolean;
 };
 
-export type ContactRequestType = "beta" | "interview" | "pilot";
+export type ContactRequestType = "survey_followup" | "beta" | "interview" | "pilot";

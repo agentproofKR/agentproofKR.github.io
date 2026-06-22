@@ -9,6 +9,9 @@ export function calculateContactExpiry(
   submittedAt: Date,
   betaProgramEnd?: Date,
 ): Date {
+  if (requestType === "survey_followup") {
+    return addMonths(submittedAt, 2);
+  }
   if (requestType === "interview") {
     return addDays(submittedAt, 90);
   }

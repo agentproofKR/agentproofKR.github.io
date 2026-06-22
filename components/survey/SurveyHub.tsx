@@ -7,7 +7,7 @@ import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-const helperItems = ["회사명 입력 없음", "기밀 입력 없음", "약 3분"];
+const helperItems = ["회사명 입력 없음", "기밀자료 입력 없음", "약 3분"];
 
 export function SurveyHub() {
   useEffect(() => {
@@ -39,14 +39,14 @@ export function SurveyHub() {
         </Link>
         <p className={styles.eyebrow}>3분 AI 안전 체크</p>
         <h1 id="survey-hub-title">
-          우리 팀 AI 사용,
+          업무에 쓰는 AI,
           <br />
-          안전할까요?
+          기준이 있나요?
         </h1>
         <p className={styles.lead}>
-          10문항으로 확인합니다.
+          10문항으로 위험 신호와 필요한 기준을 확인합니다.
           <br />
-          이메일 없이 결과를 볼 수 있어요.
+          이메일 없이 바로 결과를 볼 수 있습니다.
         </p>
         <div className={styles.actions}>
           <Link
@@ -77,9 +77,9 @@ export function SurveyHub() {
       >
         <div>
           <h2 id="survey-next-title">
-            끝나면 바로 보여드립니다.
+            끝나면 바로 결과를 보여드립니다.
           </h2>
-          <p>위험과 이번 주 할 일을 정리합니다.</p>
+          <p>먼저 정해야 할 기준과 이번 주 실행할 일을 정리합니다.</p>
         </div>
         <div className={styles.linkRow}>
           <Link href="/privacy/">개인정보 안내</Link>

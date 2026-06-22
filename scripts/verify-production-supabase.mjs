@@ -130,14 +130,14 @@ async function runVerification() {
     }
 
     const contacts = await selectRows(
-      `contact_requests?session_id=eq.${payload.sessionId}&select=encrypted_email,optional_company,request_type`,
+      `contact_requests?session_id=eq.${payload.sessionId}&select=encrypted_email,encrypted_name,encrypted_contact,optional_company,request_type`,
     );
     const consentEventsAfterContacts = await countRows(`consent_events?session_id=eq.${payload.sessionId}&select=id`);
     evidence.submissions[persona].contactRequests = contacts.length;
     evidence.submissions[persona].contactTypes = contacts.map((row) => row.request_type).sort();
     evidence.submissions[persona].consentEventsAfterContacts = consentEventsAfterContacts;
     evidence.submissions[persona].rawEmailContactRowsAfterContacts = contacts.filter((row) =>
-      String(row.encrypted_email ?? "").includes("@"),
+      JSON.stringify(row).includes("@") || JSON.stringify(row).includes("QA Tester"),
     ).length;
 
     const replay = await postFunction(payload, productionOrigin);
@@ -229,8 +229,8 @@ function assertEvidence() {
     assert(item.answerRows === 10, `${persona}: expected 10 unified answer rows`);
     assert(item.questionIds.every((id) => /^U\d{2}$/.test(id)), `${persona}: non-unified question IDs stored`);
     assert(item.resultRows === 1, `${persona}: missing result row`);
-    assert(item.requiredConsentRows >= 2, `${persona}: missing required consent rows`);
-    assert(item.contactRequests === 3, `${persona}: expected three separate contact requests`);
+    assert(item.requiredConsentRows >= 3, `${persona}: missing required consent rows`);
+    assert(item.contactRequests === 4, `${persona}: expected survey follow-up plus three separate contact requests`);
     assert(item.answerRowsWithEmail === 0, `${persona}: email leaked into answers`);
     assert(item.rawEmailContactRows === 0, `${persona}: raw email stored before contact verification`);
     assert(item.rawEmailContactRowsAfterContacts === 0, `${persona}: raw email stored in contact table`);
@@ -280,6 +280,7 @@ function buildSurveyPayload(persona) {
     consents: {
       age14OrOlder: true,
       surveyProcessing: true,
+      personalInfoCollection: true,
       beta: false,
       interview: false,
       pilot: false,
@@ -287,12 +288,20 @@ function buildSurveyPayload(persona) {
       consentTextHashes: {
         age14OrOlder: "qa-hash-age",
         surveyProcessing: "qa-hash-survey",
+        personalInfoCollection: "qa-hash-personal-info",
         beta: "qa-hash-beta",
         interview: "qa-hash-interview",
         pilot: "qa-hash-pilot",
       },
     },
-    contacts: [],
+    contacts: [
+      {
+        requestType: "survey_followup",
+        name: "QA Tester",
+        contact: `${qaPrefix}+${persona}-survey@example.invalid`,
+        preferredContactPurpose: "AI safety check result follow-up",
+      },
+    ],
     utm: {
       source: "agentproof_qa",
       medium: "release_verification",
@@ -344,7 +353,7 @@ async function verifyStoredSurvey(payload) {
   const resultRows = await selectRows(`survey_results?session_id=eq.${payload.sessionId}&select=*`);
   const consentRows = await selectRows(`consent_events?session_id=eq.${payload.sessionId}&select=*`);
   const rawContacts = await selectRows(
-    `contact_requests?session_id=eq.${payload.sessionId}&select=encrypted_email,optional_company,request_type`,
+    `contact_requests?session_id=eq.${payload.sessionId}&select=encrypted_email,encrypted_name,encrypted_contact,optional_company,request_type`,
   );
   const analyticsRows = await selectRows(
     `analytics_events?session_id=eq.${payload.sessionId}&select=event_name,non_sensitive_properties_json`,
@@ -360,7 +369,7 @@ async function verifyStoredSurvey(payload) {
     questionIds: answerRows.map((row) => row.question_id).sort(),
     resultRows: resultRows.length,
     requiredConsentRows: consentRows.filter(
-      (row) => ["age14OrOlder", "surveyProcessing"].includes(row.consent_type) && row.accepted === true,
+      (row) => ["age14OrOlder", "surveyProcessing", "personalInfoCollection"].includes(row.consent_type) && row.accepted === true,
     ).length,
     consentHashRows: consentRows.filter((row) => String(row.consent_text_hash ?? "").length > 0).length,
     surveyVersion: sessionRows[0]?.survey_version,
@@ -373,7 +382,9 @@ async function verifyStoredSurvey(payload) {
     riskFlagCount: riskFlags.length,
     utmSource: sessionRows[0]?.utm_source,
     answerRowsWithEmail: answerText.includes("@") ? 1 : 0,
-    rawEmailContactRows: rawContacts.filter((row) => String(row.encrypted_email ?? "").includes("@")).length,
+    rawEmailContactRows: rawContacts.filter((row) =>
+      JSON.stringify(row).includes("@") || JSON.stringify(row).includes("QA Tester"),
+    ).length,
     analyticsRowsWithPii: analyticsText.includes("@") || analyticsText.includes("QA redacted") ? 1 : 0,
   };
 }

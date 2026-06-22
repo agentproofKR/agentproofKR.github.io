@@ -11,7 +11,9 @@ export type SurveySubmissionMode =
 
 export type SurveyContactRequest = {
   requestType: ContactRequestType;
-  email: string;
+  email?: string;
+  name?: string;
+  contact?: string;
   company?: string;
   role?: string;
   preferredContactPurpose?: string;
@@ -43,6 +45,7 @@ export type ValidSurveySubmission = {
   consents: {
     age14OrOlder: boolean;
     surveyProcessing: boolean;
+    personalInfoCollection: boolean;
     beta: boolean;
     interview: boolean;
     pilot: boolean;
@@ -60,12 +63,27 @@ export type ValidSurveySubmission = {
 
 const personaSchema = z.enum(["practitioner", "leader", "security"]);
 const contactRequestSchema = z.object({
-  requestType: z.enum(["beta", "interview", "pilot"]),
-  email: z.string().trim().toLowerCase().email().max(254),
+  requestType: z.enum(["survey_followup", "beta", "interview", "pilot"]),
+  email: z.string().trim().toLowerCase().email().max(254).optional(),
+  name: optionalLimitedString(50),
+  contact: optionalLimitedString(80),
   company: optionalLimitedString(120),
   role: optionalLimitedString(80),
   preferredContactPurpose: optionalLimitedString(120),
   freeText: optionalLimitedString(300),
+}).superRefine((value, context) => {
+  if (value.requestType === "survey_followup") {
+    if (!value.name || value.name.length < 2) {
+      context.addIssue({ code: "custom", path: ["name"], message: "성명을 입력해주세요." });
+    }
+    if (!value.contact || value.contact.length < 5) {
+      context.addIssue({ code: "custom", path: ["contact"], message: "연락처를 입력해주세요." });
+    }
+    return;
+  }
+  if (!value.email) {
+    context.addIssue({ code: "custom", path: ["email"], message: "이메일을 입력해주세요." });
+  }
 });
 
 const submissionSchema = z.object({
@@ -86,6 +104,7 @@ const submissionSchema = z.object({
   consents: z.object({
     age14OrOlder: z.boolean(),
     surveyProcessing: z.boolean(),
+    personalInfoCollection: z.boolean(),
     beta: z.boolean().default(false),
     interview: z.boolean().default(false),
     pilot: z.boolean().default(false),
@@ -150,6 +169,9 @@ export function validateSurveySubmission(input: unknown): ValidSurveySubmission 
   if (!parsed.consents.surveyProcessing) {
     throw new Error("필수 동의가 필요합니다.");
   }
+  if (!parsed.consents.personalInfoCollection) {
+    throw new Error("개인정보 수집 및 이용 동의가 필요합니다.");
+  }
 
   validateQuestionIds(parsed.persona, parsed.answers);
   const computedResult = scoreSurvey(parsed.persona, parsed.answers);
@@ -166,6 +188,8 @@ export function validateSurveySubmission(input: unknown): ValidSurveySubmission 
     },
     contacts: parsed.contacts.map((contact) => ({
       ...contact,
+      name: stripTags(contact.name),
+      contact: stripTags(contact.contact),
       company: stripTags(contact.company),
       role: stripTags(contact.role),
       preferredContactPurpose: stripTags(contact.preferredContactPurpose),

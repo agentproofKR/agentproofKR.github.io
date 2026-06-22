@@ -9,8 +9,16 @@ const allowedOrigins = new Set([
 ]);
 
 type Persona = "practitioner" | "leader" | "security";
-type RequestType = "beta" | "interview" | "pilot";
+type RequestType = "survey_followup" | "beta" | "interview" | "pilot";
 type AnswerValue = string | string[];
+type SurveyContact = {
+  requestType: RequestType;
+  name?: string;
+  contact?: string;
+  email?: string;
+  company?: string;
+  preferredContactPurpose?: string;
+};
 
 type SurveyPayload = {
   kind?: "survey";
@@ -30,6 +38,7 @@ type SurveyPayload = {
   consents: {
     age14OrOlder: boolean;
     surveyProcessing: boolean;
+    personalInfoCollection?: boolean;
     beta?: boolean;
     interview?: boolean;
     pilot?: boolean;
@@ -42,6 +51,7 @@ type SurveyPayload = {
     campaign?: string;
     content?: string;
   };
+  contacts?: SurveyContact[];
 };
 
 type ContactPayload = {
@@ -53,6 +63,8 @@ type ContactPayload = {
   consentTextHash: string;
   requestType: RequestType;
   email: string;
+  name?: string;
+  contact?: string;
   company?: string;
   role?: string;
   preferredContactPurpose?: string;
@@ -409,6 +421,7 @@ async function handleSurvey(
     [
       ["age14OrOlder", payload.consents.age14OrOlder],
       ["surveyProcessing", payload.consents.surveyProcessing],
+      ["personalInfoCollection", payload.consents.personalInfoCollection === true],
       ["beta", payload.consents.beta === true],
       ["interview", payload.consents.interview === true],
       ["pilot", payload.consents.pilot === true],
@@ -435,6 +448,27 @@ async function handleSurvey(
     },
   ]);
 
+  const surveyContacts = normalizeSurveyContacts(payload.contacts ?? []);
+  if (surveyContacts.length > 0) {
+    await checkedTableRequest(
+      supabaseUrl,
+      serviceRoleKey,
+      "contact_requests",
+      await Promise.all(
+        surveyContacts.map(async (contact) => ({
+          session_id: payload.sessionId,
+          encrypted_email: await encryptContactValue(contact.contact ?? contact.email ?? ""),
+          encrypted_name: contact.name ? await encryptContactValue(contact.name) : null,
+          encrypted_contact: await encryptContactValue(contact.contact ?? contact.email ?? ""),
+          optional_company: normalizeText(contact.company, 120),
+          request_type: contact.requestType,
+          preferred_contact_purpose: normalizeText(contact.preferredContactPurpose, 120),
+          expires_at: addMonths(completedAt, 2).toISOString(),
+        })),
+      ),
+    );
+  }
+
   return json({ ok: true, sessionId: payload.sessionId, status: "stored" }, 201, headers);
 }
 
@@ -447,11 +481,13 @@ async function handleContactRequest(
   validateContactPayload(payload);
   await rejectDuplicateIdempotency(supabaseUrl, serviceRoleKey, payload.idempotencyKey);
 
-  const encryptedEmail = await encryptEmail(payload.email);
+  const encryptedEmail = await encryptContactValue(payload.email);
   await checkedTableRequest(supabaseUrl, serviceRoleKey, "contact_requests", [
     {
       session_id: payload.sessionId,
       encrypted_email: encryptedEmail,
+      encrypted_name: payload.name ? await encryptContactValue(payload.name) : null,
+      encrypted_contact: payload.contact ? await encryptContactValue(payload.contact) : encryptedEmail,
       optional_company: normalizeText(payload.company, 120),
       request_type: payload.requestType,
       preferred_contact_purpose: normalizeText(payload.preferredContactPurpose, 120),
@@ -494,6 +530,7 @@ function validateSurveyPayload(payload: SurveyPayload): void {
   if (!isPersona(payload.persona)) throw new Error("INVALID_PERSONA");
   if (!payload.consents?.age14OrOlder) throw new Error("MISSING_AGE_CONSENT");
   if (!payload.consents?.surveyProcessing) throw new Error("MISSING_SURVEY_CONSENT");
+  if (!payload.consents?.personalInfoCollection) throw new Error("MISSING_PERSONAL_INFO_CONSENT");
   if (payload.surveyVersion !== surveyVersion || payload.scoringVersion !== scoringVersion) {
     throw new Error("UNKNOWN_SURVEY_VERSION");
   }
@@ -533,6 +570,7 @@ function validateSurveyPayload(payload: SurveyPayload): void {
       }
     }
   }
+  normalizeSurveyContacts(payload.contacts ?? []);
 }
 
 function computeServerResult(payload: SurveyPayload): {
@@ -626,7 +664,7 @@ function displayRiskBandFor(label: string): string {
 function validateContactPayload(payload: ContactPayload): void {
   if (!isUuid(payload.sessionId)) throw new Error("INVALID_SESSION_ID");
   if (!isPersona(payload.persona)) throw new Error("INVALID_PERSONA");
-  if (!["beta", "interview", "pilot"].includes(payload.requestType)) {
+  if (!["survey_followup", "beta", "interview", "pilot"].includes(payload.requestType)) {
     throw new Error("INVALID_REQUEST_TYPE");
   }
   if (!payload.idempotencyKey || payload.idempotencyKey.length > 160) {
@@ -635,9 +673,34 @@ function validateContactPayload(payload: ContactPayload): void {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) || payload.email.length > 254) {
     throw new Error("INVALID_EMAIL");
   }
+  if (payload.name && (payload.name.length > 50 || /[<>]/.test(payload.name))) {
+    throw new Error("INVALID_NAME");
+  }
+  if (payload.contact && (payload.contact.length > 80 || /[<>]/.test(payload.contact))) {
+    throw new Error("INVALID_CONTACT");
+  }
   if ((payload.company ?? "").length > 120 || (payload.preferredContactPurpose ?? "").length > 120) {
     throw new Error("INVALID_CONTACT_LENGTH");
   }
+}
+
+function normalizeSurveyContacts(contacts: SurveyContact[]): SurveyContact[] {
+  if (contacts.length > 3) throw new Error("TOO_MANY_CONTACTS");
+  return contacts.map((contact) => {
+    if (contact.requestType !== "survey_followup") {
+      throw new Error("INVALID_SURVEY_CONTACT_TYPE");
+    }
+    const name = normalizeText(contact.name, 50);
+    const contactValue = normalizeText(contact.contact ?? contact.email, 80);
+    if (!name || name.length < 2) throw new Error("INVALID_SURVEY_CONTACT_NAME");
+    if (!contactValue || contactValue.length < 5) throw new Error("INVALID_SURVEY_CONTACT");
+    return {
+      requestType: "survey_followup",
+      name,
+      contact: contactValue,
+      preferredContactPurpose: normalizeText(contact.preferredContactPurpose, 120) ?? undefined,
+    };
+  });
 }
 
 async function rejectDuplicateIdempotency(
@@ -732,9 +795,9 @@ function restHeaders(serviceRoleKey: string): HeadersInit {
   };
 }
 
-async function encryptEmail(email: string): Promise<string> {
+async function encryptContactValue(value: string): Promise<string> {
   const secret = Deno.env.get("CONTACT_ENCRYPTION_KEY") ?? getServiceRoleKey();
-  if (!secret) throw new Error("EMAIL_ENCRYPTION_NOT_CONFIGURED");
+  if (!secret) throw new Error("CONTACT_ENCRYPTION_NOT_CONFIGURED");
   const keyMaterial = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret.slice(0, 64).padEnd(32, "0")),
@@ -754,7 +817,7 @@ async function encryptEmail(email: string): Promise<string> {
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
-    new TextEncoder().encode(email.trim().toLowerCase()),
+    new TextEncoder().encode(value.trim()),
   );
   return `aesgcm:${base64(salt)}:${base64(iv)}:${base64(new Uint8Array(ciphertext))}`;
 }
@@ -855,6 +918,7 @@ function addDays(date: Date, days: number): Date {
 
 function contactExpiry(type: RequestType): Date {
   const now = new Date();
+  if (type === "survey_followup") return addMonths(now, 2);
   if (type === "interview") return addDays(now, 90);
   if (type === "pilot") return addMonths(now, 12);
   return addMonths(now, 12);

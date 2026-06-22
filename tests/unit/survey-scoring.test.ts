@@ -93,7 +93,7 @@ describe("deterministic survey scoring", () => {
     expect(result.criticalWarnings).toEqual(
       expect.arrayContaining([
         "회사 자료나 고객 정보가 AI에 입력될 가능성이 있습니다.",
-        "AI 답변을 사람 검토 없이 사용할 수 있습니다.",
+        "AI 답변이 사람 검토 없이 업무에 사용될 수 있습니다.",
         "승인된 AI 도구 목록이나 사용정책이 명확하지 않습니다.",
       ]),
     );

@@ -28,19 +28,19 @@ const readinessBands: readonly ReadinessBand[] = [
     min: 0,
     max: 39,
     label: "기준 정립 필요",
-    summary: "AI 활용 전 기본 기준과 책임 구조를 먼저 정리해야 합니다.",
+    summary: "AI 활용 전 입력 범위와 책임 기준을 먼저 정리해야 합니다.",
   },
   {
     min: 40,
     max: 59,
     label: "제한적 실험 적합",
-    summary: "작은 범위의 실험은 가능하지만 검토와 기록 기준이 필요합니다.",
+    summary: "작은 범위의 실험은 가능하지만 검토와 기록 기준을 보완해야 합니다.",
   },
   {
     min: 60,
     max: 79,
     label: "통제 기반 확대 준비",
-    summary: "통제 기준을 갖춘 상태에서 일부 업무 확장을 검토할 수 있습니다.",
+    summary: "기본 통제 기준을 바탕으로 일부 업무 확장을 검토할 수 있습니다.",
   },
   {
     min: 80,
@@ -181,7 +181,7 @@ function getCriticalWarnings(persona: Persona, answers: SurveyAnswerMap): string
   }
 
   if (answers.U07 === "rarely" || answers.U07 === "no_standard") {
-    warnings.push("AI 답변을 사람 검토 없이 사용할 수 있습니다.");
+    warnings.push("AI 답변이 사람 검토 없이 업무에 사용될 수 있습니다.");
   }
 
   if (answers.U08 === "none" || answers.U08 === "verbal" || answers.U08 === "unknown") {
@@ -194,14 +194,14 @@ function getCriticalWarnings(persona: Persona, answers: SurveyAnswerMap): string
 function getDimensionRiskFlags(dimensionScores: Record<string, number>): string[] {
   return Object.entries(dimensionScores)
     .filter(([, score]) => score < 40)
-    .map(([dimension]) => `${dimension}: 기준 보완이 필요합니다.`);
+    .map(([dimension]) => `${dimension}: 기준을 보완해야 합니다.`);
 }
 
 function getDefaultRiskReviewPrompts(): string[] {
   return [
     "AI에 입력하면 안 되는 회사 자료와 고객 정보를 먼저 정하세요.",
     "AI 답변을 외부 제출 전에 사람이 확인해야 하는 업무를 정하세요.",
-    "회사에서 허용하는 AI 도구와 사용 기준을 확인하세요.",
+    "회사에서 허용하는 AI 도구와 사용 기준을 명확히 하세요.",
   ];
 }
 
@@ -212,15 +212,15 @@ function getRecommendedActions(
 ): string[] {
   return unique([
     ...(criticalWarnings.length > 0
-      ? ["AI에 입력하면 안 되는 정보 5가지를 정하세요."]
+      ? ["AI에 입력하면 안 되는 정보 유형을 먼저 정하세요."]
       : []),
     "외부 제출 전 사람이 반드시 확인해야 하는 업무를 정하세요.",
     persona === "leader"
       ? "AI를 먼저 도입할 업무 1개와 성공 기준을 정하세요."
       : persona === "security"
         ? "회사에서 허용하는 AI 도구 목록을 만드세요."
-        : "AI 답변의 근거와 출처를 확인하는 체크리스트를 만드세요.",
-    "회사에서 허용하는 AI 도구 목록을 만드세요.",
+        : "AI 답변의 근거와 출처를 확인하는 기준을 만드세요.",
+    "회사에서 허용하는 AI 도구 목록을 정리하세요.",
   ]).slice(0, 3);
 }
 

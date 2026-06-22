@@ -14,8 +14,11 @@ async function answerCurrentQuestion(page: Page) {
 async function acceptRequiredSurveyConsents(page: Page) {
   await expect(page.getByTestId("survey-consent-step")).toBeVisible();
   await expect(page.getByTestId("survey-question")).toHaveCount(0);
+  await page.getByLabel("성명").fill("김테스트");
+  await page.getByLabel("연락처").fill("qa+survey@example.com");
+  await page.getByRole("radio", { name: "동의합니다" }).check();
   await page.getByLabel("만 14세 이상입니다.").check();
-  await page.getByLabel("답변을 결과 계산에 사용하는 데 동의합니다.").check();
+  await page.getByLabel("답변과 결과 점수를 설문 운영에 사용하는 데 동의합니다.").check();
   await page.getByRole("button", { name: "동의하고 시작하기" }).click();
   await expect(page.getByTestId("survey-progress")).toContainText("1/");
 }
@@ -45,7 +48,7 @@ async function completeSurvey(
     page.getByRole("heading", { name: /AI 안전 체크 결과/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toContainText(
-    "이번 주 할 일을 정리했습니다",
+    "이번 주 실행할 일을 정리했습니다",
   );
 }
 
@@ -63,7 +66,7 @@ test("homepage CTAs route to the unified 3-minute survey", async ({
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
-    page.getByRole("heading", { name: /우리 팀 AI 사용,\s*안전할까요\?/ }),
+    page.getByRole("heading", { name: /업무에 쓰는 AI,\s*기준이 있나요\?/ }),
   ).toBeVisible();
 });
 
@@ -107,8 +110,8 @@ test("requires consent before showing the first question", async ({ page }) => {
 
   await page.getByRole("button", { name: "동의하고 시작하기" }).click();
   await expect(
-    page.locator('[role="alert"]').filter({ hasText: "필수 동의" }),
-  ).toContainText("필수 동의");
+    page.locator('[role="alert"]').filter({ hasText: "성명을 2자 이상 입력해주세요." }),
+  ).toContainText("성명을 2자 이상 입력해주세요.");
 
   await acceptRequiredSurveyConsents(page);
   await expect(page.getByTestId("survey-question")).toBeVisible();

@@ -29,13 +29,25 @@ type DraftState = {
 };
 
 type SurveyPhase = "consent" | "questions" | "confirm";
+type PersonalInfo = {
+  name: string;
+  contact: string;
+  consentChoice: "" | "agree" | "disagree";
+};
 
 const emptyConsents: ConsentState = {
   age14OrOlder: false,
   surveyProcessing: false,
+  personalInfoCollection: false,
   beta: false,
   interview: false,
   pilot: false,
+};
+
+const emptyPersonalInfo: PersonalInfo = {
+  name: "",
+  contact: "",
+  consentChoice: "",
 };
 
 export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
@@ -45,6 +57,7 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   const [currentIndex, setCurrentIndex] = useState(initialDraft.currentIndex);
   const [answers, setAnswers] = useState<SurveyAnswerMap>(initialDraft.answers);
   const [consents, setConsents] = useState<ConsentState>(initialDraft.consents);
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>(emptyPersonalInfo);
   const [phase, setPhase] = useState<SurveyPhase>("consent");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +108,12 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   };
 
   const beginSurvey = () => {
+    const personalInfoCheck = validatePersonalInfo(personalInfo);
+    if (!personalInfoCheck.ok) {
+      setError(personalInfoCheck.message);
+      return;
+    }
+
     const consentCheck = canSubmitSurvey(consents);
     if (!consentCheck.ok) {
       setError(`필수 동의: ${consentCheck.message}`);
@@ -163,7 +182,14 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
         riskFlags: result.riskFlags,
       },
       consents: { ...consents, consentVersion, consentTextHashes },
-      contacts: [],
+      contacts: [
+        {
+          requestType: "survey_followup",
+          name: personalInfo.name,
+          contact: personalInfo.contact,
+          preferredContactPurpose: "AI 안전 체크 결과 안내 및 후속 연락",
+        },
+      ],
       utm: stored,
     });
 
@@ -218,14 +244,19 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </Link>
           <p className={styles.eyebrow}>3분 AI 안전 체크</p>
           <h1 id="consent-title" ref={headingRef} tabIndex={-1}>
-            결과를 보여주기 위한 확인입니다
+            개인정보 수집 및 이용에 동의해주세요
           </h1>
           <p className={styles.lead}>
-            이름, 전화번호, 회사 기밀은 묻지 않습니다.
+            AI 안전 체크 결과 안내를 위해 성명과 연락처를 받습니다.
             <br />
-            이메일은 마지막에만 선택합니다.
+            회사 기밀이나 실제 업무 자료는 입력하지 마세요.
           </p>
-          <ConsentPanel consents={consents} onChange={setConsents} />
+          <PersonalInfoPanel
+            personalInfo={personalInfo}
+            onPersonalInfoChange={setPersonalInfo}
+            consents={consents}
+            onConsentChange={setConsents}
+          />
           <StorageNotice mode={submissionMode} />
           <p className={styles.policyLink}>
             <Link href="/privacy/">자세한 개인정보 안내 보기</Link>
@@ -263,12 +294,12 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </Link>
           <p className={styles.eyebrow}>제출 전 확인</p>
           <h1 id="confirm-title" ref={headingRef} tabIndex={-1}>
-            이제 결과를 볼까요?
+            답변을 바탕으로 결과를 계산합니다
           </h1>
           <p className={styles.lead}>
-            결과는 바로 계산됩니다.
+            입력한 답변으로 위험 신호와 다음 할 일을 정리합니다.
             <br />
-            이메일은 묻지 않습니다.
+            이메일 입력 없이 바로 확인할 수 있습니다.
           </p>
           <StorageNotice mode={submissionMode} />
           {error ? (
@@ -381,19 +412,98 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
   );
 }
 
-function ConsentPanel({
+function PersonalInfoPanel({
+  personalInfo,
+  onPersonalInfoChange,
   consents,
-  onChange,
+  onConsentChange,
 }: {
+  personalInfo: PersonalInfo;
+  onPersonalInfoChange: (value: PersonalInfo) => void;
   consents: ConsentState;
-  onChange: (value: ConsentState) => void;
+  onConsentChange: (value: ConsentState) => void;
 }) {
+  const setPersonalInfo = (key: keyof PersonalInfo, value: string) => {
+    onPersonalInfoChange({ ...personalInfo, [key]: value });
+  };
   const setConsent = (key: keyof ConsentState, value: boolean) => {
-    onChange({ ...consents, [key]: value });
+    onConsentChange({ ...consents, [key]: value });
+  };
+  const setPersonalConsent = (value: "agree" | "disagree") => {
+    onPersonalInfoChange({ ...personalInfo, consentChoice: value });
+    onConsentChange({ ...consents, personalInfoCollection: value === "agree" });
   };
 
   return (
     <div className={styles.consentPanel}>
+      <div className={styles.personalInfoGrid}>
+        <label>
+          <span>성명</span>
+          <input
+            type="text"
+            value={personalInfo.name}
+            maxLength={50}
+            autoComplete="name"
+            onChange={(event) => setPersonalInfo("name", event.currentTarget.value)}
+          />
+        </label>
+        <label>
+          <span>연락처</span>
+          <input
+            type="text"
+            value={personalInfo.contact}
+            maxLength={80}
+            autoComplete="email tel"
+            placeholder="이메일 또는 전화번호"
+            onChange={(event) => setPersonalInfo("contact", event.currentTarget.value)}
+          />
+        </label>
+      </div>
+      <section className={styles.privacyConsentBox} aria-labelledby="personal-info-consent-title">
+        <h2 id="personal-info-consent-title">개인정보 수집 및 이용 동의</h2>
+        <p>
+          AgentProof는 개인정보보호법 제15조에 따라 AI 안전 체크 결과 안내와 후속 연락을 위해
+          개인정보 수집 및 이용 동의를 받고 있습니다. 수집한 개인정보는 아래 목적 외 다른
+          용도로 이용하지 않습니다. 귀하는 동의하지 않을 권리가 있습니다. 다만, 동의하지
+          않을 경우 AI 안전 체크 참여와 결과 안내가 제한됩니다.
+        </p>
+        <dl>
+          <div>
+            <dt>개인정보 수집 항목</dt>
+            <dd>성명, 연락처</dd>
+          </div>
+          <div>
+            <dt>개인정보 이용 목적</dt>
+            <dd>AI 안전 체크 결과 안내 및 후속 연락</dd>
+          </div>
+          <div>
+            <dt>개인정보 보유 및 이용 기간</dt>
+            <dd>수집 후 2개월</dd>
+          </div>
+        </dl>
+        <div className={styles.radioGroup} role="radiogroup" aria-label="개인정보 수집 및 이용 동의">
+          <label>
+            <input
+              type="radio"
+              name="personalInfoCollection"
+              value="agree"
+              checked={personalInfo.consentChoice === "agree"}
+              onChange={() => setPersonalConsent("agree")}
+            />
+            <span>동의합니다</span>
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="personalInfoCollection"
+              value="disagree"
+              checked={personalInfo.consentChoice === "disagree"}
+              onChange={() => setPersonalConsent("disagree")}
+            />
+            <span>동의하지 않습니다</span>
+          </label>
+        </div>
+      </section>
       <label>
         <input
           type="checkbox"
@@ -410,11 +520,10 @@ function ConsentPanel({
           checked={consents.surveyProcessing}
           onChange={(event) => setConsent("surveyProcessing", event.currentTarget.checked)}
         />
-        <span>답변을 결과 계산에 사용하는 데 동의합니다.</span>
+        <span>답변과 결과 점수를 설문 운영에 사용하는 데 동의합니다.</span>
       </label>
       <p>
-        설문 답변과 결과 점수만 씁니다.
-        이름, 전화번호, 회사 기밀은 묻지 않습니다.
+        회사 기밀, 고객명, 실제 업무 문서 내용은 입력하지 마세요.
       </p>
     </div>
   );
@@ -422,7 +531,7 @@ function ConsentPanel({
 
 function StorageNotice({ mode }: { mode: SurveySubmissionMode }) {
   if (mode.mode === "live") {
-    return <p className={styles.infoBox}>제출 후 안전하게 저장됩니다.</p>;
+    return <p className={styles.infoBox}>결과 계산을 위해 답변과 점수만 저장합니다.</p>;
   }
   return <p className={styles.warningBox}>{mode.message}</p>;
 }
@@ -445,4 +554,22 @@ function readDraft(draftKey: string): DraftState {
 
   window.localStorage.removeItem(draftKey);
   return { currentIndex: 0, answers: {}, consents: emptyConsents };
+}
+
+function validatePersonalInfo(personalInfo: PersonalInfo): { ok: true } | { ok: false; message: string } {
+  const name = personalInfo.name.trim();
+  const contact = personalInfo.contact.trim();
+  if (name.length < 2) {
+    return { ok: false, message: "성명을 2자 이상 입력해주세요." };
+  }
+  if (contact.length < 5) {
+    return { ok: false, message: "연락처를 입력해주세요." };
+  }
+  if (/[<>]/.test(name) || /[<>]/.test(contact)) {
+    return { ok: false, message: "성명과 연락처에는 꺾쇠괄호를 입력할 수 없습니다." };
+  }
+  if (personalInfo.consentChoice !== "agree") {
+    return { ok: false, message: "개인정보 수집 및 이용에 동의해야 시작할 수 있습니다." };
+  }
+  return { ok: true };
 }

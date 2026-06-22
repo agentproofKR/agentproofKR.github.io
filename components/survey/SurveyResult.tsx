@@ -94,9 +94,9 @@ export function SurveyResult() {
         <p className={styles.eyebrow}>AI 안전 체크 결과</p>
         <h1 id="result-title">AI 안전 체크 결과</h1>
         <p className={styles.lead}>
-          먼저 막아야 할 위험과
+          먼저 정해야 할 기준과
           <br />
-          이번 주 할 일을 정리했습니다.
+          이번 주 실행할 일을 정리했습니다.
           <br />
           보안 인증이나 법률 자문은 아닙니다.
         </p>
@@ -110,13 +110,13 @@ export function SurveyResult() {
         {stored.submissionMode.mode === "disabled" ? (
           <p className={styles.warningBox}>{stored.submissionMode.message}</p>
         ) : (
-          <p className={styles.successBox}>설문 저장소에 결과가 전송되었습니다.</p>
+          <p className={styles.successBox}>답변과 결과 점수가 저장되었습니다.</p>
         )}
       </section>
 
       <section className={styles.resultGrid} aria-label="결과 세부 항목">
         <article className={styles.resultCard}>
-          <h2>점수</h2>
+          <h2>영역별 상태</h2>
           {Object.entries(result.dimensionScores).map(([dimension, score]) => (
             <div className={styles.scoreRow} key={dimension}>
               <span>{dimension}</span>
@@ -126,7 +126,7 @@ export function SurveyResult() {
           ))}
         </article>
         <article className={styles.resultCard}>
-          <h2>먼저 볼 위험</h2>
+          <h2>먼저 확인할 기준</h2>
           <ol>
             {result.topRisks.map((risk) => (
               <li key={risk}>{risk}</li>
@@ -146,15 +146,15 @@ export function SurveyResult() {
           <ol>
             <li>
               <strong>답변 근거</strong>
-              <span>출처 없는 답을 걸러냅니다.</span>
+              <span>출처와 기준이 불명확한 답변을 확인합니다.</span>
             </li>
             <li>
               <strong>위험 테스트</strong>
-              <span>오답·기밀·권한 문제를 찾습니다.</span>
+              <span>오답, 기밀 입력, 권한 문제를 점검합니다.</span>
             </li>
             <li>
               <strong>승인 기록</strong>
-              <span>누가 확인했는지 남깁니다.</span>
+              <span>누가 검토하고 승인했는지 기록합니다.</span>
             </li>
           </ol>
         </article>
@@ -163,7 +163,7 @@ export function SurveyResult() {
       <section className={styles.noticeBand} aria-labelledby="reward-title">
         <div>
           <h2 id="reward-title">다음 단계</h2>
-          <p>원하면 이어갈 수 있어요.</p>
+          <p>필요한 자료만 선택해 이어갈 수 있습니다.</p>
         </div>
         <div className={styles.inlineActions}>
           <button className={styles.secondaryButton} type="button" onClick={() => window.print()}>
@@ -215,15 +215,15 @@ export function SurveyResult() {
 
 function getRiskSummary(riskBand: SurveyScoreResult["displayRiskBand"]): string {
   if (riskBand === "즉시 점검 필요") {
-    return "자료 입력과 승인 기준을 먼저 막아야 합니다.";
+    return "자료 입력 범위와 승인 기준을 먼저 정해야 합니다.";
   }
   if (riskBand === "위험") {
-    return "회사 자료 입력 기준부터 정리하세요.";
+    return "회사 자료 입력 기준부터 정리해야 합니다.";
   }
   if (riskBand === "주의") {
-    return "검토 기준과 허용 도구를 더 좁히세요.";
+    return "검토 기준과 허용 도구를 더 명확히 해야 합니다.";
   }
-  return "기준은 있습니다. 기록과 점검을 유지하세요.";
+  return "기본 기준은 있습니다. 기록과 정기 점검을 유지하세요.";
 }
 
 function OptInForm({

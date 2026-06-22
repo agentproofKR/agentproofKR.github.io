@@ -41,12 +41,20 @@ const basePayload = {
   consents: {
     age14OrOlder: true,
     surveyProcessing: true,
+    personalInfoCollection: true,
     beta: false,
     interview: false,
     pilot: false,
     consentVersion: "2026-06-21",
   },
-  contacts: [],
+  contacts: [
+    {
+      requestType: "survey_followup",
+      name: "김테스트",
+      contact: "qa+survey@example.com",
+      preferredContactPurpose: "AI 안전 체크 결과 안내 및 후속 연락",
+    },
+  ],
   utm: {
     source: "linkedin",
     campaign: "ai_readiness",
@@ -64,6 +72,11 @@ describe("survey submission validation", () => {
     expect(parsed.persona).toBe("leader");
     expect(parsed.answers.U09).toBe("priority_report");
     expect(parsed.consents.age14OrOlder).toBe(true);
+    expect(parsed.contacts[0]).toMatchObject({
+      requestType: "survey_followup",
+      name: "김테스트",
+      contact: "qa+survey@example.com",
+    });
   });
 
   it("accepts unified U01-U10 answers for every legacy persona URL", () => {
@@ -84,6 +97,13 @@ describe("survey submission validation", () => {
         consents: { ...basePayload.consents, age14OrOlder: false },
       }),
     ).toThrow(/만 14세/);
+
+    expect(() =>
+      validateSurveySubmission({
+        ...basePayload,
+        consents: { ...basePayload.consents, personalInfoCollection: false },
+      }),
+    ).toThrow(/개인정보/);
 
     expect(() => validateSurveySubmission({ ...basePayload, honeypot: "filled" })).toThrow(
       /bot/i,

@@ -37,14 +37,14 @@ test.describe("three-page simplification", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /우리 팀 AI 사용,\s*안전할까요\?/,
+        name: /업무에 쓰는 AI,\s*기준이 있나요\?/,
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "10문항으로 확인합니다.",
+      "10문항으로 위험 신호와 필요한 기준을 확인합니다.",
     );
     await expect(page.locator("body")).toContainText(
-      "이메일 없이 결과를 볼 수 있어요.",
+      "이메일 없이 바로 결과를 볼 수 있습니다.",
     );
 
     await expect(
@@ -64,11 +64,11 @@ test.describe("three-page simplification", () => {
     await expect(
       page.getByRole("heading", { level: 1, name: "개인정보 안내" }),
     ).toBeVisible();
-    await expect(page.locator("body")).toContainText("이름 안 받아요.");
-    await expect(page.locator("body")).toContainText("전화번호 안 받아요.");
+    await expect(page.locator("body")).toContainText("성명과 연락처를 받습니다.");
+    await expect(page.locator("body")).toContainText("결과 안내와 후속 연락에만 사용합니다.");
     await expect(page.locator("body")).toContainText("회사 기밀 안 받아요.");
     await expect(page.locator("body")).toContainText(
-      "이메일은 원할 때만 입력합니다.",
+      "성명과 연락처는 수집 후 2개월 동안 보관합니다.",
     );
 
     const summaryCards = page.getByTestId("privacy-summary-card");
@@ -192,6 +192,7 @@ test.describe("three-page simplification", () => {
 
     const body = page.locator("body");
     await expect(body).toContainText("6개월");
+    await expect(body).toContainText("2개월");
     await expect(body).toContainText("12개월");
     await expect(body).toContainText("90일");
     await expect(body).toContainText("1년");
