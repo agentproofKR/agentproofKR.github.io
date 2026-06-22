@@ -243,11 +243,11 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             설문 소개로 돌아가기
           </Link>
           <p className={styles.eyebrow}>3분 AI 안전 체크</p>
-          <h1 id="consent-title" ref={headingRef} tabIndex={-1}>
-            개인정보 수집 및 이용에 동의해주세요
+          <h1 className={styles.consentTitle} id="consent-title" ref={headingRef} tabIndex={-1}>
+            시작 전 확인
           </h1>
-          <p className={styles.lead}>
-            AI 안전 체크 결과 안내를 위해 성명과 연락처를 받습니다.
+          <p className={`${styles.lead} ${styles.consentLead}`}>
+            결과 안내를 위해 성명과 연락처를 받습니다.
             <br />
             회사 기밀이나 실제 업무 자료는 입력하지 마세요.
           </p>
@@ -460,27 +460,50 @@ function PersonalInfoPanel({
         </label>
       </div>
       <section className={styles.privacyConsentBox} aria-labelledby="personal-info-consent-title">
-        <h2 id="personal-info-consent-title">개인정보 수집 및 이용 동의</h2>
-        <p>
-          AgentProof는 개인정보보호법 제15조에 따라 AI 안전 체크 결과 안내와 후속 연락을 위해
-          개인정보 수집 및 이용 동의를 받고 있습니다. 수집한 개인정보는 아래 목적 외 다른
-          용도로 이용하지 않습니다. 귀하는 동의하지 않을 권리가 있습니다. 다만, 동의하지
-          않을 경우 AI 안전 체크 참여와 결과 안내가 제한됩니다.
-        </p>
-        <dl>
+        <div className={styles.privacyConsentHeader}>
           <div>
-            <dt>개인정보 수집 항목</dt>
+            <span className={styles.consentBadge}>필수</span>
+            <h2 id="personal-info-consent-title">개인정보 수집 및 이용 동의</h2>
+          </div>
+          <p>성명과 연락처만 받아 결과 안내와 후속 연락에 사용합니다.</p>
+        </div>
+        <dl className={styles.privacySummaryList}>
+          <div>
+            <dt>수집 항목</dt>
             <dd>성명, 연락처</dd>
           </div>
           <div>
-            <dt>개인정보 이용 목적</dt>
+            <dt>이용 목적</dt>
             <dd>AI 안전 체크 결과 안내 및 후속 연락</dd>
           </div>
           <div>
-            <dt>개인정보 보유 및 이용 기간</dt>
+            <dt>보유 기간</dt>
             <dd>수집 후 2개월</dd>
           </div>
         </dl>
+        <details className={styles.privacyDetails}>
+          <summary>개인정보 수집 및 이용 동의 전문 보기</summary>
+          <p>
+            AgentProof는 개인정보보호법 제15조에 따라 AI 안전 체크 결과 안내와 후속 연락을 위해
+            개인정보 수집 및 이용 동의를 받고 있습니다. 수집한 개인정보는 아래 목적 외 다른
+            용도로 이용하지 않습니다. 귀하는 동의하지 않을 권리가 있습니다. 다만, 동의하지
+            않을 경우 AI 안전 체크 참여와 결과 안내가 제한됩니다.
+          </p>
+          <dl>
+            <div>
+              <dt>개인정보 수집 항목</dt>
+              <dd>성명, 연락처</dd>
+            </div>
+            <div>
+              <dt>개인정보 이용 목적</dt>
+              <dd>AI 안전 체크 결과 안내 및 후속 연락</dd>
+            </div>
+            <div>
+              <dt>개인정보 보유 및 이용 기간</dt>
+              <dd>수집 후 2개월</dd>
+            </div>
+          </dl>
+        </details>
         <div className={styles.radioGroup} role="radiogroup" aria-label="개인정보 수집 및 이용 동의">
           <label>
             <input
