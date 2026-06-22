@@ -266,7 +266,7 @@
 
 .productStage {
   position: relative;
-  overflow-x: auto;
+  overflow: hidden;
   border: 1px solid #d5d4cd;
   border-bottom: 0;
   border-radius: 26px 26px 0 0;
@@ -276,7 +276,6 @@
     linear-gradient(90deg, rgb(17 19 25 / 4%) 1px, transparent 1px);
   background-size: 34px 34px;
   padding: 22px 22px 0;
-  -webkit-overflow-scrolling: touch;
 }
 
 .desktopDashboard {
@@ -1099,12 +1098,14 @@
   }
 
   .productStage {
+    overflow: hidden;
     border-radius: 15px 15px 0 0;
     padding: 9px 9px 0;
   }
 
   .desktopDashboard {
-    min-width: 720px;
+    min-width: 0;
+    width: 100%;
     border-radius: 10px 10px 0 0;
   }
 

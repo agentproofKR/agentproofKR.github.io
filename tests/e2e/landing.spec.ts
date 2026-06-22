@@ -104,6 +104,11 @@ test("keeps mobile problem cards horizontal and uses the desktop dashboard image
       name: /AgentProof 업무용 AI 검증 대시보드 샘플/,
     }),
   ).toBeVisible();
+  const dashboardMetrics = await desktopDashboard.locator("..").evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(dashboardMetrics.scrollWidth).toBeLessThanOrEqual(dashboardMetrics.clientWidth);
   await expect(
     page.locator("[aria-label='AgentProof 모바일 제품 화면 샘플']"),
   ).toHaveCount(0);
