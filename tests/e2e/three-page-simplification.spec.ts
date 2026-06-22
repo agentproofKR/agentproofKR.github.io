@@ -43,10 +43,6 @@ test.describe("three-page simplification", () => {
     await expect(page.locator("body")).toContainText(
       "10문항으로 위험 신호와 필요한 기준을 확인합니다.",
     );
-    await expect(page.locator("body")).toContainText(
-      "이메일 없이 바로 결과를 볼 수 있습니다.",
-    );
-
     await expect(
       page.getByRole("link", { name: "시작하기" }),
     ).toHaveAttribute("href", "/survey/practitioner/");
@@ -66,13 +62,12 @@ test.describe("three-page simplification", () => {
     ).toBeVisible();
     await expect(page.locator("body")).toContainText("성명과 연락처를 받습니다.");
     await expect(page.locator("body")).toContainText("결과 안내와 후속 연락에만 사용합니다.");
-    await expect(page.locator("body")).toContainText("회사 기밀 안 받아요.");
     await expect(page.locator("body")).toContainText(
       "성명과 연락처는 수집 후 2개월 동안 보관합니다.",
     );
 
     const summaryCards = page.getByTestId("privacy-summary-card");
-    await expect(summaryCards).toHaveCount(5);
+    await expect(summaryCards).toHaveCount(4);
     await expect(
       page.getByRole("link", { name: "개인정보 요청 방법 보기" }),
     ).toHaveAttribute("href", "/privacy/request/");

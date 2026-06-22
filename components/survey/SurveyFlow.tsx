@@ -248,8 +248,6 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </h1>
           <p className={`${styles.lead} ${styles.consentLead}`}>
             결과 안내를 위해 성명과 연락처를 받습니다.
-            <br />
-            회사 기밀이나 실제 업무 자료는 입력하지 마세요.
           </p>
           <PersonalInfoPanel
             personalInfo={personalInfo}
@@ -298,8 +296,6 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </h1>
           <p className={styles.lead}>
             입력한 답변으로 위험 신호와 다음 할 일을 정리합니다.
-            <br />
-            이메일 입력 없이 바로 확인할 수 있습니다.
           </p>
           <StorageNotice mode={submissionMode} />
           {error ? (
@@ -465,7 +461,7 @@ function PersonalInfoPanel({
             <span className={styles.consentBadge}>필수</span>
             <h2 id="personal-info-consent-title">개인정보 수집 및 이용 동의</h2>
           </div>
-          <p>성명과 연락처만 받아 결과 안내와 후속 연락에 사용합니다.</p>
+          <p>성명과 연락처를 받아 결과 안내와 후속 연락에 사용합니다.</p>
         </div>
         <dl className={styles.privacySummaryList}>
           <div>
@@ -545,16 +541,13 @@ function PersonalInfoPanel({
         />
         <span>답변과 결과 점수를 설문 운영에 사용하는 데 동의합니다.</span>
       </label>
-      <p>
-        회사 기밀, 고객명, 실제 업무 문서 내용은 입력하지 마세요.
-      </p>
     </div>
   );
 }
 
 function StorageNotice({ mode }: { mode: SurveySubmissionMode }) {
   if (mode.mode === "live") {
-    return <p className={styles.infoBox}>결과 계산을 위해 답변과 점수만 저장합니다.</p>;
+    return <p className={styles.infoBox}>설문 결과를 안전하게 저장합니다.</p>;
   }
   return <p className={styles.warningBox}>{mode.message}</p>;
 }

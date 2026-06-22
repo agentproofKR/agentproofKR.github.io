@@ -24,8 +24,8 @@ type LandingPageProps = {
 };
 
 const faqs = [
-  ["이메일 필요?", "아니요. 결과는 바로 볼 수 있어요."],
-  ["회사 자료를 넣어야 하나요?", "아니요. 기밀 자료는 입력하지 않습니다."],
+  ["얼마나 걸리나요?", "대부분 3분 안에 끝납니다."],
+  ["무엇을 확인하나요?", "AI 답변의 근거, 위험 테스트, 승인 기록을 봅니다."],
   ["AI Agent를 안 써도 되나요?", "네. ChatGPT나 Copilot만 써도 됩니다."],
   ["무료인가요?", "3분 체크는 무료입니다."],
   ["결과가 보안 인증인가요?", "아니요. 빠른 자가 확인용입니다."],
@@ -144,8 +144,8 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 </button>
               </div>
               <ul className={styles.heroMeta} aria-label="체크 안내">
-                <li>이메일 없음</li>
-                <li>기밀 입력 없음</li>
+                <li>바로 결과 확인</li>
+                <li>역할별 기준 정리</li>
                 <li>10문항</li>
               </ul>
             </div>
@@ -307,7 +307,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   >
                     바로 확인하기
                   </Link>
-                  <p>이메일은 마지막에만 선택합니다.</p>
+                  <p>결과 확인 뒤 필요한 다음 단계를 선택합니다.</p>
                 </div>
               </div>
               <div
@@ -379,7 +379,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   <br />
                   3분.
                   <br />
-                  이메일 없음.
+                  바로 결과 확인.
                 </p>
                 <div className={styles.finalActions}>
                   <Link

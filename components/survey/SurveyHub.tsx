@@ -7,7 +7,7 @@ import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-const helperItems = ["회사명 입력 없음", "기밀자료 입력 없음", "약 3분"];
+const helperItems = ["10문항", "역할별 결과", "약 3분"];
 
 export function SurveyHub() {
   useEffect(() => {
@@ -45,8 +45,6 @@ export function SurveyHub() {
         </h1>
         <p className={styles.lead}>
           10문항으로 위험 신호와 필요한 기준을 확인합니다.
-          <br />
-          이메일 없이 바로 결과를 볼 수 있습니다.
         </p>
         <div className={styles.actions}>
           <Link

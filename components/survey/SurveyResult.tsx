@@ -309,9 +309,6 @@ function OptInForm({
         </label>
       ) : null}
       <input name="website" type="text" tabIndex={-1} autoComplete="off" hidden />
-      <p className={styles.fieldHint}>
-        개인정보, 고객명, 회사 기밀은 입력하지 마세요.
-      </p>
       <label className={styles.checkboxLine}>
         <input name="consent" type="checkbox" />
         <span>{labels.consent}</span>

@@ -16,10 +16,6 @@ const summaryCards = [
     body: "성명, 연락처, 설문 답변",
   },
   {
-    title: "안 받는 것",
-    body: "회사 기밀, 실제 업무자료",
-  },
-  {
     title: "연락처",
     body: "결과 안내와 후속 연락에만 사용",
   },
@@ -301,8 +297,6 @@ export default function PrivacyPage() {
           성명과 연락처를 받습니다.
           <br />
           결과 안내와 후속 연락에만 사용합니다.
-          <br />
-          회사 기밀 안 받아요.
           <br />
           <br />
           성명과 연락처는 수집 후 2개월 동안 보관합니다.
