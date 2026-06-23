@@ -16,11 +16,15 @@
 .semanticLanding {
   position: relative;
   z-index: 1;
+  --landing-header-height: 72px;
+  padding-top: var(--landing-header-height);
 }
 
 .semanticLandingBaseline {
   position: relative;
   z-index: 1;
+  --landing-header-height: 72px;
+  padding-top: var(--landing-header-height);
   opacity: 0;
 }
 
@@ -34,8 +38,10 @@
 }
 
 .siteHeader {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 60;
   border-bottom: 1px solid rgb(17 19 25 / 8%);
   background: rgb(244 243 238 / 88%);
@@ -1018,6 +1024,11 @@
 }
 
 @media (max-width: 767px) {
+  .semanticLanding,
+  .semanticLandingBaseline {
+    --landing-header-height: 62px;
+  }
+
   .wrap,
   .navWrap {
     width: min(var(--max-content-width), calc(100% - 28px));

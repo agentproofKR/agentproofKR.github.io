@@ -76,6 +76,35 @@ test("links each landing problem card to the unified survey with problem intent"
   ).toHaveAttribute("href", "/survey/?problem=security");
 });
 
+test("keeps the brand and AI diagnosis CTA fixed while moving through the page", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  const header = page.getByRole("banner");
+  const brand = header.getByRole("link", { name: /AgentProof/ });
+  const cta = header.getByRole("link", { name: /AI 활용 진단/ });
+  await expect(brand).toBeVisible();
+  await expect(cta).toBeVisible();
+
+  const before = await header.boundingBox();
+  expect(before?.y).toBe(0);
+
+  await page.getByRole("link", { name: "대시보드 보기" }).click();
+  await expect(page.locator("#product")).toBeInViewport();
+
+  const afterAnchorMove = await header.boundingBox();
+  expect(afterAnchorMove?.y).toBe(0);
+  await expect(brand).toBeVisible();
+  await expect(cta).toBeVisible();
+
+  await page.mouse.wheel(0, 1500);
+  const afterScroll = await header.boundingBox();
+  expect(afterScroll?.y).toBe(0);
+  await expect(brand).toBeVisible();
+  await expect(cta).toBeVisible();
+});
+
 test("keeps mobile problem cards horizontal and uses the desktop dashboard image", async ({
   page,
 }) => {
