@@ -58,11 +58,11 @@ test("homepage CTAs route to the unified 3-minute survey", async ({
   await page.goto("/");
 
   await expect(
-    page.getByRole("banner").getByRole("link", { name: /3분 체크/ }),
+    page.getByRole("banner").getByRole("link", { name: /AI 활용 진단/ }),
   ).toHaveAttribute("href", "/survey/");
   await page
     .getByRole("banner")
-    .getByRole("link", { name: /3분 체크/ })
+    .getByRole("link", { name: /AI 활용 진단/ })
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(

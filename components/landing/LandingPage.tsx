@@ -27,7 +27,7 @@ const faqs = [
   ["얼마나 걸리나요?", "대부분 3분 안에 끝납니다."],
   ["무엇을 확인하나요?", "AI 답변의 근거, 위험 테스트, 승인 기록을 봅니다."],
   ["AI Agent를 안 써도 되나요?", "네. ChatGPT나 Copilot만 써도 됩니다."],
-  ["무료인가요?", "3분 체크는 무료입니다."],
+  ["무료인가요?", "AI 활용 진단은 무료입니다."],
   ["결과가 보안 인증인가요?", "아니요. 빠른 자가 확인용입니다."],
 ] as const;
 
@@ -118,9 +118,9 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                 초기 사용자 모집
               </div>
               <h1 id="hero-heading">
-                AI 답변,
+                AI,
                 <br />
-                그냥 쓰면 위험합니다.
+                업무에 그냥 쓰면 위험합니다.
               </h1>
               <p className={styles.heroCopy}>
                 오답·기밀유출·책임 문제.
@@ -133,7 +133,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   href="/survey/"
                   onClick={() => trackSurveyCta("hero")}
                 >
-                  바로 확인하기
+                  AI 활용 진단
                 </Link>
                 <button
                   className={styles.textLink}
@@ -166,9 +166,6 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     가장 많이 막히는 3가지
                   </h2>
                 </div>
-                <p className={styles.sectionCopy}>
-                  가까운 문제부터 확인하세요.
-                </p>
               </div>
 
               <div className={styles.roleGrid} data-testid="problem-grid">
@@ -305,7 +302,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     href="/survey/"
                     onClick={() => trackSurveyCta("process")}
                   >
-                    바로 확인하기
+                    AI 활용 진단
                   </Link>
                   <p>결과 확인 뒤 필요한 다음 단계를 선택합니다.</p>
                 </div>
@@ -387,7 +384,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     href="/survey/"
                     onClick={() => trackSurveyCta("final")}
                   >
-                    바로 확인하기
+                    AI 활용 진단
                   </Link>
                   <a
                     className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`}

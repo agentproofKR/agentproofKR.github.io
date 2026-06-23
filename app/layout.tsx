@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/agentproof-logo-mark.png", type: "image/png" }],
   },
   openGraph: {
-    title: "AI 답변, 그냥 쓰면 위험합니다.",
+    title: "AI, 업무에 그냥 쓰면 위험합니다.",
     description,
     type: "website",
     url: "/",

@@ -11,7 +11,7 @@ test("renders the simplified landing flow and routes CTAs to the unified survey"
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: /AI 답변,\s*그냥 쓰면 위험합니다\./,
+      name: /AI,\s*업무에 그냥 쓰면 위험합니다\./,
     }),
   ).toBeVisible();
   await expect(page.locator("#result-example")).toHaveCount(0);
@@ -35,13 +35,13 @@ test("renders the simplified landing flow and routes CTAs to the unified survey"
 
   const headerCta = page
     .getByRole("banner")
-    .getByRole("link", { name: /3분 체크/ });
+    .getByRole("link", { name: /AI 활용 진단/ });
   await expect(headerCta).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("link", { name: "AI 업무 자가진단 시작" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "바로 확인하기" }).first(),
+    page.getByRole("link", { name: "AI 활용 진단" }).first(),
   ).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("button", { name: "대시보드 보기" }),

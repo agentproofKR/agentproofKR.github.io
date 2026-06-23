@@ -46,7 +46,7 @@ export function Header({ onNavClick }: HeaderProps) {
           className={`${styles.button} ${styles.buttonDark} ${styles.headerButton}`}
           href="/survey/"
         >
-          3분 체크
+          AI 활용 진단
         </Link>
       </div>
     </header>

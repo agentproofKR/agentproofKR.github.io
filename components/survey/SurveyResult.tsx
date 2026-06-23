@@ -73,7 +73,7 @@ export function SurveyResult() {
           <p>
             아직 결과가 없습니다.
             <br />
-            3분 체크를 먼저 완료해주세요.
+            AI 활용 진단을 먼저 완료해주세요.
           </p>
           <Link className={styles.primaryLink} href="/survey/">
             시작하기
