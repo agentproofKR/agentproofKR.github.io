@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { LEGAL_CONFIG } from "@/lib/legal";
 import styles from "@/styles/survey.module.css";
 
@@ -26,8 +27,10 @@ export default function PrivacyRequestPage() {
   )}`;
 
   return (
-    <main className={styles.page}>
-      <section className={styles.surveyPanel}>
+    <>
+      <SurveyHeader />
+      <main className={styles.page}>
+        <section className={styles.surveyPanel}>
         <Link className={styles.backLink} href="/privacy/">
           개인정보 안내
         </Link>
@@ -102,6 +105,7 @@ export default function PrivacyRequestPage() {
           사유를 함께 확인하겠습니다.
         </p>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

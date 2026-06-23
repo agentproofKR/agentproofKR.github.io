@@ -92,6 +92,34 @@ test("survey hub preserves UTM and starts unified survey without putting answers
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
+test("survey pages keep the brand and AI diagnosis CTA fixed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 1200 });
+  await page.goto("/survey/");
+
+  const header = page.getByRole("banner");
+  const brand = header.getByRole("link", { name: /AgentProof/ });
+  const cta = header.getByRole("link", { name: /AI 활용 진단/ });
+  await expect(brand).toBeVisible();
+  await expect(cta).toBeVisible();
+
+  const before = await header.boundingBox();
+  expect(before?.y).toBe(0);
+
+  await page.mouse.wheel(0, 1200);
+  const afterScroll = await header.boundingBox();
+  expect(afterScroll?.y).toBe(0);
+  await expect(brand).toBeVisible();
+  await expect(cta).toBeVisible();
+
+  const metrics = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+});
+
 test("completes unified survey from all legacy persona URLs and shows result without email", async ({
   page,
 }) => {

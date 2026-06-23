@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { trackEvent } from "@/lib/analytics";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
@@ -32,11 +33,10 @@ export function SurveyHub() {
   };
 
   return (
-    <main className={styles.page}>
-      <section className={styles.hero} aria-labelledby="survey-hub-title">
-        <Link className={styles.backLink} href="/">
-          AgentProof 홈
-        </Link>
+    <>
+      <SurveyHeader />
+      <main className={styles.page}>
+        <section className={styles.hero} aria-labelledby="survey-hub-title">
         <p className={styles.eyebrow}>3분 AI 안전 체크</p>
         <h1 id="survey-hub-title">
           업무에 쓰는 AI,
@@ -84,6 +84,7 @@ export function SurveyHub() {
           <Link href="/beta-terms/">초기 사용 안내</Link>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

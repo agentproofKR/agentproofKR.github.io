@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { LEGAL_CONFIG } from "@/lib/legal";
 import styles from "@/styles/survey.module.css";
 
@@ -11,8 +12,10 @@ export const metadata = {
 
 export default function BetaTermsPage() {
   return (
-    <main className={styles.page}>
-      <section className={styles.surveyPanel}>
+    <>
+      <SurveyHeader />
+      <main className={styles.page}>
+        <section className={styles.surveyPanel}>
         <Link className={styles.backLink} href="/survey/">
           체크로 돌아가기
         </Link>
@@ -58,6 +61,7 @@ export default function BetaTermsPage() {
           </p>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

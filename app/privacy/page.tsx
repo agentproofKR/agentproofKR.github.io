@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { LEGAL_CONFIG } from "@/lib/legal";
 import styles from "@/styles/survey.module.css";
 
@@ -286,8 +287,10 @@ const detailSections: Array<{ title: string; body: ReactNode }> = [
 
 export default function PrivacyPage() {
   return (
-    <main className={styles.page}>
-      <section className={styles.surveyPanel}>
+    <>
+      <SurveyHeader />
+      <main className={styles.page}>
+        <section className={styles.surveyPanel}>
         <Link className={styles.backLink} href="/">
           AgentProof 홈
         </Link>
@@ -345,6 +348,7 @@ export default function PrivacyPage() {
           </div>
         </section>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

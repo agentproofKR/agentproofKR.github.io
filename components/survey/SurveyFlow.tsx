@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { trackEvent } from "@/lib/analytics";
 import { canSubmitSurvey, consentTextHashes, consentVersion } from "@/lib/survey/consent";
 import { getSurveyDefinition, inferPersonaFromAnswers } from "@/lib/survey/questions";
@@ -229,16 +230,18 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
 
   if (phase === "consent") {
     return (
-      <main
-        className={styles.page}
-        data-testid="survey-shell"
-        data-question-count={definition.questionCount}
-      >
-        <section
-          className={styles.surveyPanel}
-          data-testid="survey-consent-step"
-          aria-labelledby="consent-title"
+      <>
+        <SurveyHeader />
+        <main
+          className={styles.page}
+          data-testid="survey-shell"
+          data-question-count={definition.questionCount}
         >
+          <section
+            className={styles.surveyPanel}
+            data-testid="survey-consent-step"
+            aria-labelledby="consent-title"
+          >
           <Link className={styles.backLink} href="/survey/">
             설문 소개로 돌아가기
           </Link>
@@ -275,18 +278,21 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             </button>
           </div>
         </section>
-      </main>
+        </main>
+      </>
     );
   }
 
   if (phase === "confirm") {
     return (
-      <main
-        className={styles.page}
-        data-testid="survey-shell"
-        data-question-count={definition.questionCount}
-      >
-        <section className={styles.surveyPanel} aria-labelledby="confirm-title">
+      <>
+        <SurveyHeader />
+        <main
+          className={styles.page}
+          data-testid="survey-shell"
+          data-question-count={definition.questionCount}
+        >
+          <section className={styles.surveyPanel} aria-labelledby="confirm-title">
           <Link className={styles.backLink} href="/survey/">
             설문 소개로 돌아가기
           </Link>
@@ -318,17 +324,20 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
             </button>
           </div>
         </section>
-      </main>
+        </main>
+      </>
     );
   }
 
   return (
-    <main
-      className={styles.page}
-      data-testid="survey-shell"
-      data-question-count={definition.questionCount}
-    >
-      <section className={styles.surveyPanel} aria-labelledby="question-title">
+    <>
+      <SurveyHeader />
+      <main
+        className={styles.page}
+        data-testid="survey-shell"
+        data-question-count={definition.questionCount}
+      >
+        <section className={styles.surveyPanel} aria-labelledby="question-title">
         <Link className={styles.backLink} href="/survey/">
           설문 소개로 돌아가기
         </Link>
@@ -404,7 +413,8 @@ export function SurveyFlow({ persona, legalOperatorName }: SurveyFlowProps) {
           </button>
         </div>
       </section>
-    </main>
+      </main>
+    </>
   );
 }
 

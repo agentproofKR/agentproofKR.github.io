@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
+import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { trackEvent } from "@/lib/analytics";
 import { LEGAL_CONFIG } from "@/lib/legal";
 import { consentTextHashes, consentVersion } from "@/lib/survey/consent";
@@ -67,27 +68,32 @@ export function SurveyResult() {
 
   if (!stored || !definition) {
     return (
-      <main className={styles.page}>
-        <section className={styles.surveyPanel}>
-          <h1>AI 안전 체크 결과</h1>
-          <p>
-            아직 결과가 없습니다.
-            <br />
-            AI 활용 진단을 먼저 완료해주세요.
-          </p>
-          <Link className={styles.primaryLink} href="/survey/">
-            시작하기
-          </Link>
-        </section>
-      </main>
+      <>
+        <SurveyHeader />
+        <main className={styles.page}>
+          <section className={styles.surveyPanel}>
+            <h1>AI 안전 체크 결과</h1>
+            <p>
+              아직 결과가 없습니다.
+              <br />
+              AI 활용 진단을 먼저 완료해주세요.
+            </p>
+            <Link className={styles.primaryLink} href="/survey/">
+              시작하기
+            </Link>
+          </section>
+        </main>
+      </>
     );
   }
 
   const result = stored.result;
 
   return (
-    <main className={styles.page}>
-      <section className={styles.resultHero} aria-labelledby="result-title">
+    <>
+      <SurveyHeader />
+      <main className={styles.page}>
+        <section className={styles.resultHero} aria-labelledby="result-title">
         <Link className={styles.backLink} href="/survey/">
           새 체크 시작
         </Link>
@@ -209,7 +215,8 @@ export function SurveyResult() {
           </p>
         ) : null}
       </section>
-    </main>
+      </main>
+    </>
   );
 }
 
