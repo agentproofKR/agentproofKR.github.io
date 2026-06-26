@@ -29,7 +29,16 @@ export type AnalyticsEvent =
   | "result_viewed"
   | "beta_optin"
   | "interview_optin"
-  | "pilot_requested";
+  | "pilot_requested"
+  | "quick_diagnosis_view"
+  | "quick_diagnosis_start"
+  | "quick_diagnosis_step_view"
+  | "quick_diagnosis_option_select"
+  | "quick_diagnosis_complete"
+  | "quick_diagnosis_workspace_cta_click"
+  | "quick_diagnosis_consult_click"
+  | "quick_diagnosis_advanced_survey_click"
+  | "quick_diagnosis_restart";
 
 export type AnalyticsPayload = Record<string, string | number | boolean | string[]>;
 
@@ -50,6 +59,14 @@ const allowedKeys = new Set([
   "question_count",
   "completion_time_band",
   "result_band",
+  "step",
+  "selectedJob",
+  "audience",
+  "concern",
+  "band",
+  "assuranceScore",
+  "ctaType",
+  "quickDiagnosisVersion",
 ]);
 
 export function sanitizeAnalyticsPayload(payload: AnalyticsPayload = {}): AnalyticsPayload {

@@ -40,4 +40,33 @@ describe("analytics payload hygiene", () => {
       result_band: "통제 기반 확대 준비",
     });
   });
+
+  it("allows quick diagnosis fields without leaking contact details", () => {
+    expect(
+      sanitizeAnalyticsPayload({
+        step: "concern",
+        persona: "worker",
+        selectedJob: "customer_reply",
+        audience: "customer",
+        concern: "privacy",
+        band: "hold",
+        assuranceScore: 34,
+        ctaType: "workspace",
+        quickDiagnosisVersion: "2026-06-AgentProof-human-quick-diagnosis-v2",
+        email: "qa@example.com",
+        company: "QA 테스트 팀",
+        memo: "고객 문의 원문",
+      }),
+    ).toEqual({
+      step: "concern",
+      persona: "worker",
+      selectedJob: "customer_reply",
+      audience: "customer",
+      concern: "privacy",
+      band: "hold",
+      assuranceScore: 34,
+      ctaType: "workspace",
+      quickDiagnosisVersion: "2026-06-AgentProof-human-quick-diagnosis-v2",
+    });
+  });
 });

@@ -66,11 +66,13 @@ test("homepage CTAs route to the unified 3-minute survey", async ({
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
-    page.getByRole("heading", { name: /업무에 쓰는 AI,\s*기준이 있나요\?/ }),
+    page.getByRole("heading", {
+      name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
+    }),
   ).toBeVisible();
 });
 
-test("survey hub preserves UTM and starts unified survey without putting answers in URLs", async ({
+test("quick diagnosis preserves UTM and starts without putting answers in URLs", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -80,15 +82,18 @@ test("survey hub preserves UTM and starts unified survey without putting answers
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText("약 3분")).toBeVisible();
+  await expect(page.getByText("3분만 체크해보세요.")).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
-  await page.getByRole("link", { name: "시작하기" }).click();
-  await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
+  await page.getByRole("button", { name: "3분 진단 시작하기" }).click();
+  await expect(page).toHaveURL(/\/survey\//);
+  await expect(
+    page.getByRole("heading", { name: "지금 어떤 상황에 가까우세요?" }),
+  ).toBeVisible();
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
 
   const events = await page.evaluate(() => window.dataLayer);
-  expect(JSON.stringify(events)).toContain("survey_start_click");
+  expect(JSON.stringify(events)).toContain("quick_diagnosis_start");
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 

@@ -860,6 +860,386 @@
   font: inherit;
 }
 
+.quickPage {
+  --quick-bg: #07080d;
+  --quick-surface: #11131a;
+  --quick-surface-2: #181b24;
+  --quick-line: rgb(255 255 255 / 10%);
+  --quick-text: #ffffff;
+  --quick-muted: rgb(255 255 255 / 68%);
+  --quick-primary: #ff2e6d;
+  --quick-primary-dark: #d71955;
+  --quick-success: #20d69b;
+  --quick-warning: #f5a524;
+  min-height: 100vh;
+  background: var(--quick-bg);
+  color: var(--quick-text);
+}
+
+.quickShell {
+  display: grid;
+  gap: 18px;
+  width: min(456px, calc(100% - 28px));
+  margin: 0 auto;
+}
+
+.quickCard,
+.quickResultCard,
+.workspaceBeta {
+  border: 1px solid var(--quick-line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%)),
+    var(--quick-surface);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 42%);
+  padding: 22px;
+}
+
+.quickCard h1,
+.quickResultCard h1,
+.workspaceBeta h1 {
+  margin: 12px 0 0;
+  color: var(--quick-text);
+  font-size: 38px;
+  line-height: 1.08;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+
+.quickCard h1 span,
+.quickResultCard h1 span {
+  display: block;
+}
+
+.quickProgress {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  color: var(--quick-muted);
+  font-size: 13px;
+  font-weight: 760;
+}
+
+.quickProgressText {
+  min-width: 76px;
+}
+
+.quickDots {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.quickDots span {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+}
+
+.quickDots span[data-active="true"] {
+  background: var(--quick-primary);
+}
+
+.quickEyebrow {
+  margin: 26px 0 0;
+  color: var(--quick-success);
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.quickIntroBody {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.quickIntroBody p,
+.quickHelperText,
+.quickResultLead,
+.quickResultSection p,
+.quickRecommendation p,
+.workspaceLead,
+.quickAdvanced p,
+.quickPrivacyNotice,
+.quickDisclaimer {
+  margin: 0;
+  color: var(--quick-muted);
+  font-size: 15px;
+  line-height: 1.68;
+  word-break: keep-all;
+}
+
+.quickActions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.quickPrimaryButton,
+.quickPrimaryLink,
+.quickSecondaryLink,
+.quickGhostButton,
+.quickTextLink {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 15px;
+  font-weight: 840;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.quickPrimaryButton,
+.quickPrimaryLink {
+  border: 1px solid var(--quick-primary);
+  background: linear-gradient(180deg, var(--quick-primary), var(--quick-primary-dark));
+  color: #fff;
+}
+
+.quickSecondaryLink {
+  border: 1px solid rgb(255 255 255 / 16%);
+  background: rgb(255 255 255 / 7%);
+  color: var(--quick-text);
+}
+
+.quickTextLink {
+  min-height: 40px;
+  border: 0;
+  color: var(--quick-muted);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.quickTrustNote,
+.quickPrivacyNotice,
+.quickDisclaimer {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 5%);
+  margin: 16px 0 0;
+  padding: 12px;
+}
+
+.quickQuestionHeader {
+  display: grid;
+  gap: 12px;
+}
+
+.quickOptionList {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.quickOption {
+  display: grid;
+  min-height: 72px;
+  gap: 6px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background: var(--quick-surface-2);
+  padding: 15px;
+  color: var(--quick-text);
+  font: inherit;
+  text-align: left;
+}
+
+.quickOption[data-selected="true"],
+.quickOption:hover {
+  border-color: rgb(255 46 109 / 70%);
+  background: rgb(255 46 109 / 12%);
+}
+
+.quickOption span {
+  font-size: 16px;
+  font-weight: 820;
+  line-height: 1.38;
+  word-break: keep-all;
+}
+
+.quickOption small {
+  color: var(--quick-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.quickFooterActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.quickGhostButton {
+  min-height: 42px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  background: transparent;
+  color: var(--quick-muted);
+}
+
+.quickGhostButton:disabled {
+  opacity: 0.45;
+}
+
+.quickScoreCard {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 14px;
+  align-items: end;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 6%);
+  margin-top: 22px;
+  padding: 16px;
+}
+
+.quickScoreCard span,
+.quickRecommendation span,
+.workspaceSelected {
+  color: var(--quick-muted);
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.quickScoreCard strong {
+  grid-column: 1;
+  color: var(--quick-text);
+  font-size: 56px;
+  line-height: 1;
+}
+
+.quickScoreCard b {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  border: 1px solid rgb(32 214 155 / 28%);
+  border-radius: 8px;
+  background: rgb(32 214 155 / 10%);
+  padding: 8px 10px;
+  color: var(--quick-success);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.quickResultLead {
+  margin-top: 16px;
+}
+
+.quickResultSection,
+.quickRecommendation {
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  margin-top: 20px;
+  padding-top: 18px;
+}
+
+.quickResultSection h2,
+.quickRecommendation h2,
+.quickAdvanced h2 {
+  margin: 0 0 10px;
+  color: var(--quick-text);
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.quickWatchList,
+.workspaceFeatureList {
+  display: grid;
+  gap: 9px;
+  margin: 0;
+  padding-left: 22px;
+  color: var(--quick-muted);
+  line-height: 1.62;
+  word-break: keep-all;
+}
+
+.quickRecommendation {
+  border: 1px solid rgb(245 165 36 / 24%);
+  border-radius: 8px;
+  background: rgb(245 165 36 / 9%);
+  padding: 16px;
+}
+
+.quickRecommendation h2 {
+  margin-top: 8px;
+}
+
+.quickAdvanced {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  padding: 18px;
+}
+
+.quickAdvancedGrid {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.quickAdvancedGrid a {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 5%);
+  padding: 13px;
+  color: var(--quick-text);
+}
+
+.quickAdvancedGrid span {
+  color: var(--quick-muted);
+  font-size: 13px;
+  line-height: 1.52;
+  word-break: keep-all;
+}
+
+.workspaceBeta {
+  width: min(520px, calc(100% - 28px));
+  margin: 0 auto;
+}
+
+.workspaceLead {
+  margin-top: 18px;
+}
+
+.workspaceSelected {
+  border: 1px solid rgb(32 214 155 / 24%);
+  border-radius: 8px;
+  background: rgb(32 214 155 / 9%);
+  margin-top: 22px;
+  padding: 14px;
+}
+
+.workspaceSelected strong {
+  color: var(--quick-text);
+}
+
+.workspaceFeatureList {
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  margin-top: 20px;
+  padding-top: 18px;
+}
+
+.quickPrimaryButton:focus-visible,
+.quickPrimaryLink:focus-visible,
+.quickSecondaryLink:focus-visible,
+.quickGhostButton:focus-visible,
+.quickTextLink:focus-visible,
+.quickOption:focus-visible,
+.quickAdvancedGrid a:focus-visible {
+  outline: 3px solid rgb(255 255 255 / 82%);
+  outline-offset: 3px;
+}
+
 @media (max-width: 900px) {
   .roleGrid,
   .resultGrid,

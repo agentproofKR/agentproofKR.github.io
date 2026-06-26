@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 
-import { SurveyHub } from "@/components/survey/SurveyHub";
+import { QuickDiagnosisPage } from "@/components/survey/QuickDiagnosisPage";
 
 export const metadata: Metadata = {
-  title: "3분 AI 안전 체크 | AgentProof",
+  title: "3분 무료 진단 | AgentProof",
   description:
-    "10문항으로 AI 사용 위험과 바로 정해야 할 기준을 확인합니다.",
+    "AI로 만든 답변을 보내기 전 확인할 부분과 먼저 해볼 일을 3분 안에 확인합니다.",
   alternates: {
     canonical: "/survey/",
   },
   openGraph: {
-    title: "3분 AI 안전 체크 | AgentProof",
-    description: "10문항으로 필요한 기준과 다음 실행 항목을 확인합니다.",
+    title: "3분 무료 진단 | AgentProof",
+    description: "AI로 먼저 맡겨볼 일과 보내기 전 확인할 부분을 확인합니다.",
     url: "/survey/",
     images: [
       {
@@ -25,5 +25,5 @@ export const metadata: Metadata = {
 };
 
 export default function SurveyPage() {
-  return <SurveyHub />;
+  return <QuickDiagnosisPage />;
 }

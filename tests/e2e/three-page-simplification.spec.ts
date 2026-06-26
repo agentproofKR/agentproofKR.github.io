@@ -28,28 +28,28 @@ test.describe("three-page simplification", () => {
     });
   }
 
-  test("survey page uses the approved unified 3-minute survey copy", async ({
+  test("survey page uses the approved human quick diagnosis copy", async ({
     page,
   }) => {
     await page.goto("/survey/");
 
-    await expect(page.getByText("3분 AI 안전 체크")).toBeVisible();
+    await expect(page.getByText("3분 무료 진단")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /업무에 쓰는 AI,\s*기준이 있나요\?/,
+        name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "10문항으로 위험 신호와 필요한 기준을 확인합니다.",
+      "3분만 체크해보세요. 어떤 일부터 AI로 맡겨도 될지 바로 알려드릴게요.",
     );
     await expect(
-      page.getByRole("link", { name: "시작하기" }),
-    ).toHaveAttribute("href", "/survey/practitioner/");
+      page.getByRole("button", { name: "3분 진단 시작하기" }),
+    ).toBeVisible();
 
     await expect(page.getByRole("heading", { name: /역할/ })).toHaveCount(0);
     await expect(page.locator("main")).not.toContainText("결과물");
-    await expect(page.locator("main")).toContainText("약 3분");
+    await expect(page.locator("main")).toContainText("회사명, 이메일, 고객정보는 입력하지 않습니다.");
   });
 
   test("privacy page separates plain summary from detailed legal disclosures", async ({

@@ -44,32 +44,17 @@ test("keyboard users can start the survey and move through the first question", 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const start = page.getByRole("link", { name: "시작하기" });
+  const start = page.getByRole("button", { name: "3분 진단 시작하기" });
   await start.focus();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/survey\/practitioner\/$/);
+  await expect(page).toHaveURL(/\/survey\/$/);
+  await expect(
+    page.getByRole("heading", { name: "지금 어떤 상황에 가까우세요?" }),
+  ).toBeVisible();
 
-  await expect(page.getByTestId("survey-consent-step")).toBeVisible();
-  await page.getByLabel("성명").focus();
-  await page.keyboard.type("김테스트");
-  await page.getByLabel("연락처").focus();
-  await page.keyboard.type("qa+keyboard@example.com");
-  await page.getByRole("radio", { name: "동의합니다" }).focus();
-  await page.keyboard.press("Space");
-  await expect(page.getByRole("radio", { name: "동의합니다" })).toBeChecked();
-  await page.getByTestId("age-consent").focus();
-  await page.keyboard.press("Space");
-  await expect(page.getByTestId("age-consent")).toBeChecked();
-  await page.getByTestId("survey-processing-consent").focus();
-  await page.keyboard.press("Space");
-  await expect(page.getByTestId("survey-processing-consent")).toBeChecked();
-  await page.getByRole("button", { name: "동의하고 시작하기" }).focus();
+  await page.getByRole("button", { name: "제가 직접 AI로 일을 해보고 있어요" }).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByTestId("survey-progress")).toContainText("1/10");
-
-  await page.getByTestId("survey-question").getByRole("radio").first().focus();
-  await page.keyboard.press("Space");
-  await page.getByRole("button", { name: "계속" }).focus();
-  await page.keyboard.press("Enter");
-  await expect(page.getByTestId("survey-progress")).toContainText("2/10");
+  await expect(
+    page.getByRole("heading", { name: "AI로 먼저 맡겨보고 싶은 일은 뭔가요?" }),
+  ).toBeVisible();
 });
