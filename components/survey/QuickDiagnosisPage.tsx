@@ -1,70 +1,48 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  type FormEvent,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
-import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { trackEvent } from "@/lib/analytics";
 import {
-  calculateQuickDiagnosisResult,
-  quickDiagnosisSteps,
+  calculateAssuranceResult,
+  getAutonomyLabel,
+  getDefaultControlState,
   quickDiagnosisVersion,
-  workspaceMap,
-  type QuickDiagnosisAnswers,
-  type QuickDiagnosisAudience,
-  type QuickDiagnosisConcern,
-  type QuickDiagnosisJob,
-  type QuickDiagnosisPersona,
-  type QuickDiagnosisResult,
-  type QuickDiagnosisReview,
-  type QuickDiagnosisStep,
+  referenceDiagnosisScreens,
+  workOptions,
+  type AssuranceResult,
+  type ControlState,
+  type WorkType,
 } from "@/lib/survey/quickDiagnosis";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-type AnswerStepId = Exclude<QuickDiagnosisStep["id"], "intro">;
-type StepValue =
-  | QuickDiagnosisPersona
-  | QuickDiagnosisJob
-  | QuickDiagnosisAudience
-  | QuickDiagnosisConcern
-  | QuickDiagnosisReview;
+type ScreenIndex = 0 | 1 | 2 | 3 | 4 | 5;
+type TimingOption = "즉시" | "1개월" | "검토 중";
 
-const answerSteps = quickDiagnosisSteps.slice(1) as readonly Extract<
-  QuickDiagnosisStep,
-  { id: AnswerStepId }
->[];
-
-const progressLabels = [
-  "시작",
-  "입장",
-  "확인 대상",
-  "사용처",
-  "걱정",
-  "마지막 확인",
-  "결과",
-] as const;
-
-const autoAdvanceDelayMs = 210;
+const timingOptions: readonly TimingOption[] = ["즉시", "1개월", "검토 중"];
 
 export function QuickDiagnosisPage() {
-  const [started, setStarted] = useState(false);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Partial<QuickDiagnosisAnswers>>({});
-  const [completedAnswers, setCompletedAnswers] =
-    useState<QuickDiagnosisAnswers | null>(null);
-  const [pendingSelection, setPendingSelection] = useState<{
-    stepId: AnswerStepId;
-    value: StepValue;
-  } | null>(null);
-  const autoAdvanceTimer = useRef<number | null>(null);
-  const currentStep = answerSteps[currentIndex];
+  const [screenIndex, setScreenIndex] = useState<ScreenIndex>(0);
+  const [selectedWork, setSelectedWork] = useState<WorkType>("customer_reply");
+  const [controlState, setControlState] = useState<ControlState>(
+    getDefaultControlState("customer_reply"),
+  );
+  const [decisionMaker, setDecisionMaker] = useState("");
+  const [contact, setContact] = useState("");
+  const [timing, setTiming] = useState<TimingOption>("즉시");
   const result = useMemo(
-    () =>
-      completedAnswers
-        ? calculateQuickDiagnosisResult(completedAnswers)
-        : null,
-    [completedAnswers],
+    () => calculateAssuranceResult(selectedWork, controlState),
+    [controlState, selectedWork],
   );
 
   useEffect(() => {
@@ -72,513 +50,522 @@ export function QuickDiagnosisPage() {
     storeInitialUtm(initial, window.sessionStorage);
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_view", {
+      mode: "reference",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
   }, []);
 
-  useEffect(() => {
-    if (!started || completedAnswers) return;
+  const goToScreen = (nextIndex: ScreenIndex) => {
+    setScreenIndex(nextIndex);
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_step_view", {
-      step: currentStep.id,
+      mode: "reference",
+      step: referenceDiagnosisScreens[nextIndex].id,
+      selectedWork,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-  }, [completedAnswers, currentStep.id, started]);
+  };
 
-  useEffect(() => {
-    return () => {
-      if (autoAdvanceTimer.current) {
-        window.clearTimeout(autoAdvanceTimer.current);
-      }
-    };
-  }, []);
-
-  const begin = () => {
+  const start = () => {
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_start", {
-      step: "intro",
+      mode: "reference",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-    setStarted(true);
-    setCurrentIndex(0);
-    setAnswers({});
-    setCompletedAnswers(null);
-    setPendingSelection(null);
+    goToScreen(1);
   };
 
-  const selectOption = (stepId: AnswerStepId, value: StepValue) => {
-    const nextAnswers = setAnswer(answers, stepId, value);
-    const stored = getStoredUtm(window.sessionStorage);
+  const chooseWork = (workType: WorkType) => {
+    setSelectedWork(workType);
+    setControlState(getDefaultControlState(workType));
     trackEvent("quick_diagnosis_option_select", {
-      step: stepId,
-      persona: nextAnswers.persona ?? "",
-      selectedJob: nextAnswers.selectedJob ?? "",
-      audience: nextAnswers.audience ?? "",
-      concern: nextAnswers.concern ?? "",
-      review: nextAnswers.review ?? "",
+      mode: "reference",
+      selectedWork: workType,
+      quickDiagnosisVersion,
+    });
+  };
+
+  const showScore = () => {
+    const stored = getStoredUtm(window.sessionStorage);
+    trackEvent("quick_diagnosis_complete", {
+      mode: "reference",
+      selectedWork,
+      score: result.score,
+      band: result.band,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-
-    if (isCompleteAnswers(nextAnswers)) {
-      const nextResult = calculateQuickDiagnosisResult(nextAnswers);
-      setCompletedAnswers(nextAnswers);
-      trackEvent("quick_diagnosis_complete", {
-        persona: nextAnswers.persona,
-        selectedJob: nextAnswers.selectedJob,
-        audience: nextAnswers.audience,
-        concern: nextAnswers.concern,
-        band: nextResult.band,
-        assuranceScore: nextResult.assuranceScore,
-        quickDiagnosisVersion,
-        utm_source: stored.source ?? "",
-        utm_campaign: stored.campaign ?? "",
-      });
-      return;
-    }
-
-    setAnswers(nextAnswers);
-    setCurrentIndex((index) => Math.min(index + 1, answerSteps.length - 1));
+    goToScreen(3);
   };
 
-  const queueOption = (stepId: AnswerStepId, value: StepValue) => {
-    if (pendingSelection) return;
-    setPendingSelection({ stepId, value });
-    autoAdvanceTimer.current = window.setTimeout(() => {
-      setPendingSelection(null);
-      selectOption(stepId, value);
-    }, autoAdvanceDelayMs);
+  const submitValidation = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    trackEvent("quick_diagnosis_validation_submit", {
+      mode: "reference",
+      selectedWork,
+      timing,
+      score: result.score,
+      band: result.band,
+      quickDiagnosisVersion,
+    });
+    goToScreen(5);
   };
 
-  const goPrevious = () => {
-    if (autoAdvanceTimer.current) {
-      window.clearTimeout(autoAdvanceTimer.current);
-    }
-    setPendingSelection(null);
-    setCurrentIndex((index) => Math.max(0, index - 1));
-  };
-
-  const restart = () => {
-    if (autoAdvanceTimer.current) {
-      window.clearTimeout(autoAdvanceTimer.current);
-    }
-    setAnswers({});
-    setCompletedAnswers(null);
-    setPendingSelection(null);
-    setStarted(false);
-    setCurrentIndex(0);
-    trackEvent("quick_diagnosis_restart", {
+  const shareReport = () => {
+    trackEvent("quick_diagnosis_report_share_click", {
+      mode: "reference",
+      selectedWork,
+      score: result.score,
       quickDiagnosisVersion,
     });
   };
-
-  if (result && completedAnswers) {
-    return (
-      <>
-        <SurveyHeader />
-        <main className={`${styles.page} ${styles.quickPage}`}>
-          <ResultView
-            answers={completedAnswers}
-            result={result}
-            onRestart={restart}
-          />
-        </main>
-      </>
-    );
-  }
-
-  if (!started) {
-    return (
-      <>
-        <SurveyHeader />
-        <main className={`${styles.page} ${styles.quickPage}`}>
-          <IntroView onBegin={begin} />
-        </main>
-      </>
-    );
-  }
 
   return (
-    <>
-      <SurveyHeader />
-      <main className={`${styles.page} ${styles.quickPage}`}>
-        <QuestionView
-          answers={answers}
-          currentIndex={currentIndex}
-          currentStep={currentStep}
-          pendingValue={
-            pendingSelection?.stepId === currentStep.id
-              ? pendingSelection.value
-              : undefined
-          }
-          onPrevious={goPrevious}
-          onSelect={queueOption}
-        />
-      </main>
-    </>
+    <main className={`${styles.page} ${styles.referencePage}`}>
+      <div className={styles.referenceShell}>
+        <section className={styles.referenceCard} aria-labelledby="reference-title">
+          <CardTopBar screenIndex={screenIndex} />
+          {screenIndex === 0 ? <AwarenessScreen onStart={start} /> : null}
+          {screenIndex === 1 ? (
+            <WorkScreen
+              selectedWork={selectedWork}
+              onSelect={chooseWork}
+              onNext={() => goToScreen(2)}
+              onBack={() => goToScreen(0)}
+            />
+          ) : null}
+          {screenIndex === 2 ? (
+            <ControlScreen
+              controlState={controlState}
+              selectedWork={selectedWork}
+              onBack={() => goToScreen(1)}
+              onChange={setControlState}
+              onNext={showScore}
+            />
+          ) : null}
+          {screenIndex === 3 ? (
+            <ScoreScreen
+              result={result}
+              onBack={() => goToScreen(2)}
+              onNext={() => goToScreen(4)}
+            />
+          ) : null}
+          {screenIndex === 4 ? (
+            <ValidationScreen
+              contact={contact}
+              decisionMaker={decisionMaker}
+              timing={timing}
+              onBack={() => goToScreen(3)}
+              onContactChange={setContact}
+              onDecisionMakerChange={setDecisionMaker}
+              onSubmit={submitValidation}
+              onTimingChange={setTiming}
+            />
+          ) : null}
+          {screenIndex === 5 ? (
+            <MonitoringScreen onBack={() => goToScreen(4)} onShare={shareReport} />
+          ) : null}
+        </section>
+        <LegacySurveyLinks />
+      </div>
+    </main>
   );
 }
 
-function IntroView({ onBegin }: { onBegin: () => void }) {
-  const intro = quickDiagnosisSteps[0];
+function CardTopBar({ screenIndex }: { screenIndex: ScreenIndex }) {
+  const screen = referenceDiagnosisScreens[screenIndex];
 
   return (
-    <div className={styles.quickShell}>
-      <section className={styles.quickCard} aria-labelledby="quick-intro-title">
-        <ProgressIndicator current={0} />
-        <h1 id="quick-intro-title">
-          {intro.title.split("\n").map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </h1>
-        <p className={styles.quickHelperText}>
-          {intro.helperText.split("\n").map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </p>
-        <div className={styles.quickPreviewCard}>
-          <span>{intro.previewTitle}</span>
-          <ul>
-            {intro.previewItems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-        <div className={styles.quickActions}>
-          <button className={styles.quickPrimaryButton} type="button" onClick={onBegin}>
-            {intro.primaryCta}
-          </button>
-        </div>
-        <p className={styles.quickTrustNote}>{intro.trustNote}</p>
-      </section>
+    <div className={styles.referenceTopBar}>
+      <Link className={styles.referenceBrand} href="/" aria-label="AgentProof 홈">
+        <Image
+          src="/agentproof-logo-mark.png"
+          width={786}
+          height={891}
+          alt=""
+          aria-hidden="true"
+          priority
+        />
+        <Image
+          src="/agentproof-logo-wordmark.png"
+          width={1064}
+          height={217}
+          alt="AgentProof"
+          priority
+        />
+      </Link>
+      <span>{screen.stageLabel}</span>
     </div>
   );
 }
 
-function QuestionView({
-  answers,
-  currentIndex,
-  currentStep,
-  pendingValue,
-  onPrevious,
+function AwarenessScreen({ onStart }: { onStart: () => void }) {
+  const screen = referenceDiagnosisScreens[0];
+
+  return (
+    <div className={styles.referenceScreen}>
+      <div className={styles.referenceHeroIcon} data-testid="reference-check-icon">
+        <span aria-hidden="true">✓</span>
+      </div>
+      <h1 id="reference-title">
+        {screen.title.split("\n").map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </h1>
+      <p className={styles.referenceSubcopy}>{screen.subcopy}</p>
+      <p className={styles.referenceSupportPill}>{screen.pill}</p>
+      <button className={styles.referencePrimaryButton} type="button" onClick={onStart}>
+        {screen.cta}
+      </button>
+    </div>
+  );
+}
+
+function WorkScreen({
+  selectedWork,
+  onBack,
+  onNext,
   onSelect,
 }: {
-  answers: Partial<QuickDiagnosisAnswers>;
-  currentIndex: number;
-  currentStep: Extract<QuickDiagnosisStep, { id: AnswerStepId }>;
-  pendingValue?: StepValue;
-  onPrevious: () => void;
-  onSelect: (stepId: AnswerStepId, value: StepValue) => void;
+  selectedWork: WorkType;
+  onBack: () => void;
+  onNext: () => void;
+  onSelect: (workType: WorkType) => void;
 }) {
-  const selected = pendingValue ?? getSelectedValue(answers, currentStep.id);
-  const isPending = Boolean(pendingValue);
+  const screen = referenceDiagnosisScreens[1];
 
   return (
-    <div className={styles.quickShell}>
-      <section className={styles.quickCard} aria-labelledby="quick-question-title">
-        <ProgressIndicator current={currentIndex + 1} />
-        <div className={styles.quickQuestionHeader}>
-          <h1 id="quick-question-title">{currentStep.question}</h1>
-        </div>
-        <div className={styles.quickOptionList}>
-          {currentStep.options.map((option) => {
-            const isSelected = selected === option.value;
-            return (
-              <button
-                className={styles.quickOption}
-                type="button"
-                key={option.value}
-                aria-pressed={isSelected}
-                data-quick-option="true"
-                data-selected={isSelected ? "true" : "false"}
-                disabled={isPending}
-                onClick={() => onSelect(currentStep.id, option.value)}
-              >
-                <span>{option.label}</span>
-                <small>{option.subtitle}</small>
-              </button>
-            );
-          })}
-        </div>
-        <div className={styles.quickFooterActions}>
-          <button
-            className={styles.quickGhostButton}
-            type="button"
-            disabled={currentIndex === 0}
-            onClick={onPrevious}
-          >
-            이전
-          </button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function ResultView({
-  answers,
-  result,
-  onRestart,
-}: {
-  answers: QuickDiagnosisAnswers;
-  result: QuickDiagnosisResult;
-  onRestart: () => void;
-}) {
-  const workspace = workspaceMap[result.recommendedJob];
-  const displayScore = useCountUp(result.assuranceScore);
-
-  const trackWorkspaceClick = () => {
-    trackEvent("quick_diagnosis_workspace_cta_click", {
-      persona: answers.persona,
-      selectedJob: answers.selectedJob,
-      audience: answers.audience,
-      concern: answers.concern,
-      band: result.band,
-      assuranceScore: result.assuranceScore,
-      ctaType: "workspace",
-      quickDiagnosisVersion,
-    });
-  };
-
-  const trackPilotClick = () => {
-    trackEvent("quick_diagnosis_consult_click", {
-      persona: answers.persona,
-      selectedJob: answers.selectedJob,
-      band: result.band,
-      assuranceScore: result.assuranceScore,
-      ctaType: "pilot",
-      quickDiagnosisVersion,
-    });
-  };
-
-  return (
-    <div className={styles.quickShell}>
-      <section className={styles.quickResultCard} aria-labelledby="quick-result-title">
-        <ProgressIndicator current={6} />
-        <p className={styles.quickStatusPill}>{result.statusPill}</p>
-        <h1 id="quick-result-title">{result.resultHeadline}</h1>
-        <div className={styles.quickResultSummary}>
-          <div className={styles.quickScoreCard}>
-            <strong>{displayScore}점</strong>
-            <b>· {result.bandLabel}</b>
-          </div>
-          <section className={styles.quickRecommendation}>
-            <span>먼저 확인할 내용</span>
-            <h2>{result.workspaceTitle}</h2>
-          </section>
-        </div>
-        <section className={styles.quickResultSection}>
-          <h2>확인하면 좋은 부분</h2>
-          <ol className={styles.quickWatchList}>
-            {result.watchOut.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ol>
-        </section>
-        <div className={styles.quickActions}>
-          <Link
-            className={styles.quickPrimaryLink}
-            href={workspace.path}
-            onClick={trackWorkspaceClick}
-          >
-            {result.workspaceCta}
-          </Link>
-          <Link
-            className={styles.quickSecondaryLink}
-            href="mailto:agentproof.ai@gmail.com?subject=AgentProof%20%ED%8C%8C%EC%9D%BC%EB%9F%BF%20%EB%AC%B8%EC%9D%98"
-            onClick={trackPilotClick}
-          >
-            파일럿 문의하기
-          </Link>
-        </div>
-        <p className={styles.quickDisclaimer}>
-          간단 체크 결과입니다. 법률·보안 자문은 아닙니다.
-        </p>
-        <section className={styles.quickValueCard}>
-          <h2>{result.valueTitle}</h2>
-          <p>
-            {result.valueText.split("\n").map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </p>
-          <ul>
-            {result.valueBullets.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </section>
-        <div className={styles.quickFooterActions}>
-          <button className={styles.quickGhostButton} type="button" onClick={onRestart}>
-            다시 해보기
-          </button>
-        </div>
-      </section>
-      <AdvancedSurveyLinks />
-    </div>
-  );
-}
-
-function ProgressIndicator({ current }: { current: number }) {
-  const progress = Math.round(((current + 1) / progressLabels.length) * 100);
-
-  return (
-    <div
-      className={styles.quickProgress}
-      aria-label={`진행 단계 ${current + 1}/${progressLabels.length}`}
-    >
-      <div
-        className={styles.quickProgressTrack}
-        role="progressbar"
-        aria-valuemin={1}
-        aria-valuemax={progressLabels.length}
-        aria-valuenow={current + 1}
-      >
-        <span style={{ inlineSize: `${progress}%` }} />
+    <div className={styles.referenceScreen}>
+      <h1 id="reference-title">
+        {screen.title.split("\n").map((line) => (
+          <span key={line}>{line}</span>
+        ))}
+      </h1>
+      <div className={styles.referenceOptionList}>
+        {workOptions.map((option) => {
+          const selected = option.value === selectedWork;
+          return (
+            <button
+              aria-pressed={selected}
+              className={styles.referenceOption}
+              data-reference-option="true"
+              data-selected={selected ? "true" : "false"}
+              key={option.value}
+              type="button"
+              onClick={() => onSelect(option.value)}
+            >
+              <span>{option.label}</span>
+              <b aria-hidden="true">{selected ? "✓" : "›"}</b>
+            </button>
+          );
+        })}
       </div>
-      <span className={styles.quickProgressCount}>{current + 1}/{progressLabels.length}</span>
+      <ReferenceActions onBack={onBack}>
+        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+          {screen.cta}
+        </button>
+      </ReferenceActions>
     </div>
   );
 }
 
-function useCountUp(target: number) {
-  const [value, setValue] = useState(0);
+function ControlScreen({
+  controlState,
+  selectedWork,
+  onBack,
+  onChange,
+  onNext,
+}: {
+  controlState: ControlState;
+  selectedWork: WorkType;
+  onBack: () => void;
+  onChange: (controlState: ControlState) => void;
+  onNext: () => void;
+}) {
+  const screen = referenceDiagnosisScreens[2];
+  const workLabel =
+    workOptions.find((option) => option.value === selectedWork)?.label ?? "";
 
-  useEffect(() => {
-    const duration = 520;
-    const startedAt = performance.now();
-    let frameId = 0;
-
-    const tick = (time: number) => {
-      const progress = Math.min((time - startedAt) / duration, 1);
-      setValue(Math.round(target * easeOutCubic(progress)));
-      if (progress < 1) {
-        frameId = window.requestAnimationFrame(tick);
-      }
-    };
-
-    frameId = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frameId);
-  }, [target]);
-
-  return value;
+  return (
+    <div className={styles.referenceScreen}>
+      <h1 id="reference-title">{screen.title}</h1>
+      <p className={styles.referenceSelectedWork}>업무 · {workLabel}</p>
+      <div className={styles.referenceControlList}>
+        <div className={styles.referenceControlRow}>
+          <span>자율성 범위</span>
+          <strong>{getAutonomyLabel(controlState.autonomy)}</strong>
+        </div>
+        <ControlToggle
+          checked={controlState.behaviorLogging}
+          label="행동 로그 수집"
+          onChange={(checked) =>
+            onChange({ ...controlState, behaviorLogging: checked })
+          }
+        />
+        <ControlToggle
+          checked={controlState.humanReview}
+          label="사람 검토(HITL)"
+          onChange={(checked) => onChange({ ...controlState, humanReview: checked })}
+        />
+        <ControlToggle
+          checked={controlState.driftMonitoring}
+          label="드리프트 감시"
+          onChange={(checked) =>
+            onChange({ ...controlState, driftMonitoring: checked })
+          }
+        />
+      </div>
+      <div className={styles.referenceAnalysis}>
+        <span>{screen.analysisText}</span>
+        <div
+          className={styles.referenceAnalysisBar}
+          role="progressbar"
+          aria-label="AI 분석 진행률"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={72}
+        >
+          <i />
+        </div>
+      </div>
+      <ReferenceActions onBack={onBack}>
+        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+          {screen.cta}
+        </button>
+      </ReferenceActions>
+    </div>
+  );
 }
 
-function easeOutCubic(value: number) {
-  return 1 - (1 - value) ** 3;
+function ControlToggle({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      aria-checked={checked}
+      aria-label={label}
+      className={styles.referenceControlRow}
+      role="switch"
+      type="button"
+      onClick={() => onChange(!checked)}
+    >
+      <span>{label}</span>
+      <i data-checked={checked ? "true" : "false"} aria-hidden="true">
+        <b />
+      </i>
+    </button>
+  );
 }
 
-function AdvancedSurveyLinks() {
-  const trackClick = (persona: "practitioner" | "leader" | "security") => {
-    trackEvent("quick_diagnosis_advanced_survey_click", {
-      ctaType: persona,
-      quickDiagnosisVersion,
-    });
-  };
+function ScoreScreen({
+  result,
+  onBack,
+  onNext,
+}: {
+  result: AssuranceResult;
+  onBack: () => void;
+  onNext: () => void;
+}) {
+  const screen = referenceDiagnosisScreens[3];
 
+  return (
+    <div className={styles.referenceScreen}>
+      <h1 id="reference-title">{screen.title}</h1>
+      <div
+        className={styles.referenceScoreGauge}
+        style={{ "--score": result.score } as CSSProperties}
+      >
+        <strong>{result.score} / 100</strong>
+      </div>
+      <p className={styles.referenceBand}>{result.bandLabel}</p>
+      <section className={styles.referenceRiskBox}>
+        <span>{screen.riskTitle}</span>
+        <strong>{result.riskLine}</strong>
+      </section>
+      <div className={styles.referenceMetrics}>
+        <div>
+          <span>일 누수</span>
+          <strong>{result.dailyLeakageEstimate}</strong>
+        </div>
+        <div>
+          <span>지원금</span>
+          <strong>{result.subsidyEstimate}</strong>
+        </div>
+      </div>
+      <ReferenceActions onBack={onBack}>
+        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+          {screen.cta}
+        </button>
+      </ReferenceActions>
+    </div>
+  );
+}
+
+function ValidationScreen({
+  contact,
+  decisionMaker,
+  timing,
+  onBack,
+  onContactChange,
+  onDecisionMakerChange,
+  onSubmit,
+  onTimingChange,
+}: {
+  contact: string;
+  decisionMaker: string;
+  timing: TimingOption;
+  onBack: () => void;
+  onContactChange: (value: string) => void;
+  onDecisionMakerChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onTimingChange: (value: TimingOption) => void;
+}) {
+  const screen = referenceDiagnosisScreens[4];
+
+  return (
+    <form className={styles.referenceScreen} onSubmit={onSubmit}>
+      <h1 id="reference-title">{screen.title}</h1>
+      <label className={styles.referenceField}>
+        <span>담당자 · 결재자</span>
+        <input
+          autoComplete="name"
+          name="decisionMaker"
+          placeholder="김대표 · 구매 결정권자"
+          type="text"
+          value={decisionMaker}
+          onChange={(event) => onDecisionMakerChange(event.target.value)}
+        />
+      </label>
+      <label className={styles.referenceField}>
+        <span>연락처</span>
+        <input
+          autoComplete="tel"
+          inputMode="tel"
+          name="contact"
+          placeholder="010--"
+          type="tel"
+          value={contact}
+          onChange={(event) => onContactChange(event.target.value)}
+        />
+      </label>
+      <div className={styles.referenceTiming} role="group" aria-label="도입 시점">
+        <span>도입 시점</span>
+        <div>
+          {timingOptions.map((option) => (
+            <button
+              aria-pressed={timing === option}
+              key={option}
+              type="button"
+              onClick={() => onTimingChange(option)}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.referencePriceBox}>
+        <span>정밀 검증 · 업무당</span>
+        <strong>₩50–150만 / 건</strong>
+      </div>
+      <ReferenceActions onBack={onBack}>
+        <button className={styles.referencePrimaryButton} type="submit">
+          {screen.cta}
+        </button>
+      </ReferenceActions>
+    </form>
+  );
+}
+
+function MonitoringScreen({
+  onBack,
+  onShare,
+}: {
+  onBack: () => void;
+  onShare: () => void;
+}) {
+  const screen = referenceDiagnosisScreens[5];
+
+  return (
+    <div className={styles.referenceScreen}>
+      <h1 id="reference-title">{screen.title}</h1>
+      <p className={styles.referenceSubcopy}>{screen.subcopy}</p>
+      <div
+        className={styles.referenceChart}
+        data-testid="reference-monitoring-chart"
+        aria-label="최근 8주 안심 점수 추이"
+      >
+        <svg viewBox="0 0 280 120" role="img" aria-hidden="true">
+          <polyline points="8,86 48,72 88,78 128,52 168,58 208,40 248,34 272,28" />
+          <circle cx="272" cy="28" r="6" />
+        </svg>
+      </div>
+      <section className={styles.referenceAlertCard}>
+        <strong>{screen.alertTitle}</strong>
+        <span>권장 대비 -6점 · 재진단 권장</span>
+      </section>
+      <ul className={styles.referenceChecklist}>
+        <li>재진단 예약됨 (D-2)</li>
+        <li>규제 체크 통과 (AI 기본법)</li>
+      </ul>
+      <ReferenceActions onBack={onBack}>
+        <button
+          className={styles.referencePrimaryButton}
+          type="button"
+          onClick={onShare}
+        >
+          {screen.cta}
+        </button>
+      </ReferenceActions>
+    </div>
+  );
+}
+
+function ReferenceActions({
+  children,
+  onBack,
+}: {
+  children: ReactNode;
+  onBack: () => void;
+}) {
+  return (
+    <div className={styles.referenceActions}>
+      {children}
+      <button className={styles.referenceBackButton} type="button" onClick={onBack}>
+        이전
+      </button>
+    </div>
+  );
+}
+
+function LegacySurveyLinks() {
   return (
     <section
-      className={styles.quickAdvanced}
-      id="advanced-surveys"
-      aria-labelledby="advanced-surveys-title"
+      className={styles.referenceLegacy}
+      id="legacy-surveys"
+      aria-labelledby="legacy-surveys-title"
     >
-      <h2 id="advanced-surveys-title">더 자세히 보고 싶다면</h2>
-      <p>간단 체크는 첫 문서와 답변을 고르는 입구입니다.</p>
-      <div className={styles.quickAdvancedGrid}>
-        <Link href="/survey/practitioner/" onClick={() => trackClick("practitioner")}>
-          <strong>실무자 체크</strong>
-          <span>실제로 쓸 때 볼 내용을 확인합니다.</span>
-        </Link>
-        <Link href="/survey/leader/" onClick={() => trackClick("leader")}>
-          <strong>대표·도입 담당자 체크</strong>
-          <span>회사 기준을 정할 때 볼 내용을 확인합니다.</span>
-        </Link>
-        <Link href="/survey/security/" onClick={() => trackClick("security")}>
-          <strong>보안·정책 담당자 체크</strong>
-          <span>개인정보와 확인 기준을 점검합니다.</span>
-        </Link>
+      <a href="#legacy-surveys" className={styles.referenceLegacyAnchor}>
+        기존 역할별 진단 보기
+      </a>
+      <h2 id="legacy-surveys-title">역할별 진단</h2>
+      <div>
+        <Link href="/survey/practitioner/">실무자 진단</Link>
+        <Link href="/survey/leader/">대표·도입 담당자 진단</Link>
+        <Link href="/survey/security/">보안·정책 담당자 진단</Link>
       </div>
     </section>
   );
-}
-
-function setAnswer(
-  answers: Partial<QuickDiagnosisAnswers>,
-  stepId: AnswerStepId,
-  value: StepValue,
-): Partial<QuickDiagnosisAnswers> {
-  if (stepId === "persona" && isPersona(value)) {
-    return { ...answers, persona: value };
-  }
-  if (stepId === "selectedJob" && isJob(value)) {
-    return { ...answers, selectedJob: value };
-  }
-  if (stepId === "audience" && isAudience(value)) {
-    return { ...answers, audience: value };
-  }
-  if (stepId === "concern" && isConcern(value)) {
-    return { ...answers, concern: value };
-  }
-  if (stepId === "review" && isReview(value)) {
-    return { ...answers, review: value };
-  }
-  return answers;
-}
-
-function getSelectedValue(
-  answers: Partial<QuickDiagnosisAnswers>,
-  stepId: AnswerStepId,
-): string | undefined {
-  if (stepId === "persona") return answers.persona;
-  if (stepId === "selectedJob") return answers.selectedJob;
-  if (stepId === "audience") return answers.audience;
-  if (stepId === "concern") return answers.concern;
-  return answers.review;
-}
-
-function isCompleteAnswers(
-  answers: Partial<QuickDiagnosisAnswers>,
-): answers is QuickDiagnosisAnswers {
-  return Boolean(
-    answers.persona &&
-      answers.selectedJob &&
-      answers.audience &&
-      answers.concern &&
-      answers.review,
-  );
-}
-
-function isPersona(value: StepValue): value is QuickDiagnosisPersona {
-  return ["worker", "team_lead", "owner", "policy_manager", "grant_writer"].includes(value);
-}
-
-function isJob(value: StepValue): value is QuickDiagnosisJob {
-  return ["customer_reply", "grant_doc", "marketing_copy", "internal_summary", "proposal_doc"].includes(
-    value,
-  );
-}
-
-function isAudience(value: StepValue): value is QuickDiagnosisAudience {
-  return ["customer", "institution", "executive", "internal", "unknown"].includes(value);
-}
-
-function isConcern(value: StepValue): value is QuickDiagnosisConcern {
-  return [
-    "privacy",
-    "wrong_answer",
-    "exaggeration",
-    "no_policy",
-    "no_evidence",
-    "unknown_risk",
-  ].includes(value);
-}
-
-function isReview(value: StepValue): value is QuickDiagnosisReview {
-  return ["always", "important_only", "individual", "rarely", "no_standard"].includes(value);
 }

@@ -38,6 +38,8 @@ export type AnalyticsEvent =
   | "quick_diagnosis_workspace_cta_click"
   | "quick_diagnosis_consult_click"
   | "quick_diagnosis_advanced_survey_click"
+  | "quick_diagnosis_validation_submit"
+  | "quick_diagnosis_report_share_click"
   | "quick_diagnosis_restart";
 
 export type AnalyticsPayload = Record<string, string | number | boolean | string[]>;
@@ -60,11 +62,15 @@ const allowedKeys = new Set([
   "completion_time_band",
   "result_band",
   "step",
+  "mode",
   "selectedJob",
+  "selectedWork",
   "audience",
   "concern",
   "band",
   "assuranceScore",
+  "score",
+  "timing",
   "ctaType",
   "quickDiagnosisVersion",
 ]);

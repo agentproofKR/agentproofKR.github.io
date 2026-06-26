@@ -33,23 +33,23 @@ test.describe("three-page simplification", () => {
   }) => {
     await page.goto("/survey/");
 
-    await expect(page.getByText("1분 체크")).toBeVisible();
+    await expect(page.getByText("+ 받을 수 있는 지원금")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /그대로 써도\s*괜찮을까요\?/,
+        name: /당신의 AI,\s*믿어도 되나요\?/,
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "답변·문장·문서를 쓰기 전에",
+      "도입 전 · 무료 3초 진단",
     );
     await expect(
-      page.getByRole("button", { name: "바로 확인하기" }),
+      page.getByRole("button", { name: "무료 진단 시작" }),
     ).toBeVisible();
 
-    await expect(page.getByRole("heading", { name: /역할/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "기존 역할별 진단 보기" })).toBeVisible();
     await expect(page.locator("main")).not.toContainText("결과물");
-    await expect(page.locator("main")).toContainText("회사명·이메일·고객정보는 묻지 않아요.");
+    await expect(page.locator('input[type="text"], input[type="tel"]')).toHaveCount(0);
   });
 
   test("privacy page separates plain summary from detailed legal disclosures", async ({

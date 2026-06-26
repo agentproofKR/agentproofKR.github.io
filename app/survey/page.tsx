@@ -3,22 +3,22 @@ import type { Metadata } from "next";
 import { QuickDiagnosisPage } from "@/components/survey/QuickDiagnosisPage";
 
 export const metadata: Metadata = {
-  title: "무료 체크 | AgentProof",
+  title: "AI 안심 점수 진단 | AgentProof",
   description:
-    "답변·문장·문서를 쓰기 전에 확인할 내용을 빠르게 살펴봅니다.",
+    "AI 업무 도입 전 통제 상태와 안심 점수를 빠르게 확인합니다.",
   alternates: {
     canonical: "/survey/",
   },
   openGraph: {
-    title: "무료 체크 | AgentProof",
-    description: "답변·문장·문서를 쓰기 전에 확인할 내용을 빠르게 살펴봅니다.",
+    title: "AI 안심 점수 진단 | AgentProof",
+    description: "AI 업무 도입 전 통제 상태와 안심 점수를 빠르게 확인합니다.",
     url: "/survey/",
     images: [
       {
         url: "/og-agentproof.png",
         width: 1200,
         height: 630,
-        alt: "AgentProof 무료 체크 예시 화면",
+        alt: "AgentProof 안심 점수 진단 예시 화면",
       },
     ],
   },

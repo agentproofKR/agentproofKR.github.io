@@ -67,7 +67,7 @@ test("homepage CTAs route to the quick check", async ({
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
     page.getByRole("heading", {
-      name: /그대로 써도\s*괜찮을까요\?/,
+      name: /당신의 AI,\s*믿어도 되나요\?/,
     }),
   ).toBeVisible();
 });
@@ -82,14 +82,12 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(
-    page.getByText(/답변·문장·문서를 쓰기 전에\s*확인할 내용만 빠르게 보여드려요\./),
-  ).toBeVisible();
+  await expect(page.getByText("도입 전 · 무료 3초 진단")).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "바로 확인하기" }).click();
+  await page.getByRole("button", { name: "무료 진단 시작" }).click();
   await expect(page).toHaveURL(/\/survey\//);
   await expect(
-    page.getByRole("heading", { name: "어떤 입장인가요?" }),
+    page.getByRole("heading", { name: /어떤 업무에\s*AI를 도입하나요\?/ }),
   ).toBeVisible();
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
@@ -99,26 +97,18 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
-test("survey pages keep the brand and quick check CTA fixed", async ({
+test("survey page keeps the brand inside the reference phone card", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 1200 });
   await page.goto("/survey/");
 
-  const header = page.getByRole("banner");
-  const brand = header.getByRole("link", { name: /AgentProof/ });
-  const cta = header.getByRole("link", { name: /무료 체크/ });
-  await expect(brand).toBeVisible();
-  await expect(cta).toBeVisible();
-
-  const before = await header.boundingBox();
-  expect(before?.y).toBe(0);
+  await expect(page.getByRole("link", { name: /AgentProof/ })).toBeVisible();
+  await expect(page.getByText("시작", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "무료 진단 시작" })).toBeVisible();
 
   await page.mouse.wheel(0, 1200);
-  const afterScroll = await header.boundingBox();
-  expect(afterScroll?.y).toBe(0);
-  await expect(brand).toBeVisible();
-  await expect(cta).toBeVisible();
+  await expect(page.getByRole("link", { name: "기존 역할별 진단 보기" })).toBeVisible();
 
   const metrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,

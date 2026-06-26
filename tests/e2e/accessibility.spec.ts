@@ -44,17 +44,19 @@ test("keyboard users can start the survey and move through the first question", 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const start = page.getByRole("button", { name: "바로 확인하기" });
+  const start = page.getByRole("button", { name: "무료 진단 시작" });
   await start.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
-    page.getByRole("heading", { name: "어떤 입장인가요?" }),
+    page.getByRole("heading", { name: /어떤 업무에\s*AI를 도입하나요\?/ }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "직접 쓰고 있어요" }).focus();
+  await page.getByRole("button", { name: "고객 문의 응대" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "다음" }).focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("heading", { name: "무엇을 확인할까요?" }),
+    page.getByRole("heading", { name: "통제 상태 진단" }),
   ).toBeVisible();
 });
