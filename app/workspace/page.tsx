@@ -6,7 +6,7 @@ import { WorkspaceBetaPage } from "@/components/survey/WorkspaceBetaPage";
 export const metadata: Metadata = {
   title: "AgentProof Workspace | 준비 중",
   description:
-    "선택한 업무부터 AI 답변과 보내기 전 확인할 부분을 함께 볼 수 있게 준비 중입니다.",
+    "선택한 일부터 답변과 문서를 작게 써볼 수 있게 준비 중입니다.",
   alternates: {
     canonical: "/workspace/",
   },

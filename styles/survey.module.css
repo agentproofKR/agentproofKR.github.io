@@ -973,6 +973,10 @@
   word-break: keep-all;
 }
 
+.quickCard > .quickHelperText {
+  margin-top: 14px;
+}
+
 .quickActions {
   display: grid;
   gap: 10px;
@@ -1109,15 +1113,12 @@
 }
 
 .quickScoreCard strong {
-  grid-column: 1;
   color: var(--quick-text);
   font-size: 56px;
   line-height: 1;
 }
 
 .quickScoreCard b {
-  grid-row: 1 / span 2;
-  grid-column: 2;
   border: 1px solid rgb(32 214 155 / 28%);
   border-radius: 8px;
   background: rgb(32 214 155 / 10%);
@@ -1414,5 +1415,20 @@
   .scoreRow meter {
     grid-column: 1 / -1;
     grid-row: 2;
+  }
+
+  .quickCard h1,
+  .quickResultCard h1,
+  .workspaceBeta h1 {
+    font-size: 32px;
+    line-height: 1.1;
+  }
+
+  .quickScoreCard strong {
+    font-size: 50px;
+  }
+
+  .workspaceBeta h1 {
+    font-size: 28px;
   }
 }

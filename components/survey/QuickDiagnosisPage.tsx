@@ -35,13 +35,21 @@ const answerSteps = quickDiagnosisSteps.slice(1) as readonly Extract<
   { id: AnswerStepId }
 >[];
 
-const stepLabels = quickDiagnosisSteps.map((step) => step.label);
+const progressLabels = [
+  "시작",
+  "입장 선택",
+  "맡겨볼 일 선택",
+  "누가 보는지 선택",
+  "걱정되는 점 선택",
+  "확인 방식 선택",
+  "결과",
+] as const;
 
 const resultHeadlines: Record<QuickDiagnosisResult["band"], string> = {
-  ready: "작게 시작해도 됩니다.",
-  conditional: "작게 시작해도 됩니다.\n다만, 보내기 전 확인은 필요해 보여요.",
-  needs_verification: "먼저 확인해보고\n작게 시작하는 게 좋습니다.",
-  hold: "기준부터 잡아도 됩니다.\n그다음 작게 시작해보세요.",
+  ready: "작게 시작하기 좋아 보여요.",
+  conditional: "작게 시작해도 됩니다.",
+  needs_verification: "먼저 몇 번 써보고 판단하는 게 좋아요.",
+  hold: "기준을 먼저 잡는 게 좋아 보여요.",
 };
 
 export function QuickDiagnosisPage() {
@@ -71,7 +79,7 @@ export function QuickDiagnosisPage() {
   }, []);
 
   useEffect(() => {
-    if (completedAnswers) return;
+    if (!started || completedAnswers) return;
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_step_view", {
       step: currentStep.id,
@@ -79,7 +87,7 @@ export function QuickDiagnosisPage() {
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-  }, [completedAnswers, currentStep.id]);
+  }, [completedAnswers, currentStep.id, started]);
 
   const begin = () => {
     const stored = getStoredUtm(window.sessionStorage);
@@ -104,6 +112,7 @@ export function QuickDiagnosisPage() {
       selectedJob: nextAnswers.selectedJob ?? "",
       audience: nextAnswers.audience ?? "",
       concern: nextAnswers.concern ?? "",
+      review: nextAnswers.review ?? "",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -131,22 +140,7 @@ export function QuickDiagnosisPage() {
   };
 
   const goPrevious = () => {
-    if (completedAnswers) {
-      setCompletedAnswers(null);
-      setCurrentIndex(answerSteps.length - 1);
-      return;
-    }
     setCurrentIndex((index) => Math.max(0, index - 1));
-  };
-
-  const restart = () => {
-    setAnswers({});
-    setCompletedAnswers(null);
-    setStarted(false);
-    setCurrentIndex(0);
-    trackEvent("quick_diagnosis_restart", {
-      quickDiagnosisVersion,
-    });
   };
 
   if (result && completedAnswers) {
@@ -154,12 +148,7 @@ export function QuickDiagnosisPage() {
       <>
         <SurveyHeader />
         <main className={`${styles.page} ${styles.quickPage}`}>
-          <ResultView
-            answers={completedAnswers}
-            result={result}
-            onPrevious={goPrevious}
-            onRestart={restart}
-          />
+          <ResultView answers={completedAnswers} result={result} />
         </main>
       </>
     );
@@ -199,29 +188,20 @@ function IntroView({ onBegin }: { onBegin: () => void }) {
     <div className={styles.quickShell}>
       <section className={styles.quickCard} aria-labelledby="quick-intro-title">
         <ProgressIndicator current={0} />
-        <p className={styles.quickEyebrow}>3분 무료 진단</p>
+        <p className={styles.quickEyebrow}>3분 진단</p>
         <h1 id="quick-intro-title">
           {intro.title.split("\n").map((line) => (
             <span key={line}>{line}</span>
           ))}
         </h1>
-        <div className={styles.quickIntroBody}>
-          {intro.body.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
+        <p className={styles.quickHelperText}>{intro.helperText}</p>
         <div className={styles.quickActions}>
           <button className={styles.quickPrimaryButton} type="button" onClick={onBegin}>
             {intro.primaryCta}
           </button>
-          <a className={styles.quickSecondaryLink} href="#advanced-surveys">
-            {intro.secondaryCta}
-          </a>
         </div>
         <p className={styles.quickTrustNote}>{intro.trustNote}</p>
       </section>
-      <AdvancedSurveyLinks />
-      <PrivacyMiniNotice />
     </div>
   );
 }
@@ -248,9 +228,6 @@ function QuestionView({
         <div className={styles.quickQuestionHeader}>
           <p className={styles.quickEyebrow}>{currentStep.label}</p>
           <h1 id="quick-question-title">{currentStep.question}</h1>
-          {"helperText" in currentStep ? (
-            <p className={styles.quickHelperText}>{currentStep.helperText}</p>
-          ) : null}
         </div>
         <div className={styles.quickOptionList}>
           {currentStep.options.map((option) => {
@@ -265,7 +242,6 @@ function QuestionView({
                 onClick={() => onSelect(currentStep.id, option.value)}
               >
                 <span>{option.label}</span>
-                {option.hint ? <small>{option.hint}</small> : null}
               </button>
             );
           })}
@@ -281,7 +257,6 @@ function QuestionView({
           </button>
         </div>
       </section>
-      <PrivacyMiniNotice />
     </div>
   );
 }
@@ -289,13 +264,9 @@ function QuestionView({
 function ResultView({
   answers,
   result,
-  onPrevious,
-  onRestart,
 }: {
   answers: QuickDiagnosisAnswers;
   result: QuickDiagnosisResult;
-  onPrevious: () => void;
-  onRestart: () => void;
 }) {
   const workspace = workspaceMap[result.recommendedJob];
 
@@ -312,13 +283,13 @@ function ResultView({
     });
   };
 
-  const trackConsultClick = () => {
+  const trackTrialClick = () => {
     trackEvent("quick_diagnosis_consult_click", {
       persona: answers.persona,
       selectedJob: answers.selectedJob,
       band: result.band,
       assuranceScore: result.assuranceScore,
-      ctaType: "consult",
+      ctaType: "trial_30_days",
       quickDiagnosisVersion,
     });
   };
@@ -326,25 +297,16 @@ function ResultView({
   return (
     <div className={styles.quickShell}>
       <section className={styles.quickResultCard} aria-labelledby="quick-result-title">
-        <ProgressIndicator current={5} />
-        <p className={styles.quickEyebrow}>추천 결과</p>
-        <h1 id="quick-result-title">
-          {resultHeadlines[result.band].split("\n").map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-        </h1>
+        <ProgressIndicator current={6} />
+        <p className={styles.quickEyebrow}>결과</p>
+        <h1 id="quick-result-title">{resultHeadlines[result.band]}</h1>
         <div className={styles.quickScoreCard}>
-          <span>AI 업무 점검 결과</span>
           <strong>{result.assuranceScore}점</strong>
           <b>{result.bandLabel}</b>
         </div>
         <p className={styles.quickResultLead}>{result.bandMessage}</p>
         <section className={styles.quickResultSection}>
-          <h2>좋은 소식</h2>
-          <p>{result.goodNews}</p>
-        </section>
-        <section className={styles.quickResultSection}>
-          <h2>주의할 점</h2>
+          <h2>조심할 점</h2>
           <ol className={styles.quickWatchList}>
             {result.watchOut.map((item) => (
               <li key={item}>{item}</li>
@@ -353,17 +315,7 @@ function ResultView({
         </section>
         <section className={styles.quickRecommendation}>
           <span>먼저 해볼 일</span>
-          <h2>{result.workspaceTitle} 초안</h2>
-          <p>{result.workspaceHint}</p>
-        </section>
-        <section className={styles.quickResultSection}>
-          <h2>AgentProof가 도와주는 방식</h2>
-          <p>
-            AgentProof에서 답변을 만들면, 보내기 전에 확인할 부분을 같이 보여줍니다.
-            고친 내용과 실제로 썼는지도 남길 수 있어, 나중에 팀장이나 대표에게
-            설명하기 쉽습니다.
-          </p>
-          <p>{result.personaValue}</p>
+          <h2>{result.workspaceTitle}</h2>
         </section>
         <div className={styles.quickActions}>
           <Link
@@ -376,26 +328,14 @@ function ResultView({
           <Link
             className={styles.quickSecondaryLink}
             href={workspace.path}
-            onClick={trackConsultClick}
+            onClick={trackTrialClick}
           >
             30일 동안 써보고 판단하기
           </Link>
-          <a className={styles.quickTextLink} href="#advanced-surveys">
-            더 자세한 역할별 진단 보기
-          </a>
         </div>
         <p className={styles.quickDisclaimer}>
-          이 결과는 입력한 선택지를 바탕으로 한 간단 진단입니다. 법률·보안 자문이나
-          안전 보장을 의미하지 않습니다.
+          간단 진단 결과입니다. 법률·보안 자문은 아닙니다.
         </p>
-        <div className={styles.quickFooterActions}>
-          <button className={styles.quickGhostButton} type="button" onClick={onPrevious}>
-            이전 답변 보기
-          </button>
-          <button className={styles.quickGhostButton} type="button" onClick={onRestart}>
-            다시 진단하기
-          </button>
-        </div>
       </section>
       <AdvancedSurveyLinks />
     </div>
@@ -404,10 +344,13 @@ function ResultView({
 
 function ProgressIndicator({ current }: { current: number }) {
   return (
-    <div className={styles.quickProgress} aria-label={`진행 단계 ${current + 1}/6`}>
-      <span className={styles.quickProgressText}>{stepLabels[current]}</span>
+    <div
+      className={styles.quickProgress}
+      aria-label={`진행 단계 ${current + 1}/${progressLabels.length}`}
+    >
+      <span className={styles.quickProgressText}>{progressLabels[current]}</span>
       <div className={styles.quickDots} aria-hidden="true">
-        {stepLabels.map((label, index) => (
+        {progressLabels.map((label, index) => (
           <span
             key={label}
             data-active={index <= current ? "true" : "false"}
@@ -432,35 +375,23 @@ function AdvancedSurveyLinks() {
       id="advanced-surveys"
       aria-labelledby="advanced-surveys-title"
     >
-      <h2 id="advanced-surveys-title">더 자세히 점검하고 싶다면</h2>
-      <p>
-        3분 진단은 첫 업무를 고르는 입구입니다. 역할별로 더 깊게 보고 싶다면
-        아래 진단을 이어서 진행하세요.
-      </p>
+      <h2 id="advanced-surveys-title">더 자세히 보고 싶다면</h2>
+      <p>3분 진단은 첫 업무를 고르는 입구입니다.</p>
       <div className={styles.quickAdvancedGrid}>
         <Link href="/survey/practitioner/" onClick={() => trackClick("practitioner")}>
           <strong>실무자 진단</strong>
-          <span>AI 답변을 실제 업무에 쓸 때 조심할 점을 확인합니다.</span>
+          <span>답변을 쓸 때 조심할 점을 봅니다.</span>
         </Link>
         <Link href="/survey/leader/" onClick={() => trackClick("leader")}>
           <strong>대표·도입 담당자 진단</strong>
-          <span>우리 회사가 어떤 일부터 AI를 허용할지 판단합니다.</span>
+          <span>어떤 일부터 허용할지 봅니다.</span>
         </Link>
         <Link href="/survey/security/" onClick={() => trackClick("security")}>
           <strong>보안·정책 담당자 진단</strong>
-          <span>개인정보, 기록, 확인 기준, 사용 원칙을 점검합니다.</span>
+          <span>개인정보와 기준을 봅니다.</span>
         </Link>
       </div>
     </section>
-  );
-}
-
-function PrivacyMiniNotice() {
-  return (
-    <p className={styles.quickPrivacyNotice}>
-      이 진단은 회사명, 이메일, 고객정보 입력 없이 진행할 수 있습니다. 상담 신청은
-      결과 확인 후 선택 사항입니다.
-    </p>
   );
 }
 
