@@ -49,12 +49,12 @@ test("keyboard users can start the survey and move through the first question", 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
-    page.getByRole("heading", { name: "어떤 상황에 가까우세요?" }),
+    page.getByRole("heading", { name: "지금 상황은?" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "직접 AI를 쓰고 있어요" }).focus();
+  await page.getByRole("button", { name: "직접 쓰고 있어요" }).focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("heading", { name: "AI로 먼저 맡겨볼 일은?" }),
+    page.getByRole("heading", { name: "AI에게 먼저 맡길 일은?" }),
   ).toBeVisible();
 });

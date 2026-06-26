@@ -33,15 +33,15 @@ test.describe("three-page simplification", () => {
   }) => {
     await page.goto("/survey/");
 
-    await expect(page.getByText("3분 진단")).toBeVisible();
+    await expect(page.getByText("오늘 확인할 것")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /AI로 만든 답변,\s*바로 보내도 될까요\?/,
+        name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "3분만 체크하고 먼저 맡길 일을 찾아보세요.",
+      "3분이면 먼저 맡길 일과",
     );
     await expect(
       page.getByRole("button", { name: "시작하기" }),

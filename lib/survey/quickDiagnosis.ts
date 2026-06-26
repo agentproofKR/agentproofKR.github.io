@@ -54,18 +54,24 @@ export type QuickDiagnosisResult = {
   riskScore: number;
   assuranceScore: number;
   band: QuickDiagnosisBand;
+  statusPill: string;
+  resultHeadline: string;
   bandLabel: string;
   bandMessage: string;
   watchOut: string[];
   recommendedJob: QuickDiagnosisJob;
   workspaceTitle: string;
   workspaceCta: string;
+  valueTitle: string;
+  valueText: string;
+  valueBullets: string[];
   personaValue: string;
 };
 
 type Option<T extends string> = {
   value: T;
   label: string;
+  subtitle: string;
 };
 
 export type QuickDiagnosisStep =
@@ -74,6 +80,8 @@ export type QuickDiagnosisStep =
       label: "시작";
       title: string;
       helperText: string;
+      previewTitle: string;
+      previewItems: readonly string[];
       primaryCta: string;
       trustNote: string;
     }
@@ -112,70 +120,176 @@ export const quickDiagnosisSteps = [
   {
     id: "intro",
     label: "시작",
-    title: "AI로 만든 답변,\n바로 보내도 될까요?",
-    helperText: "3분만 체크하고 먼저 맡길 일을 찾아보세요.",
+    title: "AI로 만든 답변,\n그냥 보내도 될까요?",
+    helperText: "3분이면 먼저 맡길 일과\n조심할 점이 나옵니다.",
+    previewTitle: "오늘 확인할 것",
+    previewItems: ["먼저 해볼 일", "조심할 표현", "마지막 확인 방식"],
     primaryCta: "시작하기",
     trustNote: "회사명·이메일·고객정보 입력 없음",
   },
   {
     id: "persona",
     label: "입장 선택",
-    question: "어떤 상황에 가까우세요?",
+    question: "지금 상황은?",
     options: [
-      { value: "worker", label: "직접 AI를 쓰고 있어요" },
-      { value: "team_lead", label: "팀원들이 쓰기 시작했어요" },
-      { value: "owner", label: "대표 입장에서 고민 중이에요" },
-      { value: "policy_manager", label: "개인정보가 걱정돼요" },
-      { value: "grant_writer", label: "지원사업 문서를 준비 중이에요" },
+      {
+        value: "worker",
+        label: "직접 쓰고 있어요",
+        subtitle: "내가 만든 답변이 괜찮은지 보고 싶어요",
+      },
+      {
+        value: "team_lead",
+        label: "팀원들이 쓰기 시작했어요",
+        subtitle: "어디까지 허용할지 고민돼요",
+      },
+      {
+        value: "owner",
+        label: "대표 입장에서 보고 있어요",
+        subtitle: "막을지, 허용할지 판단해야 해요",
+      },
+      {
+        value: "policy_manager",
+        label: "개인정보가 걱정돼요",
+        subtitle: "고객정보나 내부자료가 신경 쓰여요",
+      },
+      {
+        value: "grant_writer",
+        label: "제출 문서를 준비 중이에요",
+        subtitle: "사업계획서나 지원사업 문서가 필요해요",
+      },
     ],
   },
   {
     id: "selectedJob",
     label: "맡겨볼 일 선택",
-    question: "AI로 먼저 맡겨볼 일은?",
+    question: "AI에게 먼저 맡길 일은?",
     options: [
-      { value: "customer_reply", label: "고객 문의 답변" },
-      { value: "grant_doc", label: "사업계획서 문장" },
-      { value: "marketing_copy", label: "마케팅 문구" },
-      { value: "internal_summary", label: "회의록 요약" },
-      { value: "proposal_doc", label: "제안서 문장" },
+      {
+        value: "customer_reply",
+        label: "고객 문의 답변",
+        subtitle: "보내기 전 표현 확인",
+      },
+      {
+        value: "grant_doc",
+        label: "사업계획서 문장",
+        subtitle: "과장·근거 확인",
+      },
+      {
+        value: "marketing_copy",
+        label: "마케팅 문구",
+        subtitle: "오해·과장 확인",
+      },
+      {
+        value: "internal_summary",
+        label: "회의록 요약",
+        subtitle: "공유 범위 확인",
+      },
+      {
+        value: "proposal_doc",
+        label: "제안서 문장",
+        subtitle: "가격·보장 표현 확인",
+      },
     ],
   },
   {
     id: "audience",
     label: "누가 보는지 선택",
-    question: "이 결과를 누가 보나요?",
+    question: "이 결과는 어디까지 나가나요?",
     options: [
-      { value: "customer", label: "고객" },
-      { value: "institution", label: "기관·심사위원" },
-      { value: "executive", label: "대표·팀장" },
-      { value: "internal", label: "내부 팀원" },
-      { value: "unknown", label: "아직 모름" },
+      {
+        value: "customer",
+        label: "고객에게 보냅니다",
+        subtitle: "답변·안내·상담 메시지",
+      },
+      {
+        value: "institution",
+        label: "기관에 제출합니다",
+        subtitle: "지원사업·심사·공식 문서",
+      },
+      {
+        value: "executive",
+        label: "대표나 팀장에게 보고합니다",
+        subtitle: "내부 의사결정 자료",
+      },
+      {
+        value: "internal",
+        label: "내부에서만 봅니다",
+        subtitle: "팀 공유·정리용",
+      },
+      {
+        value: "unknown",
+        label: "아직 모르겠습니다",
+        subtitle: "일단 써보고 정하려고요",
+      },
     ],
   },
   {
     id: "concern",
     label: "걱정되는 점 선택",
-    question: "제일 걱정되는 건?",
+    question: "가장 찝찝한 건?",
     options: [
-      { value: "privacy", label: "개인정보" },
-      { value: "wrong_answer", label: "틀린 답변" },
-      { value: "exaggeration", label: "과장된 표현" },
-      { value: "no_policy", label: "기준 없음" },
-      { value: "no_evidence", label: "설명할 기록 없음" },
-      { value: "unknown_risk", label: "뭐가 위험한지 모름" },
+      {
+        value: "privacy",
+        label: "개인정보",
+        subtitle: "고객정보가 섞일까 봐",
+      },
+      {
+        value: "wrong_answer",
+        label: "틀린 답변",
+        subtitle: "잘못된 말을 보낼까 봐",
+      },
+      {
+        value: "exaggeration",
+        label: "과장된 표현",
+        subtitle: "너무 세게 말할까 봐",
+      },
+      {
+        value: "no_policy",
+        label: "기준 없음",
+        subtitle: "어디까지 써도 되는지 몰라서",
+      },
+      {
+        value: "no_evidence",
+        label: "남는 기록 없음",
+        subtitle: "나중에 설명하기 어려워서",
+      },
+      {
+        value: "unknown_risk",
+        label: "잘 모르겠음",
+        subtitle: "뭐가 위험한지도 애매해서",
+      },
     ],
   },
   {
     id: "review",
     label: "확인 방식 선택",
-    question: "마지막에 누가 확인하나요?",
+    question: "마지막 확인은?",
     options: [
-      { value: "always", label: "항상 사람이 봐요" },
-      { value: "important_only", label: "중요한 것만 봐요" },
-      { value: "individual", label: "각자 알아서 봐요" },
-      { value: "rarely", label: "거의 안 봐요" },
-      { value: "no_standard", label: "기준이 없어요" },
+      {
+        value: "always",
+        label: "항상 사람이 봅니다",
+        subtitle: "보내기 전 확인해요",
+      },
+      {
+        value: "important_only",
+        label: "중요한 것만 봅니다",
+        subtitle: "민감한 건 따로 봐요",
+      },
+      {
+        value: "individual",
+        label: "각자 알아서 봅니다",
+        subtitle: "정해진 방식은 없어요",
+      },
+      {
+        value: "rarely",
+        label: "거의 안 봅니다",
+        subtitle: "만든 사람이 바로 써요",
+      },
+      {
+        value: "no_standard",
+        label: "기준이 없습니다",
+        subtitle: "아직 정해둔 게 없어요",
+      },
     ],
   },
 ] as const satisfies readonly QuickDiagnosisStep[];
@@ -254,36 +368,43 @@ const reviewRisk = {
 
 const bandCopy = {
   ready: {
+    status: "시작 가능",
+    headline: "작은 일부터 시작하기 좋아 보여요.",
     label: "작게 시작하기 좋은 상태",
-    message:
-      "작은 업무부터 써볼 수 있습니다. 밖으로 나가는 문서는 마지막에 한 번 확인하세요.",
+    message: "내부용이거나 확인 방식이 있는 업무부터 써볼 수 있습니다.",
   },
   conditional: {
+    status: "조건부 시작",
+    headline: "작게 시작해도 됩니다. 보내기 전 확인만 꼭 하세요.",
     label: "조건을 두고 시작하기 좋은 상태",
     message:
-      "AI를 못 쓸 상태는 아닙니다. 다만 민감한 내용은 사람이 한 번 봐야 합니다.",
+      "AI를 못 쓸 상태는 아닙니다. 다만 밖으로 나가는 내용은 한 번 더 보는 편이 좋습니다.",
   },
   needs_verification: {
+    status: "먼저 확인",
+    headline: "바로 넓게 쓰기엔 아직 이릅니다.",
     label: "확인이 더 필요한 상태",
     message:
-      "바로 넓게 쓰기보다, 작은 업무에서 몇 번 써보고 확인하는 편이 좋습니다.",
+      "작은 업무에서 몇 번 써보고, 어떤 부분을 고쳐야 하는지 먼저 보는 게 좋습니다.",
   },
   hold: {
+    status: "기준 먼저",
+    headline: "쓰기 전에 기준부터 잡는 게 좋습니다.",
     label: "기준 정리가 먼저 필요한 상태",
-    message: "지금은 어떤 일에 쓰고 누가 확인할지 먼저 정하는 게 좋습니다.",
+    message: "어떤 일에 쓰고, 누가 마지막에 볼지 먼저 정하는 편이 좋습니다.",
   },
 } as const satisfies Record<
   QuickDiagnosisBand,
-  { label: string; message: string }
+  { status: string; headline: string; label: string; message: string }
 >;
 
 const concernWatchOut = {
   privacy: "개인정보가 섞일 수 있어요",
   wrong_answer: "틀린 답변이 나갈 수 있어요",
   exaggeration: "말이 과장될 수 있어요",
-  no_policy: "직원들이 참고할 기준이 부족해요",
+  no_policy: "참고할 기준이 부족해요",
   no_evidence: "나중에 설명할 기록이 부족해요",
-  unknown_risk: "뭐가 위험한지 모르는 상태예요",
+  unknown_risk: "뭐가 위험한지 애매한 상태예요",
 } as const satisfies Record<QuickDiagnosisConcern, string>;
 
 const audienceWatchOut = {
@@ -320,12 +441,17 @@ export function calculateQuickDiagnosisResult(
     riskScore,
     assuranceScore,
     band,
+    statusPill: bandCopy[band].status,
+    resultHeadline: bandCopy[band].headline,
     bandLabel: bandCopy[band].label,
     bandMessage: bandCopy[band].message,
     watchOut: deriveWatchOutItems(answers),
     recommendedJob: answers.selectedJob,
     workspaceTitle: workspace.title,
     workspaceCta: workspace.cta,
+    valueTitle: "AgentProof에서 시작하면",
+    valueText: "답변 만들기와 보내기 전 확인을 같이 할 수 있습니다.",
+    valueBullets: ["어떻게 고쳤는지", "실제로 썼는지", "사람이 봤는지"],
     personaValue: personaValueMap[answers.persona],
   };
 }

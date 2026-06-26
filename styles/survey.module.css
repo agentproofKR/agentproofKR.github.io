@@ -862,24 +862,28 @@
 
 .quickPage {
   --quick-bg: #07080d;
-  --quick-surface: #11131a;
-  --quick-surface-2: #181b24;
-  --quick-line: rgb(255 255 255 / 10%);
+  --quick-surface: rgb(21 23 31 / 82%);
+  --quick-surface-2: rgb(255 255 255 / 6%);
+  --quick-line: rgb(255 255 255 / 11%);
   --quick-text: #ffffff;
-  --quick-muted: rgb(255 255 255 / 68%);
-  --quick-primary: #ff2e6d;
-  --quick-primary-dark: #d71955;
+  --quick-muted: rgb(255 255 255 / 66%);
+  --quick-soft: rgb(255 255 255 / 42%);
+  --quick-primary: #ff3b74;
+  --quick-primary-dark: #e11c5d;
   --quick-success: #20d69b;
   --quick-warning: #f5a524;
   min-height: 100vh;
-  background: var(--quick-bg);
+  background:
+    radial-gradient(circle at 50% -8%, rgb(255 59 116 / 20%), transparent 34%),
+    radial-gradient(circle at 92% 16%, rgb(32 214 155 / 10%), transparent 30%),
+    linear-gradient(180deg, #080910 0%, #05060a 100%);
   color: var(--quick-text);
 }
 
 .quickShell {
   display: grid;
-  gap: 18px;
-  width: min(456px, calc(100% - 28px));
+  gap: 16px;
+  width: min(430px, calc(100% - 32px));
   margin: 0 auto;
 }
 
@@ -887,21 +891,24 @@
 .quickResultCard,
 .workspaceBeta {
   border: 1px solid var(--quick-line);
-  border-radius: 8px;
+  border-radius: 28px;
   background:
-    linear-gradient(180deg, rgb(255 255 255 / 6%), rgb(255 255 255 / 2%)),
+    linear-gradient(180deg, rgb(255 255 255 / 7%), rgb(255 255 255 / 3%)),
     var(--quick-surface);
-  box-shadow: 0 24px 80px rgb(0 0 0 / 42%);
-  padding: 22px;
+  box-shadow: 0 24px 90px rgb(0 0 0 / 38%);
+  padding: 24px;
+  backdrop-filter: blur(22px) saturate(1.2);
+  animation: quickFadeIn 320ms ease-out;
 }
 
 .quickCard h1,
 .quickResultCard h1,
 .workspaceBeta h1 {
-  margin: 12px 0 0;
+  margin: 22px 0 0;
   color: var(--quick-text);
-  font-size: 38px;
-  line-height: 1.08;
+  font-size: 34px;
+  font-weight: 780;
+  line-height: 1.12;
   letter-spacing: 0;
   word-break: keep-all;
 }
@@ -913,34 +920,31 @@
 
 .quickProgress {
   display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-  color: var(--quick-muted);
-  font-size: 13px;
-  font-weight: 760;
-}
-
-.quickProgressText {
-  min-width: 76px;
-}
-
-.quickDots {
-  display: inline-flex;
-  gap: 6px;
+  gap: 12px;
   align-items: center;
 }
 
-.quickDots span {
-  display: block;
-  width: 8px;
-  height: 8px;
+.quickProgressTrack {
+  flex: 1 1 auto;
+  height: 5px;
+  overflow: hidden;
   border-radius: 999px;
-  background: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 10%);
 }
 
-.quickDots span[data-active="true"] {
-  background: var(--quick-primary);
+.quickProgressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--quick-primary), #ff7aa3);
+  transition: inline-size 260ms ease;
+}
+
+.quickProgressCount {
+  color: var(--quick-soft);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
 }
 
 .quickEyebrow {
@@ -962,19 +966,71 @@
 .quickResultLead,
 .quickResultSection p,
 .quickRecommendation p,
+.quickValueCard p,
 .workspaceLead,
 .quickAdvanced p,
 .quickPrivacyNotice,
 .quickDisclaimer {
   margin: 0;
   color: var(--quick-muted);
-  font-size: 15px;
-  line-height: 1.68;
+  font-size: 16px;
+  line-height: 1.58;
   word-break: keep-all;
 }
 
+.quickHelperText span {
+  display: block;
+}
+
 .quickCard > .quickHelperText {
-  margin-top: 14px;
+  margin-top: 16px;
+}
+
+.quickPreviewCard {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 20px;
+  background: rgb(255 255 255 / 5%);
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.quickPreviewCard > span,
+.quickValueCard > span {
+  display: block;
+  color: var(--quick-soft);
+  font-size: 13px;
+  font-weight: 720;
+}
+
+.quickPreviewCard ul,
+.quickValueCard ul {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quickPreviewCard li,
+.quickValueCard li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--quick-text);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.quickPreviewCard li::before,
+.quickValueCard li::before {
+  content: "";
+  position: absolute;
+  top: 0.58em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--quick-success);
 }
 
 .quickActions {
@@ -989,13 +1045,13 @@
 .quickGhostButton,
 .quickTextLink {
   display: inline-flex;
-  min-height: 48px;
+  min-height: 54px;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 0 16px;
-  font-size: 15px;
-  font-weight: 840;
+  font-size: 17px;
+  font-weight: 720;
   letter-spacing: 0;
   text-align: center;
 }
@@ -1005,6 +1061,7 @@
   border: 1px solid var(--quick-primary);
   background: linear-gradient(180deg, var(--quick-primary), var(--quick-primary-dark));
   color: #fff;
+  box-shadow: 0 16px 36px rgb(255 59 116 / 24%);
 }
 
 .quickSecondaryLink {
@@ -1025,53 +1082,68 @@
 .quickPrivacyNotice,
 .quickDisclaimer {
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
+  border-radius: 16px;
   background: rgb(255 255 255 / 5%);
   margin: 16px 0 0;
   padding: 12px;
+  font-size: 14px;
 }
 
 .quickQuestionHeader {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .quickOptionList {
   display: grid;
   gap: 10px;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 
 .quickOption {
   display: grid;
-  min-height: 72px;
-  gap: 6px;
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 8px;
+  min-height: 68px;
+  gap: 5px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
   background: var(--quick-surface-2);
-  padding: 15px;
+  padding: 12px 14px;
   color: var(--quick-text);
   font: inherit;
   text-align: left;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .quickOption[data-selected="true"],
 .quickOption:hover {
-  border-color: rgb(255 46 109 / 70%);
-  background: rgb(255 46 109 / 12%);
+  border-color: rgb(255 59 116 / 34%);
+  background: rgb(255 59 116 / 10%);
+  box-shadow: 0 0 0 4px rgb(255 59 116 / 7%);
+}
+
+.quickOption[data-selected="true"] {
+  transform: scale(0.985);
+}
+
+.quickOption:disabled {
+  cursor: wait;
 }
 
 .quickOption span {
-  font-size: 16px;
-  font-weight: 820;
-  line-height: 1.38;
+  font-size: 17px;
+  font-weight: 690;
+  line-height: 1.2;
   word-break: keep-all;
 }
 
 .quickOption small {
   color: var(--quick-muted);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.3;
   word-break: keep-all;
 }
 
@@ -1086,19 +1158,36 @@
   border: 1px solid rgb(255 255 255 / 12%);
   background: transparent;
   color: var(--quick-muted);
+  font-size: 14px;
+  box-shadow: none;
 }
 
 .quickGhostButton:disabled {
   opacity: 0.45;
 }
 
+.quickStatusPill {
+  display: inline-flex;
+  width: max-content;
+  min-height: 30px;
+  align-items: center;
+  border: 1px solid rgb(32 214 155 / 24%);
+  border-radius: 999px;
+  background: rgb(32 214 155 / 10%);
+  margin: 22px 0 0;
+  padding: 0 11px;
+  color: var(--quick-success);
+  font-size: 13px;
+  font-weight: 760;
+}
+
 .quickScoreCard {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px 14px;
-  align-items: end;
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 8px;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 20px;
   background: rgb(255 255 255 / 6%);
   margin-top: 22px;
   padding: 16px;
@@ -1113,20 +1202,17 @@
 }
 
 .quickScoreCard strong {
+  grid-row: 1 / span 2;
   color: var(--quick-text);
-  font-size: 56px;
+  font-size: 44px;
+  font-weight: 760;
   line-height: 1;
 }
 
 .quickScoreCard b {
-  border: 1px solid rgb(32 214 155 / 28%);
-  border-radius: 8px;
-  background: rgb(32 214 155 / 10%);
-  padding: 8px 10px;
-  color: var(--quick-success);
+  color: var(--quick-muted);
   font-size: 13px;
   line-height: 1.35;
-  text-align: center;
   word-break: keep-all;
 }
 
@@ -1135,7 +1221,8 @@
 }
 
 .quickResultSection,
-.quickRecommendation {
+.quickRecommendation,
+.quickValueCard {
   border-top: 1px solid rgb(255 255 255 / 10%);
   margin-top: 20px;
   padding-top: 18px;
@@ -1143,6 +1230,7 @@
 
 .quickResultSection h2,
 .quickRecommendation h2,
+.quickValueCard h2,
 .quickAdvanced h2 {
   margin: 0 0 10px;
   color: var(--quick-text);
@@ -1163,9 +1251,9 @@
 }
 
 .quickRecommendation {
-  border: 1px solid rgb(245 165 36 / 24%);
-  border-radius: 8px;
-  background: rgb(245 165 36 / 9%);
+  border: 1px solid rgb(245 165 36 / 20%);
+  border-radius: 20px;
+  background: rgb(245 165 36 / 8%);
   padding: 16px;
 }
 
@@ -1173,9 +1261,24 @@
   margin-top: 8px;
 }
 
+.quickValueCard {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 20px;
+  background: rgb(255 255 255 / 5%);
+  padding: 16px;
+}
+
+.quickValueCard p {
+  margin-top: 8px;
+}
+
+.quickValueCard > span {
+  margin-top: 16px;
+}
+
 .quickAdvanced {
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
+  border-radius: 24px;
   background: rgb(255 255 255 / 4%);
   padding: 18px;
 }
@@ -1190,7 +1293,7 @@
   display: grid;
   gap: 5px;
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
+  border-radius: 16px;
   background: rgb(255 255 255 / 5%);
   padding: 13px;
   color: var(--quick-text);
@@ -1204,7 +1307,7 @@
 }
 
 .workspaceBeta {
-  width: min(520px, calc(100% - 28px));
+  width: min(430px, calc(100% - 32px));
   margin: 0 auto;
 }
 
@@ -1214,20 +1317,37 @@
 
 .workspaceSelected {
   border: 1px solid rgb(32 214 155 / 24%);
-  border-radius: 8px;
+  border-radius: 20px;
   background: rgb(32 214 155 / 9%);
   margin-top: 22px;
   padding: 14px;
 }
 
 .workspaceSelected strong {
+  display: block;
+  margin-top: 6px;
   color: var(--quick-text);
+  font-size: 22px;
 }
 
 .workspaceFeatureList {
-  border-top: 1px solid rgb(255 255 255 / 10%);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border-top: 0;
   margin-top: 20px;
-  padding-top: 18px;
+  padding: 0;
+  list-style: none;
+}
+
+.workspaceFeatureList li {
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 5%);
+  padding: 13px;
+  color: var(--quick-text);
+  font-size: 14px;
+  font-weight: 670;
+  line-height: 1.35;
 }
 
 .quickPrimaryButton:focus-visible,
@@ -1239,6 +1359,31 @@
 .quickAdvancedGrid a:focus-visible {
   outline: 3px solid rgb(255 255 255 / 82%);
   outline-offset: 3px;
+}
+
+@keyframes quickFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quickCard,
+  .quickResultCard,
+  .workspaceBeta {
+    animation: none;
+  }
+
+  .quickOption,
+  .quickProgressTrack span {
+    transition: none;
+  }
 }
 
 @media (max-width: 900px) {

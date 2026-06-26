@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { SurveyHeader } from "@/components/survey/SurveyHeader";
 import { trackEvent } from "@/lib/analytics";
@@ -45,12 +45,7 @@ const progressLabels = [
   "결과",
 ] as const;
 
-const resultHeadlines: Record<QuickDiagnosisResult["band"], string> = {
-  ready: "작게 시작하기 좋아 보여요.",
-  conditional: "작게 시작해도 됩니다.",
-  needs_verification: "먼저 몇 번 써보고 판단하는 게 좋아요.",
-  hold: "기준을 먼저 잡는 게 좋아 보여요.",
-};
+const autoAdvanceDelayMs = 210;
 
 export function QuickDiagnosisPage() {
   const [started, setStarted] = useState(false);
@@ -58,6 +53,11 @@ export function QuickDiagnosisPage() {
   const [answers, setAnswers] = useState<Partial<QuickDiagnosisAnswers>>({});
   const [completedAnswers, setCompletedAnswers] =
     useState<QuickDiagnosisAnswers | null>(null);
+  const [pendingSelection, setPendingSelection] = useState<{
+    stepId: AnswerStepId;
+    value: StepValue;
+  } | null>(null);
+  const autoAdvanceTimer = useRef<number | null>(null);
   const currentStep = answerSteps[currentIndex];
   const result = useMemo(
     () =>
@@ -89,6 +89,14 @@ export function QuickDiagnosisPage() {
     });
   }, [completedAnswers, currentStep.id, started]);
 
+  useEffect(() => {
+    return () => {
+      if (autoAdvanceTimer.current) {
+        window.clearTimeout(autoAdvanceTimer.current);
+      }
+    };
+  }, []);
+
   const begin = () => {
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_start", {
@@ -101,6 +109,7 @@ export function QuickDiagnosisPage() {
     setCurrentIndex(0);
     setAnswers({});
     setCompletedAnswers(null);
+    setPendingSelection(null);
   };
 
   const selectOption = (stepId: AnswerStepId, value: StepValue) => {
@@ -139,8 +148,35 @@ export function QuickDiagnosisPage() {
     setCurrentIndex((index) => Math.min(index + 1, answerSteps.length - 1));
   };
 
+  const queueOption = (stepId: AnswerStepId, value: StepValue) => {
+    if (pendingSelection) return;
+    setPendingSelection({ stepId, value });
+    autoAdvanceTimer.current = window.setTimeout(() => {
+      setPendingSelection(null);
+      selectOption(stepId, value);
+    }, autoAdvanceDelayMs);
+  };
+
   const goPrevious = () => {
+    if (autoAdvanceTimer.current) {
+      window.clearTimeout(autoAdvanceTimer.current);
+    }
+    setPendingSelection(null);
     setCurrentIndex((index) => Math.max(0, index - 1));
+  };
+
+  const restart = () => {
+    if (autoAdvanceTimer.current) {
+      window.clearTimeout(autoAdvanceTimer.current);
+    }
+    setAnswers({});
+    setCompletedAnswers(null);
+    setPendingSelection(null);
+    setStarted(false);
+    setCurrentIndex(0);
+    trackEvent("quick_diagnosis_restart", {
+      quickDiagnosisVersion,
+    });
   };
 
   if (result && completedAnswers) {
@@ -148,7 +184,11 @@ export function QuickDiagnosisPage() {
       <>
         <SurveyHeader />
         <main className={`${styles.page} ${styles.quickPage}`}>
-          <ResultView answers={completedAnswers} result={result} />
+          <ResultView
+            answers={completedAnswers}
+            result={result}
+            onRestart={restart}
+          />
         </main>
       </>
     );
@@ -173,8 +213,13 @@ export function QuickDiagnosisPage() {
           answers={answers}
           currentIndex={currentIndex}
           currentStep={currentStep}
+          pendingValue={
+            pendingSelection?.stepId === currentStep.id
+              ? pendingSelection.value
+              : undefined
+          }
           onPrevious={goPrevious}
-          onSelect={selectOption}
+          onSelect={queueOption}
         />
       </main>
     </>
@@ -188,13 +233,24 @@ function IntroView({ onBegin }: { onBegin: () => void }) {
     <div className={styles.quickShell}>
       <section className={styles.quickCard} aria-labelledby="quick-intro-title">
         <ProgressIndicator current={0} />
-        <p className={styles.quickEyebrow}>3분 진단</p>
         <h1 id="quick-intro-title">
           {intro.title.split("\n").map((line) => (
             <span key={line}>{line}</span>
           ))}
         </h1>
-        <p className={styles.quickHelperText}>{intro.helperText}</p>
+        <p className={styles.quickHelperText}>
+          {intro.helperText.split("\n").map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </p>
+        <div className={styles.quickPreviewCard}>
+          <span>{intro.previewTitle}</span>
+          <ul>
+            {intro.previewItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
         <div className={styles.quickActions}>
           <button className={styles.quickPrimaryButton} type="button" onClick={onBegin}>
             {intro.primaryCta}
@@ -210,23 +266,25 @@ function QuestionView({
   answers,
   currentIndex,
   currentStep,
+  pendingValue,
   onPrevious,
   onSelect,
 }: {
   answers: Partial<QuickDiagnosisAnswers>;
   currentIndex: number;
   currentStep: Extract<QuickDiagnosisStep, { id: AnswerStepId }>;
+  pendingValue?: StepValue;
   onPrevious: () => void;
   onSelect: (stepId: AnswerStepId, value: StepValue) => void;
 }) {
-  const selected = getSelectedValue(answers, currentStep.id);
+  const selected = pendingValue ?? getSelectedValue(answers, currentStep.id);
+  const isPending = Boolean(pendingValue);
 
   return (
     <div className={styles.quickShell}>
       <section className={styles.quickCard} aria-labelledby="quick-question-title">
         <ProgressIndicator current={currentIndex + 1} />
         <div className={styles.quickQuestionHeader}>
-          <p className={styles.quickEyebrow}>{currentStep.label}</p>
           <h1 id="quick-question-title">{currentStep.question}</h1>
         </div>
         <div className={styles.quickOptionList}>
@@ -238,10 +296,13 @@ function QuestionView({
                 type="button"
                 key={option.value}
                 aria-pressed={isSelected}
+                data-quick-option="true"
                 data-selected={isSelected ? "true" : "false"}
+                disabled={isPending}
                 onClick={() => onSelect(currentStep.id, option.value)}
               >
                 <span>{option.label}</span>
+                <small>{option.subtitle}</small>
               </button>
             );
           })}
@@ -264,11 +325,14 @@ function QuestionView({
 function ResultView({
   answers,
   result,
+  onRestart,
 }: {
   answers: QuickDiagnosisAnswers;
   result: QuickDiagnosisResult;
+  onRestart: () => void;
 }) {
   const workspace = workspaceMap[result.recommendedJob];
+  const displayScore = useCountUp(result.assuranceScore);
 
   const trackWorkspaceClick = () => {
     trackEvent("quick_diagnosis_workspace_cta_click", {
@@ -298,10 +362,11 @@ function ResultView({
     <div className={styles.quickShell}>
       <section className={styles.quickResultCard} aria-labelledby="quick-result-title">
         <ProgressIndicator current={6} />
-        <p className={styles.quickEyebrow}>결과</p>
-        <h1 id="quick-result-title">{resultHeadlines[result.band]}</h1>
+        <p className={styles.quickStatusPill}>{result.statusPill}</p>
+        <h1 id="quick-result-title">{result.resultHeadline}</h1>
         <div className={styles.quickScoreCard}>
-          <strong>{result.assuranceScore}점</strong>
+          <span>진단 점수</span>
+          <strong>{displayScore}점</strong>
           <b>{result.bandLabel}</b>
         </div>
         <p className={styles.quickResultLead}>{result.bandMessage}</p>
@@ -316,6 +381,16 @@ function ResultView({
         <section className={styles.quickRecommendation}>
           <span>먼저 해볼 일</span>
           <h2>{result.workspaceTitle}</h2>
+        </section>
+        <section className={styles.quickValueCard}>
+          <h2>{result.valueTitle}</h2>
+          <p>{result.valueText}</p>
+          <span>작게 남길 수 있는 것</span>
+          <ul>
+            {result.valueBullets.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </section>
         <div className={styles.quickActions}>
           <Link
@@ -336,6 +411,11 @@ function ResultView({
         <p className={styles.quickDisclaimer}>
           간단 진단 결과입니다. 법률·보안 자문은 아닙니다.
         </p>
+        <div className={styles.quickFooterActions}>
+          <button className={styles.quickGhostButton} type="button" onClick={onRestart}>
+            다시 해보기
+          </button>
+        </div>
       </section>
       <AdvancedSurveyLinks />
     </div>
@@ -343,22 +423,52 @@ function ResultView({
 }
 
 function ProgressIndicator({ current }: { current: number }) {
+  const progress = Math.round(((current + 1) / progressLabels.length) * 100);
+
   return (
     <div
       className={styles.quickProgress}
       aria-label={`진행 단계 ${current + 1}/${progressLabels.length}`}
     >
-      <span className={styles.quickProgressText}>{progressLabels[current]}</span>
-      <div className={styles.quickDots} aria-hidden="true">
-        {progressLabels.map((label, index) => (
-          <span
-            key={label}
-            data-active={index <= current ? "true" : "false"}
-          />
-        ))}
+      <div
+        className={styles.quickProgressTrack}
+        role="progressbar"
+        aria-valuemin={1}
+        aria-valuemax={progressLabels.length}
+        aria-valuenow={current + 1}
+      >
+        <span style={{ inlineSize: `${progress}%` }} />
       </div>
+      <span className={styles.quickProgressCount}>{current + 1}/{progressLabels.length}</span>
     </div>
   );
+}
+
+function useCountUp(target: number) {
+  const [value, setValue] = useState(0);
+
+  useEffect(() => {
+    const duration = 520;
+    const startedAt = performance.now();
+    let frameId = 0;
+
+    const tick = (time: number) => {
+      const progress = Math.min((time - startedAt) / duration, 1);
+      setValue(Math.round(target * easeOutCubic(progress)));
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(tick);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [target]);
+
+  return value;
+}
+
+function easeOutCubic(value: number) {
+  return 1 - (1 - value) ** 3;
 }
 
 function AdvancedSurveyLinks() {

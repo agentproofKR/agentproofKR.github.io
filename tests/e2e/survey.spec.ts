@@ -67,7 +67,7 @@ test("homepage CTAs route to the unified 3-minute survey", async ({
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
     page.getByRole("heading", {
-      name: /AI로 만든 답변,\s*바로 보내도 될까요\?/,
+      name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
     }),
   ).toBeVisible();
 });
@@ -82,12 +82,12 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText("3분만 체크하고 먼저 맡길 일을 찾아보세요.")).toBeVisible();
+  await expect(page.getByText(/3분이면 먼저 맡길 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page).toHaveURL(/\/survey\//);
   await expect(
-    page.getByRole("heading", { name: "어떤 상황에 가까우세요?" }),
+    page.getByRole("heading", { name: "지금 상황은?" }),
   ).toBeVisible();
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
