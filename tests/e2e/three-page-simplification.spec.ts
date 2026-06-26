@@ -41,7 +41,7 @@ test.describe("three-page simplification", () => {
       }),
     ).toBeVisible();
     await expect(page.locator("body")).toContainText(
-      "3분이면 먼저 맡길 일과",
+      "3분이면 먼저 해볼 일과",
     );
     await expect(
       page.getByRole("button", { name: "시작하기" }),

@@ -82,7 +82,7 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText(/3분이면 먼저 맡길 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
+  await expect(page.getByText(/3분이면 먼저 해볼 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page).toHaveURL(/\/survey\//);

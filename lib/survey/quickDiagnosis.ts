@@ -121,7 +121,7 @@ export const quickDiagnosisSteps = [
     id: "intro",
     label: "시작",
     title: "AI로 만든 답변,\n그냥 보내도 될까요?",
-    helperText: "3분이면 먼저 맡길 일과\n조심할 점이 나옵니다.",
+    helperText: "3분이면 먼저 해볼 일과\n조심할 점이 나옵니다.",
     previewTitle: "오늘 확인할 것",
     previewItems: ["먼저 해볼 일", "조심할 표현", "마지막 확인 방식"],
     primaryCta: "시작하기",
@@ -162,7 +162,7 @@ export const quickDiagnosisSteps = [
   {
     id: "selectedJob",
     label: "맡겨볼 일 선택",
-    question: "AI에게 먼저 맡길 일은?",
+    question: "먼저 해볼 일은?",
     options: [
       {
         value: "customer_reply",
@@ -194,31 +194,31 @@ export const quickDiagnosisSteps = [
   {
     id: "audience",
     label: "누가 보는지 선택",
-    question: "이 결과는 어디까지 나가나요?",
+    question: "누가 보게 되나요?",
     options: [
       {
         value: "customer",
-        label: "고객에게 보냅니다",
+        label: "고객",
         subtitle: "답변·안내·상담 메시지",
       },
       {
         value: "institution",
-        label: "기관에 제출합니다",
+        label: "기관·심사위원",
         subtitle: "지원사업·심사·공식 문서",
       },
       {
         value: "executive",
-        label: "대표나 팀장에게 보고합니다",
+        label: "대표·팀장",
         subtitle: "내부 의사결정 자료",
       },
       {
         value: "internal",
-        label: "내부에서만 봅니다",
+        label: "내부 팀원",
         subtitle: "팀 공유·정리용",
       },
       {
         value: "unknown",
-        label: "아직 모르겠습니다",
+        label: "아직 모름",
         subtitle: "일단 써보고 정하려고요",
       },
     ],
@@ -226,7 +226,7 @@ export const quickDiagnosisSteps = [
   {
     id: "concern",
     label: "걱정되는 점 선택",
-    question: "가장 찝찝한 건?",
+    question: "가장 신경 쓰이는 건?",
     options: [
       {
         value: "privacy",
@@ -263,7 +263,7 @@ export const quickDiagnosisSteps = [
   {
     id: "review",
     label: "확인 방식 선택",
-    question: "마지막 확인은?",
+    question: "마지막엔 누가 보나요?",
     options: [
       {
         value: "always",
@@ -305,27 +305,27 @@ export const personaValueMap = {
 export const workspaceMap = {
   customer_reply: {
     title: "고객 문의 답변",
-    cta: "고객답변 1건 체험하기",
+    cta: "고객답변 1건 확인해보기",
     path: "/workspace/?job=customer_reply",
   },
   grant_doc: {
     title: "사업계획서 문장",
-    cta: "사업계획서 문장 검수해보기",
+    cta: "사업계획서 문장 확인해보기",
     path: "/workspace/?job=grant_doc",
   },
   marketing_copy: {
     title: "마케팅 문구",
-    cta: "마케팅 문구 검수해보기",
+    cta: "마케팅 문구 확인해보기",
     path: "/workspace/?job=marketing_copy",
   },
   internal_summary: {
     title: "회의록 요약",
-    cta: "업무요약 AI 체험하기",
+    cta: "회의록 요약 확인해보기",
     path: "/workspace/?job=internal_summary",
   },
   proposal_doc: {
     title: "제안서 문장",
-    cta: "제안서 문장 검수해보기",
+    cta: "제안서 문장 확인해보기",
     path: "/workspace/?job=proposal_doc",
   },
 } as const satisfies Record<
@@ -377,15 +377,13 @@ const bandCopy = {
     status: "조건부 시작",
     headline: "작게 시작해도 됩니다. 보내기 전 확인만 꼭 하세요.",
     label: "조건을 두고 시작하기 좋은 상태",
-    message:
-      "AI를 못 쓸 상태는 아닙니다. 다만 밖으로 나가는 내용은 한 번 더 보는 편이 좋습니다.",
+    message: "밖으로 나가는 내용은 한 번 더 보는 편이 좋습니다.",
   },
   needs_verification: {
     status: "먼저 확인",
     headline: "바로 넓게 쓰기엔 아직 이릅니다.",
     label: "확인이 더 필요한 상태",
-    message:
-      "작은 업무에서 몇 번 써보고, 어떤 부분을 고쳐야 하는지 먼저 보는 게 좋습니다.",
+    message: "작은 업무에서 몇 번 써보고, 고칠 부분을 먼저 보는 게 좋습니다.",
   },
   hold: {
     status: "기준 먼저",
@@ -411,7 +409,7 @@ const audienceWatchOut = {
   customer: "고객에게 보내기 전 확인이 필요해요",
   institution: "제출 전 표현을 한 번 더 봐야 해요",
   executive: "보고용 문서는 근거가 중요해요",
-  internal: "내부 공유 범위를 먼저 정해야 해요",
+  internal: "내부 공유 전 범위 확인이 필요해요",
   unknown: "누가 볼지 모르면 확인 기준도 흔들려요",
 } as const satisfies Record<QuickDiagnosisAudience, string>;
 
@@ -449,8 +447,8 @@ export function calculateQuickDiagnosisResult(
     recommendedJob: answers.selectedJob,
     workspaceTitle: workspace.title,
     workspaceCta: workspace.cta,
-    valueTitle: "AgentProof에서 시작하면",
-    valueText: "답변 만들기와 보내기 전 확인을 같이 할 수 있습니다.",
+    valueTitle: "AgentProof에서 하면 좋은 점",
+    valueText: "답변을 만들고,\n보내기 전 확인할 부분을 같이 볼 수 있습니다.",
     valueBullets: ["어떻게 고쳤는지", "실제로 썼는지", "사람이 봤는지"],
     personaValue: personaValueMap[answers.persona],
   };

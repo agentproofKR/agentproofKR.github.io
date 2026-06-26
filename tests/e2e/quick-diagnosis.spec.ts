@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 const scenarioA = [
   "직접 쓰고 있어요",
   "고객 문의 답변",
-  "고객에게 보냅니다",
+  "고객",
   "개인정보",
   "기준이 없습니다",
 ] as const;
@@ -25,9 +25,9 @@ test("quick diagnosis completes without PII and routes to the selected workspace
       name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
     }),
   ).toBeVisible();
-  await expect(page.getByText(/3분이면 먼저 맡길 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
+  await expect(page.getByText(/3분이면 먼저 해볼 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
   await expect(page.getByText("오늘 확인할 것")).toBeVisible();
-  await expect(page.getByText("먼저 해볼 일")).toBeVisible();
+  await expect(page.getByText("먼저 해볼 일", { exact: true })).toBeVisible();
   await expect(page.getByText("조심할 표현")).toBeVisible();
   await expect(page.getByText("마지막 확인 방식")).toBeVisible();
   await expect(page.getByText("회사명·이메일·고객정보 입력 없음")).toBeVisible();
@@ -45,7 +45,7 @@ test("quick diagnosis completes without PII and routes to the selected workspace
   const optionHeights = await page.locator("[data-quick-option]").evaluateAll((nodes) =>
     nodes.map((node) => Math.round(node.getBoundingClientRect().height)),
   );
-  expect(Math.max(...optionHeights)).toBeLessThanOrEqual(86);
+  expect(Math.max(...optionHeights)).toBeLessThanOrEqual(78);
 
   for (const label of scenarioA) {
     await page.getByRole("button", { name: label }).click();
@@ -58,11 +58,23 @@ test("quick diagnosis completes without PII and routes to the selected workspace
   await expect(page.getByText("개인정보가 섞일 수 있어요")).toBeVisible();
   await expect(page.getByText("고객에게 보내기 전 확인이 필요해요")).toBeVisible();
   await expect(page.getByText("확인 방식이 사람마다 달라질 수 있어요")).toBeVisible();
-  await expect(page.getByText("AgentProof에서 시작하면")).toBeVisible();
-  await expect(page.getByText("답변 만들기와 보내기 전 확인을 같이 할 수 있습니다.")).toBeVisible();
+  await expect(page.getByText("AgentProof에서 하면 좋은 점")).toBeVisible();
+  await expect(page.getByText(/답변을 만들고,\s*보내기 전 확인할 부분을 같이 볼 수 있습니다\./)).toBeVisible();
   await expect(page.getByText("어떻게 고쳤는지")).toBeVisible();
   await expect(page.getByRole("button", { name: "다시 해보기" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "더 자세히 보고 싶다면" })).toBeVisible();
+
+  const resultOrder = await page.locator("main").evaluate((node) => {
+    const text = node.textContent ?? "";
+    return {
+      primaryCta: text.indexOf("고객답변 1건 확인해보기"),
+      valueSection: text.indexOf("AgentProof에서 하면 좋은 점"),
+      advancedSection: text.indexOf("더 자세히 보고 싶다면"),
+    };
+  });
+  expect(resultOrder.primaryCta).toBeGreaterThan(-1);
+  expect(resultOrder.valueSection).toBeGreaterThan(resultOrder.primaryCta);
+  expect(resultOrder.advancedSection).toBeGreaterThan(resultOrder.valueSection);
 
   const events = await page.evaluate(() => window.dataLayer);
   const eventText = JSON.stringify(events);
@@ -72,16 +84,19 @@ test("quick diagnosis completes without PII and routes to the selected workspace
   expect(eventText).not.toContain("company");
   expect(eventText).not.toContain("memo");
 
-  await page.getByRole("link", { name: "고객답변 1건 체험하기" }).click();
+  await page.getByRole("link", { name: "고객답변 1건 확인해보기" }).click();
   await expect(page).toHaveURL(/\/workspace\/\?job=customer_reply$/);
   await expect(
     page.getByRole("heading", {
-      name: /선택한 일부터\s*작게 써볼 수 있게 준비 중입니다\./,
+      name: /고객 문의 답변,\s*먼저 1건만 확인해보세요\./,
     }),
   ).toBeVisible();
-  await expect(page.getByText("선택한 일", { exact: true })).toBeVisible();
-  await expect(page.getByText("고객 문의 답변")).toBeVisible();
-  await expect(page.getByText("실제로 썼는지 남기기")).toBeVisible();
+  await expect(page.getByText("초안 만들기")).toBeVisible();
+  await expect(page.getByText("AI로 빠르게 시작")).toBeVisible();
+  await expect(page.getByText("보내기 전 확인")).toBeVisible();
+  await expect(page.getByText("조심할 표현 보기")).toBeVisible();
+  await expect(page.getByText("고친 내용 남기기")).toBeVisible();
+  await expect(page.getByText("나중에 설명하기 쉽게")).toBeVisible();
   await expect(page.getByText("보내기 전 확인할 부분 보기")).toHaveCount(0);
 });
 
@@ -142,11 +157,11 @@ test("workspace placeholder keeps every job CTA route useful", async ({ page }) 
 
   for (const [job, title] of jobs) {
     await page.goto(`/workspace/?job=${job}`);
-    await expect(page.getByRole("heading", { name: /선택한 일부터/ })).toBeVisible();
-    await expect(page.getByText(title)).toBeVisible();
-    await expect(page.getByText("AI 초안 만들기")).toBeVisible();
-    await expect(page.getByText("보내기 전 확인하기")).toBeVisible();
-    await expect(page.getByText("더 나은 표현으로 고치기")).toBeVisible();
-    await expect(page.getByText("실제로 썼는지 남기기")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: new RegExp(`${title},\\s*먼저 1건만 확인해보세요\\.`) }),
+    ).toBeVisible();
+    await expect(page.getByText("초안 만들기")).toBeVisible();
+    await expect(page.getByText("보내기 전 확인")).toBeVisible();
+    await expect(page.getByText("고친 내용 남기기")).toBeVisible();
   }
 });

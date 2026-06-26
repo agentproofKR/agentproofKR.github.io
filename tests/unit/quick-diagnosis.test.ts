@@ -15,7 +15,7 @@ describe("quick diagnosis premium mobile content", () => {
     expect(intro).toMatchObject({
       id: "intro",
       title: "AI로 만든 답변,\n그냥 보내도 될까요?",
-      helperText: "3분이면 먼저 맡길 일과\n조심할 점이 나옵니다.",
+      helperText: "3분이면 먼저 해볼 일과\n조심할 점이 나옵니다.",
       previewTitle: "오늘 확인할 것",
       previewItems: ["먼저 해볼 일", "조심할 표현", "마지막 확인 방식"],
       primaryCta: "시작하기",
@@ -47,11 +47,11 @@ describe("quick diagnosis premium mobile content", () => {
       { label: "마케팅 문구", subtitle: "오해·과장 확인" },
       { label: "회의록 요약", subtitle: "공유 범위 확인" },
       { label: "제안서 문장", subtitle: "가격·보장 표현 확인" },
-      { label: "고객에게 보냅니다", subtitle: "답변·안내·상담 메시지" },
-      { label: "기관에 제출합니다", subtitle: "지원사업·심사·공식 문서" },
-      { label: "대표나 팀장에게 보고합니다", subtitle: "내부 의사결정 자료" },
-      { label: "내부에서만 봅니다", subtitle: "팀 공유·정리용" },
-      { label: "아직 모르겠습니다", subtitle: "일단 써보고 정하려고요" },
+      { label: "고객", subtitle: "답변·안내·상담 메시지" },
+      { label: "기관·심사위원", subtitle: "지원사업·심사·공식 문서" },
+      { label: "대표·팀장", subtitle: "내부 의사결정 자료" },
+      { label: "내부 팀원", subtitle: "팀 공유·정리용" },
+      { label: "아직 모름", subtitle: "일단 써보고 정하려고요" },
       { label: "개인정보", subtitle: "고객정보가 섞일까 봐" },
       { label: "틀린 답변", subtitle: "잘못된 말을 보낼까 봐" },
       { label: "과장된 표현", subtitle: "너무 세게 말할까 봐" },
@@ -63,6 +63,20 @@ describe("quick diagnosis premium mobile content", () => {
       { label: "각자 알아서 봅니다", subtitle: "정해진 방식은 없어요" },
       { label: "거의 안 봅니다", subtitle: "만든 사람이 바로 써요" },
       { label: "기준이 없습니다", subtitle: "아직 정해둔 게 없어요" },
+    ]);
+  });
+
+  it("uses short product-like questions for the quick flow", () => {
+    const questions = quickDiagnosisSteps
+      .slice(1)
+      .map((step) => ("question" in step ? step.question : ""));
+
+    expect(questions).toEqual([
+      "지금 상황은?",
+      "먼저 해볼 일은?",
+      "누가 보게 되나요?",
+      "가장 신경 쓰이는 건?",
+      "마지막엔 누가 보나요?",
     ]);
   });
 });
@@ -91,8 +105,8 @@ describe("quick diagnosis scoring", () => {
       "고객에게 보내기 전 확인이 필요해요",
       "확인 방식이 사람마다 달라질 수 있어요",
     ]);
-    expect(result.workspaceCta).toBe("고객답변 1건 체험하기");
-    expect(result.valueTitle).toBe("AgentProof에서 시작하면");
+    expect(result.workspaceCta).toBe("고객답변 1건 확인해보기");
+    expect(result.valueTitle).toBe("AgentProof에서 하면 좋은 점");
     expect(result.valueBullets).toEqual([
       "어떻게 고쳤는지",
       "실제로 썼는지",
@@ -120,7 +134,7 @@ describe("quick diagnosis scoring", () => {
     expect(result.bandMessage).toBe(
       "내부용이거나 확인 방식이 있는 업무부터 써볼 수 있습니다.",
     );
-    expect(result.workspaceCta).toBe("업무요약 AI 체험하기");
+    expect(result.workspaceCta).toBe("회의록 요약 확인해보기");
     expect(result.workspaceTitle).toBe("회의록 요약");
   });
 
@@ -141,7 +155,7 @@ describe("quick diagnosis scoring", () => {
       "제출 전 표현을 한 번 더 봐야 해요",
       "근거 없는 성과 표현을 조심해야 해요",
     ]);
-    expect(result.workspaceCta).toBe("사업계획서 문장 검수해보기");
+    expect(result.workspaceCta).toBe("사업계획서 문장 확인해보기");
   });
 
   it("keeps unknown proposal risk helpful instead of judgmental", () => {

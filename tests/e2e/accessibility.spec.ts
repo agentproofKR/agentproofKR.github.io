@@ -55,6 +55,6 @@ test("keyboard users can start the survey and move through the first question", 
   await page.getByRole("button", { name: "직접 쓰고 있어요" }).focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("heading", { name: "AI에게 먼저 맡길 일은?" }),
+    page.getByRole("heading", { name: "먼저 해볼 일은?" }),
   ).toBeVisible();
 });

@@ -364,12 +364,17 @@ function ResultView({
         <ProgressIndicator current={6} />
         <p className={styles.quickStatusPill}>{result.statusPill}</p>
         <h1 id="quick-result-title">{result.resultHeadline}</h1>
-        <div className={styles.quickScoreCard}>
-          <span>진단 점수</span>
-          <strong>{displayScore}점</strong>
-          <b>{result.bandLabel}</b>
+        <div className={styles.quickResultSummary}>
+          <div className={styles.quickScoreCard}>
+            <span>진단 점수</span>
+            <strong>{displayScore}점</strong>
+            <b>{result.bandLabel}</b>
+          </div>
+          <section className={styles.quickRecommendation}>
+            <span>먼저 해볼 일</span>
+            <h2>{result.workspaceTitle}</h2>
+          </section>
         </div>
-        <p className={styles.quickResultLead}>{result.bandMessage}</p>
         <section className={styles.quickResultSection}>
           <h2>조심할 점</h2>
           <ol className={styles.quickWatchList}>
@@ -377,20 +382,6 @@ function ResultView({
               <li key={item}>{item}</li>
             ))}
           </ol>
-        </section>
-        <section className={styles.quickRecommendation}>
-          <span>먼저 해볼 일</span>
-          <h2>{result.workspaceTitle}</h2>
-        </section>
-        <section className={styles.quickValueCard}>
-          <h2>{result.valueTitle}</h2>
-          <p>{result.valueText}</p>
-          <span>작게 남길 수 있는 것</span>
-          <ul>
-            {result.valueBullets.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
         </section>
         <div className={styles.quickActions}>
           <Link
@@ -411,6 +402,20 @@ function ResultView({
         <p className={styles.quickDisclaimer}>
           간단 진단 결과입니다. 법률·보안 자문은 아닙니다.
         </p>
+        <section className={styles.quickValueCard}>
+          <h2>{result.valueTitle}</h2>
+          <p>
+            {result.valueText.split("\n").map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
+          <span>작게 남길 수 있는 것</span>
+          <ul>
+            {result.valueBullets.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
         <div className={styles.quickFooterActions}>
           <button className={styles.quickGhostButton} type="button" onClick={onRestart}>
             다시 해보기
