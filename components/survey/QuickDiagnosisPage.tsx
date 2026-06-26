@@ -37,11 +37,11 @@ const answerSteps = quickDiagnosisSteps.slice(1) as readonly Extract<
 
 const progressLabels = [
   "시작",
-  "입장 선택",
-  "맡겨볼 일 선택",
-  "누가 보는지 선택",
-  "걱정되는 점 선택",
-  "확인 방식 선택",
+  "입장",
+  "확인 대상",
+  "사용처",
+  "걱정",
+  "마지막 확인",
   "결과",
 ] as const;
 
@@ -347,13 +347,13 @@ function ResultView({
     });
   };
 
-  const trackTrialClick = () => {
+  const trackPilotClick = () => {
     trackEvent("quick_diagnosis_consult_click", {
       persona: answers.persona,
       selectedJob: answers.selectedJob,
       band: result.band,
       assuranceScore: result.assuranceScore,
-      ctaType: "trial_30_days",
+      ctaType: "pilot",
       quickDiagnosisVersion,
     });
   };
@@ -366,17 +366,16 @@ function ResultView({
         <h1 id="quick-result-title">{result.resultHeadline}</h1>
         <div className={styles.quickResultSummary}>
           <div className={styles.quickScoreCard}>
-            <span>진단 점수</span>
             <strong>{displayScore}점</strong>
-            <b>{result.bandLabel}</b>
+            <b>· {result.bandLabel}</b>
           </div>
           <section className={styles.quickRecommendation}>
-            <span>먼저 해볼 일</span>
+            <span>먼저 확인할 내용</span>
             <h2>{result.workspaceTitle}</h2>
           </section>
         </div>
         <section className={styles.quickResultSection}>
-          <h2>조심할 점</h2>
+          <h2>확인하면 좋은 부분</h2>
           <ol className={styles.quickWatchList}>
             {result.watchOut.map((item) => (
               <li key={item}>{item}</li>
@@ -393,14 +392,14 @@ function ResultView({
           </Link>
           <Link
             className={styles.quickSecondaryLink}
-            href={workspace.path}
-            onClick={trackTrialClick}
+            href="mailto:agentproof.ai@gmail.com?subject=AgentProof%20%ED%8C%8C%EC%9D%BC%EB%9F%BF%20%EB%AC%B8%EC%9D%98"
+            onClick={trackPilotClick}
           >
-            30일 동안 써보고 판단하기
+            파일럿 문의하기
           </Link>
         </div>
         <p className={styles.quickDisclaimer}>
-          간단 진단 결과입니다. 법률·보안 자문은 아닙니다.
+          간단 체크 결과입니다. 법률·보안 자문은 아닙니다.
         </p>
         <section className={styles.quickValueCard}>
           <h2>{result.valueTitle}</h2>
@@ -409,7 +408,6 @@ function ResultView({
               <span key={line}>{line}</span>
             ))}
           </p>
-          <span>작게 남길 수 있는 것</span>
           <ul>
             {result.valueBullets.map((item) => (
               <li key={item}>{item}</li>
@@ -491,19 +489,19 @@ function AdvancedSurveyLinks() {
       aria-labelledby="advanced-surveys-title"
     >
       <h2 id="advanced-surveys-title">더 자세히 보고 싶다면</h2>
-      <p>3분 진단은 첫 업무를 고르는 입구입니다.</p>
+      <p>간단 체크는 첫 문서와 답변을 고르는 입구입니다.</p>
       <div className={styles.quickAdvancedGrid}>
         <Link href="/survey/practitioner/" onClick={() => trackClick("practitioner")}>
-          <strong>실무자 진단</strong>
-          <span>답변을 쓸 때 조심할 점을 봅니다.</span>
+          <strong>실무자 체크</strong>
+          <span>실제로 쓸 때 볼 내용을 확인합니다.</span>
         </Link>
         <Link href="/survey/leader/" onClick={() => trackClick("leader")}>
-          <strong>대표·도입 담당자 진단</strong>
-          <span>어떤 일부터 허용할지 봅니다.</span>
+          <strong>대표·도입 담당자 체크</strong>
+          <span>회사 기준을 정할 때 볼 내용을 확인합니다.</span>
         </Link>
         <Link href="/survey/security/" onClick={() => trackClick("security")}>
-          <strong>보안·정책 담당자 진단</strong>
-          <span>개인정보와 기준을 봅니다.</span>
+          <strong>보안·정책 담당자 체크</strong>
+          <span>개인정보와 확인 기준을 점검합니다.</span>
         </Link>
       </div>
     </section>

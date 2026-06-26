@@ -35,13 +35,13 @@ test("renders the simplified landing flow and routes CTAs to the unified survey"
 
   const headerCta = page
     .getByRole("banner")
-    .getByRole("link", { name: /AI 활용 진단/ });
+    .getByRole("link", { name: /무료 체크/ });
   await expect(headerCta).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("link", { name: "AI 업무 자가진단 시작" }),
   ).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "AI 활용 진단" }).first(),
+    page.getByRole("link", { name: "무료 체크" }).first(),
   ).toHaveAttribute("href", "/survey/");
   await expect(
     page.getByRole("button", { name: "대시보드 보기" }),
@@ -76,14 +76,14 @@ test("links each landing problem card to the unified survey with problem intent"
   ).toHaveAttribute("href", "/survey/?problem=security");
 });
 
-test("keeps the brand and AI diagnosis CTA fixed while moving through the page", async ({
+test("keeps the brand and quick check CTA fixed while moving through the page", async ({
   page,
 }) => {
   await page.goto("/");
 
   const header = page.getByRole("banner");
   const brand = header.getByRole("link", { name: /AgentProof/ });
-  const cta = header.getByRole("link", { name: /AI 활용 진단/ });
+  const cta = header.getByRole("link", { name: /무료 체크/ });
   await expect(brand).toBeVisible();
   await expect(cta).toBeVisible();
 

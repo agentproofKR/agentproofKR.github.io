@@ -52,22 +52,22 @@ async function completeSurvey(
   );
 }
 
-test("homepage CTAs route to the unified 3-minute survey", async ({
+test("homepage CTAs route to the quick check", async ({
   page,
 }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("banner").getByRole("link", { name: /AI 활용 진단/ }),
+    page.getByRole("banner").getByRole("link", { name: /무료 체크/ }),
   ).toHaveAttribute("href", "/survey/");
   await page
     .getByRole("banner")
-    .getByRole("link", { name: /AI 활용 진단/ })
+    .getByRole("link", { name: /무료 체크/ })
     .click();
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
     page.getByRole("heading", {
-      name: /AI로 만든 답변,\s*그냥 보내도 될까요\?/,
+      name: /그대로 써도\s*괜찮을까요\?/,
     }),
   ).toBeVisible();
 });
@@ -82,12 +82,14 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText(/3분이면 먼저 해볼 일과\s*조심할 점이 나옵니다\./)).toBeVisible();
+  await expect(
+    page.getByText(/답변·문장·문서를 쓰기 전에\s*확인할 내용만 빠르게 보여드려요\./),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "시작하기" }).click();
+  await page.getByRole("button", { name: "바로 확인하기" }).click();
   await expect(page).toHaveURL(/\/survey\//);
   await expect(
-    page.getByRole("heading", { name: "지금 상황은?" }),
+    page.getByRole("heading", { name: "어떤 입장인가요?" }),
   ).toBeVisible();
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
@@ -97,7 +99,7 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
-test("survey pages keep the brand and AI diagnosis CTA fixed", async ({
+test("survey pages keep the brand and quick check CTA fixed", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 1200 });
@@ -105,7 +107,7 @@ test("survey pages keep the brand and AI diagnosis CTA fixed", async ({
 
   const header = page.getByRole("banner");
   const brand = header.getByRole("link", { name: /AgentProof/ });
-  const cta = header.getByRole("link", { name: /AI 활용 진단/ });
+  const cta = header.getByRole("link", { name: /무료 체크/ });
   await expect(brand).toBeVisible();
   await expect(cta).toBeVisible();
 

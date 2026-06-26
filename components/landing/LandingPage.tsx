@@ -27,7 +27,7 @@ const faqs = [
   ["얼마나 걸리나요?", "대부분 3분 안에 끝납니다."],
   ["무엇을 확인하나요?", "AI 답변의 근거, 위험 테스트, 승인 기록을 봅니다."],
   ["AI Agent를 안 써도 되나요?", "네. ChatGPT나 Copilot만 써도 됩니다."],
-  ["무료인가요?", "AI 활용 진단은 무료입니다."],
+  ["무료인가요?", "무료 체크는 바로 시작할 수 있습니다."],
   ["결과가 보안 인증인가요?", "아니요. 빠른 자가 확인용입니다."],
 ] as const;
 
@@ -133,7 +133,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                   href="/survey/"
                   onClick={() => trackSurveyCta("hero")}
                 >
-                  AI 활용 진단
+                  무료 체크
                 </Link>
                 <button
                   className={styles.textLink}
@@ -302,7 +302,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     href="/survey/"
                     onClick={() => trackSurveyCta("process")}
                   >
-                    AI 활용 진단
+                    무료 체크
                   </Link>
                   <p>결과 확인 뒤 필요한 다음 단계를 선택합니다.</p>
                 </div>
@@ -384,7 +384,7 @@ export function LandingPage({ showVisualBaseline = false }: LandingPageProps) {
                     href="/survey/"
                     onClick={() => trackSurveyCta("final")}
                   >
-                    AI 활용 진단
+                    무료 체크
                   </Link>
                   <a
                     className={`${styles.button} ${styles.buttonOutline} ${styles.buttonLarge}`}

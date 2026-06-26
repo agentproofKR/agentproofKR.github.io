@@ -28,7 +28,7 @@ export function SurveyHeader() {
           />
         </Link>
         <Link className={styles.surveyHeaderCta} href="/survey/">
-          AI 활용 진단
+          무료 체크
         </Link>
       </div>
     </header>

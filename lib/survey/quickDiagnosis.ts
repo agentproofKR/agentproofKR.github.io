@@ -93,7 +93,7 @@ export type QuickDiagnosisStep =
     }
   | {
       id: "selectedJob";
-      label: "맡겨볼 일 선택";
+      label: "확인 대상 선택";
       question: string;
       options: readonly Option<QuickDiagnosisJob>[];
     }
@@ -120,32 +120,32 @@ export const quickDiagnosisSteps = [
   {
     id: "intro",
     label: "시작",
-    title: "AI로 만든 답변,\n그냥 보내도 될까요?",
-    helperText: "3분이면 먼저 해볼 일과\n조심할 점이 나옵니다.",
-    previewTitle: "오늘 확인할 것",
-    previewItems: ["먼저 해볼 일", "조심할 표현", "마지막 확인 방식"],
-    primaryCta: "시작하기",
-    trustNote: "회사명·이메일·고객정보 입력 없음",
+    title: "그대로 써도\n괜찮을까요?",
+    helperText: "답변·문장·문서를 쓰기 전에\n확인할 내용만 빠르게 보여드려요.",
+    previewTitle: "1분 체크",
+    previewItems: ["어디에 쓰는지", "무엇이 걱정되는지", "마지막에 누가 보는지"],
+    primaryCta: "바로 확인하기",
+    trustNote: "회사명·이메일·고객정보는 묻지 않아요.",
   },
   {
     id: "persona",
     label: "입장 선택",
-    question: "지금 상황은?",
+    question: "어떤 입장인가요?",
     options: [
       {
         value: "worker",
         label: "직접 쓰고 있어요",
-        subtitle: "내가 만든 답변이 괜찮은지 보고 싶어요",
+        subtitle: "내가 쓴 문장이 괜찮은지 보고 싶어요",
       },
       {
         value: "team_lead",
-        label: "팀원들이 쓰기 시작했어요",
-        subtitle: "어디까지 허용할지 고민돼요",
+        label: "팀에서 쓰고 있어요",
+        subtitle: "어디까지 허용할지 정해야 해요",
       },
       {
         value: "owner",
-        label: "대표 입장에서 보고 있어요",
-        subtitle: "막을지, 허용할지 판단해야 해요",
+        label: "대표·관리자예요",
+        subtitle: "회사 기준을 정해야 해요",
       },
       {
         value: "policy_manager",
@@ -154,135 +154,135 @@ export const quickDiagnosisSteps = [
       },
       {
         value: "grant_writer",
-        label: "제출 문서를 준비 중이에요",
-        subtitle: "사업계획서나 지원사업 문서가 필요해요",
+        label: "제출 문서가 필요해요",
+        subtitle: "사업계획서나 지원사업 문서예요",
       },
     ],
   },
   {
     id: "selectedJob",
-    label: "맡겨볼 일 선택",
-    question: "먼저 해볼 일은?",
+    label: "확인 대상 선택",
+    question: "무엇을 확인할까요?",
     options: [
       {
         value: "customer_reply",
-        label: "고객 문의 답변",
-        subtitle: "보내기 전 표현 확인",
+        label: "고객 답변",
+        subtitle: "안내·상담 메시지",
       },
       {
         value: "grant_doc",
         label: "사업계획서 문장",
-        subtitle: "과장·근거 확인",
+        subtitle: "지원사업·심사용 문장",
       },
       {
         value: "marketing_copy",
-        label: "마케팅 문구",
-        subtitle: "오해·과장 확인",
+        label: "광고·홍보 문구",
+        subtitle: "SNS·상세페이지 문구",
       },
       {
         value: "internal_summary",
         label: "회의록 요약",
-        subtitle: "공유 범위 확인",
+        subtitle: "내부 공유용 정리",
       },
       {
         value: "proposal_doc",
         label: "제안서 문장",
-        subtitle: "가격·보장 표현 확인",
+        subtitle: "가격·조건·보장 표현",
       },
     ],
   },
   {
     id: "audience",
     label: "누가 보는지 선택",
-    question: "누가 보게 되나요?",
+    question: "어디에 쓰이나요?",
     options: [
       {
         value: "customer",
-        label: "고객",
+        label: "고객에게 보냅니다",
         subtitle: "답변·안내·상담 메시지",
       },
       {
         value: "institution",
-        label: "기관·심사위원",
-        subtitle: "지원사업·심사·공식 문서",
+        label: "기관에 제출합니다",
+        subtitle: "지원사업·심사 문서",
       },
       {
         value: "executive",
-        label: "대표·팀장",
+        label: "대표·팀장에게 보고합니다",
         subtitle: "내부 의사결정 자료",
       },
       {
         value: "internal",
-        label: "내부 팀원",
-        subtitle: "팀 공유·정리용",
+        label: "팀 안에서만 봅니다",
+        subtitle: "내부 공유·정리용",
       },
       {
         value: "unknown",
-        label: "아직 모름",
-        subtitle: "일단 써보고 정하려고요",
+        label: "아직 정하지 않았습니다",
+        subtitle: "먼저 확인해보고 싶어요",
       },
     ],
   },
   {
     id: "concern",
     label: "걱정되는 점 선택",
-    question: "가장 신경 쓰이는 건?",
+    question: "무엇이 가장 걱정되나요?",
     options: [
       {
         value: "privacy",
         label: "개인정보",
-        subtitle: "고객정보가 섞일까 봐",
+        subtitle: "고객정보가 섞일 수 있어서",
       },
       {
         value: "wrong_answer",
-        label: "틀린 답변",
-        subtitle: "잘못된 말을 보낼까 봐",
+        label: "틀린 내용",
+        subtitle: "잘못 안내할 수 있어서",
       },
       {
         value: "exaggeration",
-        label: "과장된 표현",
-        subtitle: "너무 세게 말할까 봐",
+        label: "과한 표현",
+        subtitle: "너무 세게 보일 수 있어서",
       },
       {
         value: "no_policy",
-        label: "기준 없음",
-        subtitle: "어디까지 써도 되는지 몰라서",
+        label: "기준이 없음",
+        subtitle: "어디까지 써도 될지 몰라서",
       },
       {
         value: "no_evidence",
-        label: "남는 기록 없음",
+        label: "남는 기록이 없음",
         subtitle: "나중에 설명하기 어려워서",
       },
       {
         value: "unknown_risk",
         label: "잘 모르겠음",
-        subtitle: "뭐가 위험한지도 애매해서",
+        subtitle: "무엇을 조심해야 할지 몰라서",
       },
     ],
   },
   {
     id: "review",
     label: "확인 방식 선택",
-    question: "마지막엔 누가 보나요?",
+    question: "마지막 확인은 어떻게 하나요?",
     options: [
       {
         value: "always",
-        label: "항상 사람이 봅니다",
-        subtitle: "보내기 전 확인해요",
+        label: "항상 확인합니다",
+        subtitle: "쓰기 전에 사람이 봐요",
       },
       {
         value: "important_only",
-        label: "중요한 것만 봅니다",
-        subtitle: "민감한 건 따로 봐요",
+        label: "중요한 것만 확인합니다",
+        subtitle: "민감한 내용만 따로 봐요",
       },
       {
         value: "individual",
-        label: "각자 알아서 봅니다",
+        label: "각자 확인합니다",
         subtitle: "정해진 방식은 없어요",
       },
       {
         value: "rarely",
-        label: "거의 안 봅니다",
+        label: "거의 확인하지 않습니다",
         subtitle: "만든 사람이 바로 써요",
       },
       {
@@ -295,37 +295,37 @@ export const quickDiagnosisSteps = [
 ] as const satisfies readonly QuickDiagnosisStep[];
 
 export const personaValueMap = {
-  worker: "오늘 바로 쓸 때, 어떤 문장을 조심해야 하는지 확인할 수 있습니다.",
-  team_lead: "팀원이 만든 답변을 어디까지 볼지 기준을 잡는 데 도움이 됩니다.",
-  owner: "어떤 일부터 허용할지 작게 판단할 수 있습니다.",
-  policy_manager: "개인정보와 외부 발송이 섞이는 일을 먼저 나눠볼 수 있습니다.",
-  grant_writer: "제출 전 과장 표현이나 근거 부족 문장을 먼저 확인할 수 있습니다.",
+  worker: "내가 쓴 문장을 쓰기 전에 확인할 수 있습니다.",
+  team_lead: "팀에서 쓸 때 필요한 기준을 정리할 수 있습니다.",
+  owner: "회사 기준을 정할 때 볼 내용을 확인할 수 있습니다.",
+  policy_manager: "개인정보와 내부자료가 섞이는지 볼 수 있습니다.",
+  grant_writer: "제출 전 과한 표현과 근거를 확인할 수 있습니다.",
 } as const satisfies Record<QuickDiagnosisPersona, string>;
 
 export const workspaceMap = {
   customer_reply: {
-    title: "고객 문의 답변",
-    cta: "고객답변 1건 확인해보기",
+    title: "고객 답변",
+    cta: "고객 답변 확인하기",
     path: "/workspace/?job=customer_reply",
   },
   grant_doc: {
     title: "사업계획서 문장",
-    cta: "사업계획서 문장 확인해보기",
+    cta: "사업계획서 문장 확인하기",
     path: "/workspace/?job=grant_doc",
   },
   marketing_copy: {
-    title: "마케팅 문구",
-    cta: "마케팅 문구 확인해보기",
+    title: "광고·홍보 문구",
+    cta: "광고 문구 확인하기",
     path: "/workspace/?job=marketing_copy",
   },
   internal_summary: {
     title: "회의록 요약",
-    cta: "회의록 요약 확인해보기",
+    cta: "회의록 요약 확인하기",
     path: "/workspace/?job=internal_summary",
   },
   proposal_doc: {
     title: "제안서 문장",
-    cta: "제안서 문장 확인해보기",
+    cta: "제안서 문장 확인하기",
     path: "/workspace/?job=proposal_doc",
   },
 } as const satisfies Record<
@@ -369,26 +369,26 @@ const reviewRisk = {
 const bandCopy = {
   ready: {
     status: "시작 가능",
-    headline: "작은 일부터 시작하기 좋아 보여요.",
-    label: "작게 시작하기 좋은 상태",
-    message: "내부용이거나 확인 방식이 있는 업무부터 써볼 수 있습니다.",
+    headline: "작은 문서부터 시작해도 괜찮아 보여요.",
+    label: "시작하기 좋은 상태",
+    message: "내부용이거나 확인 방식이 있는 문서부터 써볼 수 있습니다.",
   },
   conditional: {
-    status: "조건부 시작",
-    headline: "작게 시작해도 됩니다. 보내기 전 확인만 꼭 하세요.",
-    label: "조건을 두고 시작하기 좋은 상태",
+    status: "한 번 더 확인",
+    headline: "그대로 쓰기 전, 한 번만 더 확인하세요.",
+    label: "확인하고 쓰기 좋은 상태",
     message: "밖으로 나가는 내용은 한 번 더 보는 편이 좋습니다.",
   },
   needs_verification: {
-    status: "먼저 확인",
-    headline: "바로 넓게 쓰기엔 아직 이릅니다.",
+    status: "확인 필요",
+    headline: "바로 쓰기엔 확인할 부분이 있어요.",
     label: "확인이 더 필요한 상태",
-    message: "작은 업무에서 몇 번 써보고, 고칠 부분을 먼저 보는 게 좋습니다.",
+    message: "작은 문서에서 몇 번 써보고, 고칠 부분을 먼저 보는 게 좋습니다.",
   },
   hold: {
-    status: "기준 먼저",
-    headline: "쓰기 전에 기준부터 잡는 게 좋습니다.",
-    label: "기준 정리가 먼저 필요한 상태",
+    status: "기준 필요",
+    headline: "쓰기 전에 기준부터 정하는 게 좋겠어요.",
+    label: "기준이 먼저 필요한 상태",
     message: "어떤 일에 쓰고, 누가 마지막에 볼지 먼저 정하는 편이 좋습니다.",
   },
 } as const satisfies Record<
@@ -397,31 +397,31 @@ const bandCopy = {
 >;
 
 const concernWatchOut = {
-  privacy: "개인정보가 섞일 수 있어요",
-  wrong_answer: "틀린 답변이 나갈 수 있어요",
-  exaggeration: "말이 과장될 수 있어요",
-  no_policy: "참고할 기준이 부족해요",
-  no_evidence: "나중에 설명할 기록이 부족해요",
-  unknown_risk: "뭐가 위험한지 애매한 상태예요",
+  privacy: "개인정보가 섞였는지",
+  wrong_answer: "틀린 내용은 없는지",
+  exaggeration: "표현이 과하지 않은지",
+  no_policy: "참고할 기준이 있는지",
+  no_evidence: "나중에 설명할 기록이 남는지",
+  unknown_risk: "무엇을 확인해야 할지 정해졌는지",
 } as const satisfies Record<QuickDiagnosisConcern, string>;
 
 const audienceWatchOut = {
-  customer: "고객에게 보내기 전 확인이 필요해요",
-  institution: "제출 전 표현을 한 번 더 봐야 해요",
-  executive: "보고용 문서는 근거가 중요해요",
-  internal: "내부 공유 전 범위 확인이 필요해요",
-  unknown: "누가 볼지 모르면 확인 기준도 흔들려요",
+  customer: "고객에게 보내기 전에 한 번 더 봤는지",
+  institution: "제출 전 표현을 다시 봤는지",
+  executive: "보고용 근거가 충분한지",
+  internal: "내부 공유 범위가 맞는지",
+  unknown: "어디에 쓸지 정해졌는지",
 } as const satisfies Record<QuickDiagnosisAudience, string>;
 
 const jobWatchOut = {
-  customer_reply: "환불·계약 표현을 조심해야 해요",
-  grant_doc: "근거 없는 성과 표현을 조심해야 해요",
-  marketing_copy: "과장 광고처럼 보일 수 있어요",
-  internal_summary: "민감정보가 섞일 수 있어요",
-  proposal_doc: "가격·보장 표현을 조심해야 해요",
+  customer_reply: "환불·계약 표현은 괜찮은지",
+  grant_doc: "근거 없는 성과 표현은 없는지",
+  marketing_copy: "과장 광고처럼 보이지 않는지",
+  internal_summary: "민감정보가 들어가지 않았는지",
+  proposal_doc: "가격·보장 표현은 괜찮은지",
 } as const satisfies Record<QuickDiagnosisJob, string>;
 
-const reviewWatchOut = "확인 방식이 사람마다 달라질 수 있어요";
+const reviewWatchOut = "사람마다 다르게 확인하고 있지 않은지";
 
 export function calculateQuickDiagnosisResult(
   answers: QuickDiagnosisAnswers,
@@ -447,9 +447,9 @@ export function calculateQuickDiagnosisResult(
     recommendedJob: answers.selectedJob,
     workspaceTitle: workspace.title,
     workspaceCta: workspace.cta,
-    valueTitle: "AgentProof에서 하면 좋은 점",
-    valueText: "답변을 만들고,\n보내기 전 확인할 부분을 같이 볼 수 있습니다.",
-    valueBullets: ["어떻게 고쳤는지", "실제로 썼는지", "사람이 봤는지"],
+    valueTitle: "AgentProof에서 확인하면",
+    valueText: "문장을 만들고,\n쓰기 전에 볼 내용을 같이 확인할 수 있어요.",
+    valueBullets: ["어떻게 고쳤는지", "실제로 썼는지", "사람이 확인했는지"],
     personaValue: personaValueMap[answers.persona],
   };
 }
@@ -490,7 +490,7 @@ export function deriveWatchOutItems(answers: QuickDiagnosisAnswers): string[] {
     addUnique(items, audienceWatchOut.internal);
   }
   if (items.length < 3) {
-    addUnique(items, "사람이 한 번 볼 일을 정해두면 좋아요");
+    addUnique(items, "사람이 확인할 부분이 정해졌는지");
   }
 
   return items.slice(0, 3);
