@@ -67,7 +67,7 @@ test("homepage CTAs route to the quick check", async ({
   await expect(page).toHaveURL(/\/survey\/$/);
   await expect(
     page.getByRole("heading", {
-      name: /AI를 업무에 써도 될지,\s*지금 바로 확인해보세요/,
+      name: /AI,\s*업무에 써도 될까\?/,
     }),
   ).toBeVisible();
 });
@@ -82,9 +82,9 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
     "/survey/?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ai_readiness&utm_content=leader_01",
   );
 
-  await expect(page.getByText("진단 후 바로 확인할 수 있는 것")).toBeVisible();
+  await expect(page.getByText("무료 1분 체크")).toBeVisible();
   await expect(page.getByRole("heading", { name: /역할에 맞는 점검/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "무료 체크 시작" }).click();
+  await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page).toHaveURL(/\/survey\//);
   await expect(
     page.getByRole("heading", { name: /어떤 업무에\s*AI를 도입하나요\?/ }),
@@ -120,7 +120,7 @@ test("survey page uses the fixed home header and keeps the phone card logo-free"
     phoneCard.getByRole("link", { name: "AgentProof 홈" }),
   ).toHaveCount(0);
   await expect(page.getByText("시작", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "무료 체크 시작" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "시작하기" })).toBeVisible();
 
   await page.mouse.wheel(0, 1200);
   await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();

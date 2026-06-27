@@ -43,8 +43,6 @@ export type ReferenceDiagnosisScreen = {
   title: string;
   subcopy?: string;
   pill?: string;
-  previewTitle?: string;
-  previewItems?: readonly string[];
   trustNote?: string;
   analysisText?: string;
   riskTitle?: string;
@@ -56,18 +54,11 @@ export const referenceDiagnosisScreens = [
   {
     id: "awareness",
     stageLabel: "시작",
-    title: "AI를 업무에 써도 될지,\n지금 바로 확인해보세요",
-    subcopy:
-      "1분이면\n먼저 써볼 업무와 사람이 확인해야 할 부분을 알려드립니다.",
-    pill: "받을 수 있는 AI 도입 지원금",
-    previewTitle: "진단 후 바로 확인할 수 있는 것",
-    previewItems: [
-      "먼저 써볼 업무",
-      "사람이 꼭 봐야 할 부분",
-      "도입 전 확인할 점",
-    ],
-    cta: "무료 체크 시작",
-    trustNote: "회사명·이메일 입력 없이 바로 확인",
+    title: "AI,\n업무에 써도 될까?",
+    subcopy: "무료 1분 체크",
+    pill: "+ AI 도입 지원금",
+    cta: "시작하기",
+    trustNote: "연락처 입력 없음",
   },
   {
     id: "work",

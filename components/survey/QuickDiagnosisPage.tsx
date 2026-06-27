@@ -228,16 +228,6 @@ function AwarenessScreen({ onStart }: { onStart: () => void }) {
         </p>
       ) : null}
       {screen.pill ? <p className={styles.referenceSupportPill}>{screen.pill}</p> : null}
-      {screen.previewTitle && screen.previewItems ? (
-        <div className={styles.referencePreviewBox}>
-          <p>{screen.previewTitle}</p>
-          <ul>
-            {screen.previewItems.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
       <button className={styles.referencePrimaryButton} type="button" onClick={onStart}>
         {screen.cta}
       </button>
