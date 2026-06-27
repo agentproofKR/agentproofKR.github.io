@@ -76,13 +76,13 @@ export const referenceDiagnosisScreens = [
     stageLabel: "리포트",
     title: "안심 점수",
     riskTitle: "가장 위험한 한 줄",
-    cta: "정밀 검증 신청",
+    cta: "30일 업무 검증 문의하기",
   },
   {
     id: "validation",
     stageLabel: "전환",
-    title: "정밀 검증 신청",
-    cta: "신청 보내기",
+    title: "30일 업무 검증 문의",
+    cta: "문의 보내기",
   },
   {
     id: "monitoring",

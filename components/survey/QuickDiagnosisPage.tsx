@@ -18,6 +18,7 @@ import {
   getDefaultControlState,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
+  workspaceMap,
   workOptions,
   type AssuranceResult,
   type ControlState,
@@ -153,6 +154,7 @@ export function QuickDiagnosisPage() {
           {screenIndex === 3 ? (
             <ScoreScreen
               result={result}
+              selectedWork={selectedWork}
               onBack={() => goToScreen(2)}
               onNext={() => goToScreen(4)}
             />
@@ -173,7 +175,10 @@ export function QuickDiagnosisPage() {
             <MonitoringScreen onBack={() => goToScreen(4)} onShare={shareReport} />
           ) : null}
         </section>
-        <LegacySurveyLinks />
+        <NextStepSection
+          selectedWork={selectedWork}
+          onValidationRequest={() => goToScreen(4)}
+        />
       </div>
     </main>
   );
@@ -372,14 +377,39 @@ function ControlToggle({
 
 function ScoreScreen({
   result,
+  selectedWork,
   onBack,
   onNext,
 }: {
   result: AssuranceResult;
+  selectedWork: WorkType;
   onBack: () => void;
   onNext: () => void;
 }) {
   const screen = referenceDiagnosisScreens[3];
+  const workspace = workspaceMap[selectedWork];
+  const reviewAdvice = getHumanReviewAdvice(selectedWork);
+
+  const trackWorkspaceClick = () => {
+    trackEvent("quick_diagnosis_workspace_cta_click", {
+      mode: "reference",
+      selectedWork,
+      score: result.score,
+      ctaType: "score_primary",
+      quickDiagnosisVersion,
+    });
+  };
+
+  const requestValidation = () => {
+    trackEvent("quick_diagnosis_consult_click", {
+      mode: "reference",
+      selectedWork,
+      score: result.score,
+      ctaType: "score_secondary",
+      quickDiagnosisVersion,
+    });
+    onNext();
+  };
 
   return (
     <div className={styles.referenceScreen}>
@@ -405,8 +435,29 @@ function ScoreScreen({
           <strong>{result.subsidyEstimate}</strong>
         </div>
       </div>
+      <div className={styles.referenceResultSummary}>
+        <section>
+          <span>먼저 시험해볼 업무</span>
+          <strong>{workspace.title}</strong>
+        </section>
+        <section>
+          <span>사람이 봐야 할 경우</span>
+          <strong>{reviewAdvice}</strong>
+        </section>
+      </div>
       <ReferenceActions onBack={onBack}>
-        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+        <Link
+          className={styles.referencePrimaryButton}
+          href={workspace.path}
+          onClick={trackWorkspaceClick}
+        >
+          추천 업무 체험하기
+        </Link>
+        <button
+          className={`${styles.referencePrimaryButton} ${styles.referenceSecondaryButton}`}
+          type="button"
+          onClick={requestValidation}
+        >
           {screen.cta}
         </button>
       </ReferenceActions>
@@ -477,7 +528,7 @@ function ValidationScreen({
         </div>
       </div>
       <div className={styles.referencePriceBox}>
-        <span>정밀 검증 · 업무당</span>
+        <span>30일 업무 검증 · 업무당</span>
         <strong>₩50–150만 / 건</strong>
       </div>
       <ReferenceActions onBack={onBack}>
@@ -550,22 +601,93 @@ function ReferenceActions({
   );
 }
 
-function LegacySurveyLinks() {
+function NextStepSection({
+  selectedWork,
+  onValidationRequest,
+}: {
+  selectedWork: WorkType;
+  onValidationRequest: () => void;
+}) {
+  const workspace = workspaceMap[selectedWork];
+
+  const requestValidation = () => {
+    trackEvent("quick_diagnosis_consult_click", {
+      mode: "reference",
+      selectedWork,
+      ctaType: "next_steps",
+      quickDiagnosisVersion,
+    });
+    onValidationRequest();
+  };
+
   return (
     <section
-      className={styles.referenceLegacy}
-      id="legacy-surveys"
-      aria-labelledby="legacy-surveys-title"
+      className={styles.referenceNextSteps}
+      id="next-steps"
+      aria-labelledby="next-steps-title"
     >
-      <a href="#legacy-surveys" className={styles.referenceLegacyAnchor}>
-        기존 역할별 진단 보기
-      </a>
-      <h2 id="legacy-surveys-title">역할별 진단</h2>
-      <div>
-        <Link href="/survey/practitioner/">실무자 진단</Link>
-        <Link href="/survey/leader/">대표·도입 담당자 진단</Link>
-        <Link href="/survey/security/">보안·정책 담당자 진단</Link>
+      <h2 id="next-steps-title">다음 단계</h2>
+      <div className={styles.referenceNextStepGrid}>
+        <Link
+          className={styles.referenceNextStepCard}
+          href={workspace.path}
+          onClick={() =>
+            trackEvent("quick_diagnosis_workspace_cta_click", {
+              mode: "reference",
+              selectedWork,
+              ctaType: "next_steps",
+              quickDiagnosisVersion,
+            })
+          }
+        >
+          <strong>추천 업무 체험하기</strong>
+          <span>진단 결과에 맞는 업무를 1회 써봅니다.</span>
+          <i aria-hidden="true">체험하기</i>
+        </Link>
+        <button
+          className={styles.referenceNextStepCard}
+          type="button"
+          onClick={requestValidation}
+        >
+          <strong>30일 업무 검증 문의하기</strong>
+          <span>실제 사용 기록으로 도입 여부를 판단합니다.</span>
+          <i aria-hidden="true">문의하기</i>
+        </button>
+        <a className={styles.referenceNextStepCard} href="#ai-policy-sample">
+          <strong>AI 사용 기준 샘플 보기</strong>
+          <span>직원들이 어디까지 AI를 써도 되는지 기준을 확인합니다.</span>
+          <i aria-hidden="true">샘플 보기</i>
+        </a>
+      </div>
+      <details className={styles.referencePolicySample} id="ai-policy-sample">
+        <summary>AI 사용 기준 샘플</summary>
+        <ul>
+          <li>고객에게 나가는 문장은 사람이 확인합니다.</li>
+          <li>개인정보가 들어간 자료는 입력하지 않습니다.</li>
+          <li>가격·환불·보장 표현은 기록을 남깁니다.</li>
+        </ul>
+      </details>
+      <div className={styles.referenceRoleLinks}>
+        <span>역할별로 더 자세히 보고 싶다면</span>
+        <div>
+          <Link href="/survey/practitioner/">실무자</Link>
+          <Link href="/survey/leader/">대표·도입 담당자</Link>
+          <Link href="/survey/security/">보안·정책 담당자</Link>
+        </div>
       </div>
     </section>
   );
+}
+
+function getHumanReviewAdvice(workType: WorkType): string {
+  if (workType === "payment_refund_review") {
+    return "결제·환불 결정 전에는 사람이 확인해야 합니다.";
+  }
+  if (workType === "customer_reply") {
+    return "고객에게 보내기 전 마지막 확인이 필요합니다.";
+  }
+  if (workType === "document_generation") {
+    return "제출 문서는 근거와 표현을 다시 봐야 합니다.";
+  }
+  return "추천 기준이 바뀌면 사람이 한 번 봐야 합니다.";
 }

@@ -108,7 +108,8 @@ test("survey page keeps the brand inside the reference phone card", async ({
   await expect(page.getByRole("button", { name: "무료 진단 시작" })).toBeVisible();
 
   await page.mouse.wheel(0, 1200);
-  await expect(page.getByRole("link", { name: "기존 역할별 진단 보기" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();
+  await expect(page.getByText("역할별로 더 자세히 보고 싶다면")).toBeVisible();
 
   const metrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,

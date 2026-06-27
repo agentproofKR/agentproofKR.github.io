@@ -226,6 +226,13 @@
   text-align: center;
 }
 
+.referenceSecondaryButton {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 7%);
+  box-shadow: none;
+  color: rgb(255 255 255 / 88%);
+}
+
 .referenceOptionList {
   display: grid;
   gap: 10px;
@@ -469,6 +476,33 @@ button.referenceControlRow {
   font-weight: 830;
 }
 
+.referenceResultSummary {
+  display: grid;
+  gap: 9px;
+}
+
+.referenceResultSummary section {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 4%);
+  padding: 13px 14px;
+}
+
+.referenceResultSummary span {
+  color: rgb(255 255 255 / 54%);
+  font-size: 12px;
+  font-weight: 740;
+}
+
+.referenceResultSummary strong {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
 .referenceField {
   display: grid;
   gap: 8px;
@@ -597,9 +631,9 @@ button.referenceControlRow {
   font-weight: 720;
 }
 
-.referenceLegacy {
+.referenceNextSteps {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   border: 1px solid rgb(255 255 255 / 7%);
   border-radius: 20px;
   background: rgb(255 255 255 / 3%);
@@ -607,31 +641,105 @@ button.referenceControlRow {
   color: #ffffff;
 }
 
-.referenceLegacyAnchor {
-  color: rgb(255 255 255 / 66%);
-  font-size: 13px;
-  font-weight: 740;
-}
-
-.referenceLegacy h2 {
+.referenceNextSteps h2 {
   margin: 0;
-  color: rgb(255 255 255 / 82%);
-  font-size: 15px;
+  color: rgb(255 255 255 / 88%);
+  font-size: 16px;
+  font-weight: 780;
 }
 
-.referenceLegacy div {
+.referenceNextStepGrid {
   display: grid;
   gap: 8px;
 }
 
-.referenceLegacy a:not(.referenceLegacyAnchor) {
-  border: 1px solid rgb(255 255 255 / 9%);
-  border-radius: 14px;
-  background: rgb(255 255 255 / 4%);
-  padding: 10px 12px;
-  color: rgb(255 255 255 / 78%);
+.referenceNextStepCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 4.5%);
+  padding: 12px 13px;
+  color: #ffffff;
+  font: inherit;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.referenceNextStepCard strong {
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.referenceNextStepCard span {
+  grid-column: 1 / -1;
+  color: rgb(255 255 255 / 58%);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1.35;
+}
+
+.referenceNextStepCard i {
+  grid-column: 2;
+  grid-row: 1;
+  color: #ff74a0;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 780;
+}
+
+.referencePolicySample {
+  border-top: 1px solid rgb(255 255 255 / 7%);
+  padding-top: 10px;
+}
+
+.referencePolicySample summary {
+  cursor: pointer;
+  color: rgb(255 255 255 / 62%);
   font-size: 13px;
   font-weight: 690;
+}
+
+.referencePolicySample ul {
+  display: grid;
+  gap: 6px;
+  margin: 9px 0 0;
+  padding-left: 18px;
+  color: rgb(255 255 255 / 58%);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.referenceRoleLinks {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid rgb(255 255 255 / 7%);
+  padding-top: 10px;
+}
+
+.referenceRoleLinks span {
+  color: rgb(255 255 255 / 42%);
+  font-size: 12px;
+  font-weight: 680;
+}
+
+.referenceRoleLinks div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.referenceRoleLinks a {
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 3%);
+  padding: 6px 9px;
+  color: rgb(255 255 255 / 58%);
+  font-size: 12px;
+  font-weight: 650;
 }
 
 .referencePrimaryButton:focus-visible,
@@ -640,7 +748,9 @@ button.referenceControlRow {
 .referenceControlRow:focus-visible,
 .referenceField input:focus-visible,
 .referenceTiming button:focus-visible,
-.referenceLegacy a:focus-visible,
+.referenceNextStepCard:focus-visible,
+.referencePolicySample summary:focus-visible,
+.referenceRoleLinks a:focus-visible,
 .referenceBrand:focus-visible {
   outline: 3px solid rgb(255 255 255 / 82%);
   outline-offset: 3px;

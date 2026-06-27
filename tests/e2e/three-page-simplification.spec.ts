@@ -47,7 +47,8 @@ test.describe("three-page simplification", () => {
       page.getByRole("button", { name: "무료 진단 시작" }),
     ).toBeVisible();
 
-    await expect(page.getByRole("link", { name: "기존 역할별 진단 보기" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();
+    await expect(page.getByText("역할별로 더 자세히 보고 싶다면")).toBeVisible();
     await expect(page.locator("main")).not.toContainText("결과물");
     await expect(page.locator('input[type="text"], input[type="tel"]')).toHaveCount(0);
   });

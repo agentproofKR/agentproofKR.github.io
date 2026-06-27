@@ -74,8 +74,19 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   await expect(page.getByText("지원금")).toBeVisible();
   await expect(page.getByText("~₩3,000만")).toBeVisible();
 
-  await page.getByRole("button", { name: "정밀 검증 신청" }).click();
-  await expect(page.getByRole("heading", { name: "정밀 검증 신청" })).toBeVisible();
+  await expect(page.getByText("먼저 시험해볼 업무")).toBeVisible();
+  await expect(page.getByText("사람이 봐야 할 경우")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "추천 업무 체험하기", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "30일 업무 검증 문의하기", exact: true }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: "30일 업무 검증 문의하기", exact: true })
+    .click();
+  await expect(page.getByRole("heading", { name: "30일 업무 검증 문의" })).toBeVisible();
   await expect(page.getByLabel("담당자 · 결재자")).toHaveAttribute(
     "placeholder",
     "김대표 · 구매 결정권자",
@@ -84,10 +95,10 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   await page.getByLabel("담당자 · 결재자").fill("김대표");
   await page.getByLabel("연락처").fill("010-1234-5678");
   await page.getByRole("button", { name: "1개월" }).click();
-  await expect(page.getByText("정밀 검증 · 업무당")).toBeVisible();
+  await expect(page.getByText("30일 업무 검증 · 업무당")).toBeVisible();
   await expect(page.getByText("₩50–150만 / 건")).toBeVisible();
 
-  await page.getByRole("button", { name: "신청 보내기" }).click();
+  await page.getByRole("button", { name: "문의 보내기" }).click();
   await expect(page.getByRole("heading", { name: "모니터링" })).toBeVisible();
   await expect(page.getByText("최근 8주 · 도입 후 상시 점검됨")).toBeVisible();
   await expect(page.getByTestId("reference-monitoring-chart")).toBeVisible();
@@ -106,23 +117,45 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   expect(eventText).not.toContain("김대표");
 });
 
-test("reference diagnosis keeps detailed survey links secondary below the phone", async ({
+test("reference diagnosis prioritizes next-step actions over role-based links", async ({
   page,
 }) => {
   await page.goto("/survey/");
 
-  const advanced = page.getByRole("link", { name: "기존 역할별 진단 보기" });
-  await expect(advanced).toBeVisible();
-  await expect(advanced).toHaveAttribute("href", "#legacy-surveys");
-  await expect(page.getByRole("link", { name: "실무자 진단" })).toHaveAttribute(
+  await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();
+  await expect(page.getByText("진단 결과에 맞는 업무를 1회 써봅니다.")).toBeVisible();
+  await expect(
+    page.getByText("실제 사용 기록으로 도입 여부를 판단합니다."),
+  ).toBeVisible();
+  await expect(
+    page.getByText("직원들이 어디까지 AI를 써도 되는지 기준을 확인합니다."),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: /추천 업무 체험하기/ })).toHaveAttribute(
+    "href",
+    "/workspace/?job=customer_reply",
+  );
+  await expect(page.getByRole("button", { name: /30일 업무 검증 문의하기/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /AI 사용 기준 샘플 보기/ })).toHaveAttribute(
+    "href",
+    "#ai-policy-sample",
+  );
+
+  await expect(page.getByText("기존 역할별 진단 보기")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "역할별 진단" })).toHaveCount(0);
+  await expect(page.getByText("역할별로 더 자세히 보고 싶다면")).toBeVisible();
+  await expect(page.getByRole("link", { name: "실무자", exact: true })).toHaveAttribute(
     "href",
     "/survey/practitioner/",
   );
-  await expect(page.getByRole("link", { name: "대표·도입 담당자 진단" })).toHaveAttribute(
+  await expect(
+    page.getByRole("link", { name: "대표·도입 담당자", exact: true }),
+  ).toHaveAttribute(
     "href",
     "/survey/leader/",
   );
-  await expect(page.getByRole("link", { name: "보안·정책 담당자 진단" })).toHaveAttribute(
+  await expect(
+    page.getByRole("link", { name: "보안·정책 담당자", exact: true }),
+  ).toHaveAttribute(
     "href",
     "/survey/security/",
   );
