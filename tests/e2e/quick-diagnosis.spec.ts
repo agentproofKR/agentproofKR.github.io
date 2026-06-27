@@ -20,15 +20,27 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   await page.goto("/survey/?utm_source=linkedin&utm_campaign=reference_flow");
 
   await expect(
-    page.getByRole("heading", { name: /당신의 AI,\s*믿어도 되나요\?/ }),
+    page.getByRole("heading", {
+      name: /AI를 업무에 써도 될지,\s*지금 바로 확인해보세요/,
+    }),
   ).toBeVisible();
-  await expect(page.getByText("도입 전 · 무료 3초 진단")).toBeVisible();
-  await expect(page.getByText("+ 받을 수 있는 지원금")).toBeVisible();
+  await expect(page.getByText("1분이면")).toBeVisible();
+  await expect(
+    page.getByText("먼저 써볼 업무와 사람이 확인해야 할 부분을 알려드립니다."),
+  ).toBeVisible();
+  await expect(page.getByText("받을 수 있는 AI 도입 지원금")).toBeVisible();
+  await expect(page.getByText("진단 후 바로 확인할 수 있는 것")).toBeVisible();
+  await expect(page.getByText("먼저 써볼 업무", { exact: true })).toBeVisible();
+  await expect(page.getByText("사람이 꼭 봐야 할 부분", { exact: true })).toBeVisible();
+  await expect(page.getByText("도입 전 확인할 점", { exact: true })).toBeVisible();
+  await expect(page.getByText("회사명·이메일 입력 없이 바로 확인")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("당신의 AI");
+  await expect(page.locator("body")).not.toContainText("도입 전 · 무료 3초 진단");
   await expect(page.getByText("시작", { exact: true })).toBeVisible();
   await expect(page.getByTestId("reference-check-icon")).toBeVisible();
   await expect(page.locator('input[type="text"], input[type="tel"]')).toHaveCount(0);
 
-  await page.getByRole("button", { name: "무료 진단 시작" }).click();
+  await page.getByRole("button", { name: "무료 체크 시작" }).click();
   await expect(
     page.getByRole("heading", { name: /어떤 업무에\s*AI를 도입하나요\?/ }),
   ).toBeVisible();
@@ -170,7 +182,7 @@ for (const width of [360, 375, 390, 430]) {
 
     for (const action of [
       async () => undefined,
-      async () => page.getByRole("button", { name: "무료 진단 시작" }).click(),
+      async () => page.getByRole("button", { name: "무료 체크 시작" }).click(),
       async () => {
         await page.getByRole("button", { name: "결제·환불 심사" }).click();
         await page.getByRole("button", { name: "다음" }).click();

@@ -33,18 +33,17 @@ test.describe("three-page simplification", () => {
   }) => {
     await page.goto("/survey/");
 
-    await expect(page.getByText("+ 받을 수 있는 지원금")).toBeVisible();
+    await expect(page.getByText("받을 수 있는 AI 도입 지원금")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: /당신의 AI,\s*믿어도 되나요\?/,
+        name: /AI를 업무에 써도 될지,\s*지금 바로 확인해보세요/,
       }),
     ).toBeVisible();
-    await expect(page.locator("body")).toContainText(
-      "도입 전 · 무료 3초 진단",
-    );
+    await expect(page.locator("body")).toContainText("진단 후 바로 확인할 수 있는 것");
+    await expect(page.locator("body")).not.toContainText("도입 전 · 무료 3초 진단");
     await expect(
-      page.getByRole("button", { name: "무료 진단 시작" }),
+      page.getByRole("button", { name: "무료 체크 시작" }),
     ).toBeVisible();
 
     await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();

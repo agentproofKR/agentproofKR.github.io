@@ -32,10 +32,18 @@ describe("reference six-screen diagnosis content", () => {
 
   it("keeps the reference baseline copy for each screen", () => {
     expect(referenceDiagnosisScreens[0]).toMatchObject({
-      title: "당신의 AI,\n믿어도 되나요?",
-      subcopy: "도입 전 · 무료 3초 진단",
-      pill: "+ 받을 수 있는 지원금",
-      cta: "무료 진단 시작",
+      title: "AI를 업무에 써도 될지,\n지금 바로 확인해보세요",
+      subcopy:
+        "1분이면\n먼저 써볼 업무와 사람이 확인해야 할 부분을 알려드립니다.",
+      pill: "받을 수 있는 AI 도입 지원금",
+      previewTitle: "진단 후 바로 확인할 수 있는 것",
+      previewItems: [
+        "먼저 써볼 업무",
+        "사람이 꼭 봐야 할 부분",
+        "도입 전 확인할 점",
+      ],
+      cta: "무료 체크 시작",
+      trustNote: "회사명·이메일 입력 없이 바로 확인",
     });
     expect(referenceDiagnosisScreens[1]).toMatchObject({
       title: "어떤 업무에\nAI를 도입하나요?",

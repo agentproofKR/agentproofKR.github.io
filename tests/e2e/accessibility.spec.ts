@@ -44,7 +44,7 @@ test("keyboard users can start the survey and move through the first question", 
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);
 
-  const start = page.getByRole("button", { name: "무료 진단 시작" });
+  const start = page.getByRole("button", { name: "무료 체크 시작" });
   await start.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/survey\/$/);

@@ -138,7 +138,12 @@ export function QuickDiagnosisPage() {
       />
       <main id="top" className={`${styles.page} ${styles.referencePage}`}>
         <div className={styles.referenceShell}>
-          <section className={styles.referenceCard} aria-labelledby="reference-title">
+          <section
+            className={`${styles.referenceCard} ${
+              screenIndex === 0 ? styles.referenceIntroCard : ""
+            }`}
+            aria-labelledby="reference-title"
+          >
             <CardTopBar screenIndex={screenIndex} />
             {screenIndex === 0 ? <AwarenessScreen onStart={start} /> : null}
             {screenIndex === 1 ? (
@@ -206,7 +211,7 @@ function AwarenessScreen({ onStart }: { onStart: () => void }) {
   const screen = referenceDiagnosisScreens[0];
 
   return (
-    <div className={styles.referenceScreen}>
+    <div className={`${styles.referenceScreen} ${styles.referenceIntroScreen}`}>
       <div className={styles.referenceHeroIcon} data-testid="reference-check-icon">
         <span aria-hidden="true">✓</span>
       </div>
@@ -215,11 +220,30 @@ function AwarenessScreen({ onStart }: { onStart: () => void }) {
           <span key={line}>{line}</span>
         ))}
       </h1>
-      <p className={styles.referenceSubcopy}>{screen.subcopy}</p>
-      <p className={styles.referenceSupportPill}>{screen.pill}</p>
+      {screen.subcopy ? (
+        <p className={styles.referenceSubcopy}>
+          {screen.subcopy.split("\n").map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </p>
+      ) : null}
+      {screen.pill ? <p className={styles.referenceSupportPill}>{screen.pill}</p> : null}
+      {screen.previewTitle && screen.previewItems ? (
+        <div className={styles.referencePreviewBox}>
+          <p>{screen.previewTitle}</p>
+          <ul>
+            {screen.previewItems.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <button className={styles.referencePrimaryButton} type="button" onClick={onStart}>
         {screen.cta}
       </button>
+      {screen.trustNote ? (
+        <p className={styles.referenceTrustNote}>{screen.trustNote}</p>
+      ) : null}
     </div>
   );
 }
