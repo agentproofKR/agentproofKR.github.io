@@ -65,8 +65,8 @@ export const referenceDiagnosisScreens = [
   {
     id: "work",
     stageLabel: "업무",
-    title: "어떤 업무에\nAI를 써볼까요?",
-    subcopy: "업무마다 확인할 기준이 달라요",
+    title: "어떤 업무에\nAI를 쓸까요?",
+    subcopy: "업무마다 확인할 기준이 달라요.",
     cta: "다음",
   },
   {
@@ -210,6 +210,14 @@ const workRisk = {
   unknown: 9,
 } as const satisfies Record<WorkType, number>;
 
+const adoptionScopeTitles = {
+  customer_reply: "고객 답변에\nAI를 어디까지 쓸까요?",
+  grant_document: "제출 문서에\nAI를 어디까지 쓸까요?",
+  business_document: "문서 작성에\nAI를 어디까지 쓸까요?",
+  marketing_content: "마케팅 콘텐츠에\nAI를 어디까지 쓸까요?",
+  unknown: "먼저 어느 범위부터\n시작해볼까요?",
+} as const satisfies Record<WorkType, string>;
+
 const autonomyLabels = {
   high: "높음",
   medium: "보통",
@@ -222,6 +230,10 @@ export function getDefaultControlState(workType: WorkType): ControlState {
 
 export function getAutonomyLabel(autonomy: AutonomyLevel): string {
   return autonomyLabels[autonomy];
+}
+
+export function getAdoptionScopeTitle(workType: WorkType): string {
+  return adoptionScopeTitles[workType];
 }
 
 export function calculateAssuranceResult(

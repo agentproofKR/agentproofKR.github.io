@@ -14,6 +14,7 @@ import { Header } from "@/components/layout/Header";
 import { trackEvent } from "@/lib/analytics";
 import {
   calculateAssuranceResult,
+  getAdoptionScopeTitle,
   getAutonomyLabel,
   getDefaultControlState,
   quickDiagnosisVersion,
@@ -320,7 +321,13 @@ function ControlScreen({
 
   return (
     <div className={styles.referenceScreen}>
-      <h1 id="reference-title">{screen.title}</h1>
+      <h1 id="reference-title">
+        {getAdoptionScopeTitle(selectedWork)
+          .split("\n")
+          .map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+      </h1>
       <p className={styles.referenceSelectedWork}>업무 · {workLabel}</p>
       <div className={styles.referenceControlList}>
         <div className={styles.referenceControlRow}>

@@ -43,7 +43,7 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
 
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(
-    page.getByRole("heading", { name: /어떤 업무에\s*AI를 써볼까요\?/ }),
+    page.getByRole("heading", { name: /어떤 업무에\s*AI를 쓸까요\?/ }),
   ).toBeVisible();
   const secondScreenLayout = await page.evaluate(() => {
     const header = document.querySelector("header")?.getBoundingClientRect();
@@ -58,7 +58,7 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   expect(secondScreenLayout.cardTop).toBeGreaterThanOrEqual(
     secondScreenLayout.headerBottom,
   );
-  await expect(page.getByText("업무마다 확인할 기준이 달라요")).toBeVisible();
+  await expect(page.getByText("업무마다 확인할 기준이 달라요.")).toBeVisible();
   await expect(page.getByText("업무", { exact: true })).toBeVisible();
   await expect(page.locator("[data-reference-option]")).toHaveCount(5);
   await expect(page.getByRole("button", { name: /고객 문의 응대/ })).toBeVisible();
@@ -90,7 +90,11 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   expect(Math.max(...optionHeights)).toBeLessThanOrEqual(78);
 
   await page.getByRole("button", { name: "다음" }).click();
-  await expect(page.getByRole("heading", { name: "통제 상태 진단" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: /마케팅 콘텐츠에\s*AI를 어디까지 쓸까요\?/,
+    }),
+  ).toBeVisible();
   await expect(page.getByText("업무 · 마케팅 콘텐츠")).toBeVisible();
   await expect(page.getByText("자율성 범위")).toBeVisible();
   await expect(page.getByText("보통")).toBeVisible();
@@ -154,6 +158,54 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   expect(eventText).toContain("quick_diagnosis_complete");
   expect(eventText).not.toContain("010-1234-5678");
   expect(eventText).not.toContain("김대표");
+});
+
+test("selected work personalizes the adoption scope screen", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/survey/");
+
+  const cases = [
+    {
+      option: /고객 문의 응대/,
+      heading: /고객 답변에\s*AI를 어디까지 쓸까요\?/,
+      selected: "업무 · 고객 문의 응대",
+    },
+    {
+      option: /사업계획서·지원사업/,
+      heading: /제출 문서에\s*AI를 어디까지 쓸까요\?/,
+      selected: "업무 · 사업계획서·지원사업",
+    },
+    {
+      option: /보고서·문서 작성/,
+      heading: /문서 작성에\s*AI를 어디까지 쓸까요\?/,
+      selected: "업무 · 보고서·문서 작성",
+    },
+    {
+      option: /마케팅 콘텐츠/,
+      heading: /마케팅 콘텐츠에\s*AI를 어디까지 쓸까요\?/,
+      selected: "업무 · 마케팅 콘텐츠",
+    },
+    {
+      option: /아직 못 정했어요/,
+      heading: /먼저 어느 범위부터\s*시작해볼까요\?/,
+      selected: "업무 · 아직 못 정했어요",
+    },
+  ] as const;
+
+  await page.getByRole("button", { name: "시작하기" }).click();
+  await expect(page.getByRole("button", { name: "다음" })).toBeDisabled();
+
+  for (const item of cases) {
+    await page.getByRole("button", { name: item.option }).click();
+    await expect(page.getByRole("button", { name: "다음" })).toBeEnabled();
+    await page.getByRole("button", { name: "다음" }).click();
+    await expect(page.getByRole("heading", { name: item.heading })).toBeVisible();
+    await expect(page.getByText(item.selected)).toBeVisible();
+    await page.getByRole("button", { name: "이전" }).click();
+    await expect(
+      page.getByRole("heading", { name: /어떤 업무에\s*AI를 쓸까요\?/ }),
+    ).toBeVisible();
+  }
 });
 
 test("reference diagnosis prioritizes next-step actions over role-based links", async ({

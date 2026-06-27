@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   calculateAssuranceResult,
+  getAdoptionScopeTitle,
   getDefaultControlState,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
@@ -41,8 +42,8 @@ describe("reference six-screen diagnosis content", () => {
     expect(referenceDiagnosisScreens[0]).not.toHaveProperty("previewTitle");
     expect(referenceDiagnosisScreens[0]).not.toHaveProperty("previewItems");
     expect(referenceDiagnosisScreens[1]).toMatchObject({
-      title: "어떤 업무에\nAI를 써볼까요?",
-      subcopy: "업무마다 확인할 기준이 달라요",
+      title: "어떤 업무에\nAI를 쓸까요?",
+      subcopy: "업무마다 확인할 기준이 달라요.",
       cta: "다음",
     });
     expect(referenceDiagnosisScreens[2]).toMatchObject({
@@ -87,6 +88,24 @@ describe("reference six-screen diagnosis content", () => {
       },
       { value: "unknown", label: "아직 못 정했어요", subtitle: "추천을 받아볼게요" },
     ]);
+  });
+
+  it("personalizes the adoption scope title from the selected work", () => {
+    expect(getAdoptionScopeTitle("customer_reply")).toBe(
+      "고객 답변에\nAI를 어디까지 쓸까요?",
+    );
+    expect(getAdoptionScopeTitle("grant_document")).toBe(
+      "제출 문서에\nAI를 어디까지 쓸까요?",
+    );
+    expect(getAdoptionScopeTitle("business_document")).toBe(
+      "문서 작성에\nAI를 어디까지 쓸까요?",
+    );
+    expect(getAdoptionScopeTitle("marketing_content")).toBe(
+      "마케팅 콘텐츠에\nAI를 어디까지 쓸까요?",
+    );
+    expect(getAdoptionScopeTitle("unknown")).toBe(
+      "먼저 어느 범위부터\n시작해볼까요?",
+    );
   });
 });
 

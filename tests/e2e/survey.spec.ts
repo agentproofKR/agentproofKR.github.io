@@ -87,7 +87,7 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(page).toHaveURL(/\/survey\//);
   await expect(
-    page.getByRole("heading", { name: /어떤 업무에\s*AI를 써볼까요\?/ }),
+    page.getByRole("heading", { name: /어떤 업무에\s*AI를 쓸까요\?/ }),
   ).toBeVisible();
   expect(page.url()).not.toContain("answer");
   expect(page.url()).not.toContain("email");
