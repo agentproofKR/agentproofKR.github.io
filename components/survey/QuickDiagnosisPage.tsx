@@ -34,16 +34,17 @@ const timingOptions: readonly TimingOption[] = ["즉시", "1개월", "검토 중
 
 export function QuickDiagnosisPage() {
   const [screenIndex, setScreenIndex] = useState<ScreenIndex>(0);
-  const [selectedWork, setSelectedWork] = useState<WorkType>("customer_reply");
+  const [selectedWork, setSelectedWork] = useState<WorkType | null>(null);
   const [controlState, setControlState] = useState<ControlState>(
-    getDefaultControlState("customer_reply"),
+    getDefaultControlState("unknown"),
   );
+  const activeWork = selectedWork ?? "unknown";
   const [decisionMaker, setDecisionMaker] = useState("");
   const [contact, setContact] = useState("");
   const [timing, setTiming] = useState<TimingOption>("즉시");
   const result = useMemo(
-    () => calculateAssuranceResult(selectedWork, controlState),
-    [controlState, selectedWork],
+    () => calculateAssuranceResult(activeWork, controlState),
+    [activeWork, controlState],
   );
 
   useEffect(() => {
@@ -60,11 +61,14 @@ export function QuickDiagnosisPage() {
 
   const goToScreen = (nextIndex: ScreenIndex) => {
     setScreenIndex(nextIndex);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_step_view", {
       mode: "reference",
       step: referenceDiagnosisScreens[nextIndex].id,
-      selectedWork,
+      selectedWork: activeWork,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -96,7 +100,7 @@ export function QuickDiagnosisPage() {
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_complete", {
       mode: "reference",
-      selectedWork,
+      selectedWork: activeWork,
       score: result.score,
       band: result.band,
       quickDiagnosisVersion,
@@ -110,7 +114,7 @@ export function QuickDiagnosisPage() {
     event.preventDefault();
     trackEvent("quick_diagnosis_validation_submit", {
       mode: "reference",
-      selectedWork,
+      selectedWork: activeWork,
       timing,
       score: result.score,
       band: result.band,
@@ -122,7 +126,7 @@ export function QuickDiagnosisPage() {
   const shareReport = () => {
     trackEvent("quick_diagnosis_report_share_click", {
       mode: "reference",
-      selectedWork,
+      selectedWork: activeWork,
       score: result.score,
       quickDiagnosisVersion,
     });
@@ -157,7 +161,7 @@ export function QuickDiagnosisPage() {
             {screenIndex === 2 ? (
               <ControlScreen
                 controlState={controlState}
-                selectedWork={selectedWork}
+                selectedWork={activeWork}
                 onBack={() => goToScreen(1)}
                 onChange={setControlState}
                 onNext={showScore}
@@ -166,7 +170,7 @@ export function QuickDiagnosisPage() {
             {screenIndex === 3 ? (
               <ScoreScreen
                 result={result}
-                selectedWork={selectedWork}
+                selectedWork={activeWork}
                 onBack={() => goToScreen(2)}
                 onNext={() => goToScreen(4)}
               />
@@ -244,7 +248,7 @@ function WorkScreen({
   onNext,
   onSelect,
 }: {
-  selectedWork: WorkType;
+  selectedWork: WorkType | null;
   onBack: () => void;
   onNext: () => void;
   onSelect: (workType: WorkType) => void;
@@ -258,6 +262,9 @@ function WorkScreen({
           <span key={line}>{line}</span>
         ))}
       </h1>
+      {screen.subcopy ? (
+        <p className={styles.referenceQuestionHelper}>{screen.subcopy}</p>
+      ) : null}
       <div className={styles.referenceOptionList}>
         {workOptions.map((option) => {
           const selected = option.value === selectedWork;
@@ -271,14 +278,22 @@ function WorkScreen({
               type="button"
               onClick={() => onSelect(option.value)}
             >
-              <span>{option.label}</span>
+              <span className={styles.referenceOptionCopy}>
+                <span>{option.label}</span>
+                <small>{option.subtitle}</small>
+              </span>
               <b aria-hidden="true">{selected ? "✓" : "›"}</b>
             </button>
           );
         })}
       </div>
       <ReferenceActions onBack={onBack}>
-        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+        <button
+          className={styles.referencePrimaryButton}
+          disabled={selectedWork === null}
+          type="button"
+          onClick={onNext}
+        >
           {screen.cta}
         </button>
       </ReferenceActions>
@@ -610,15 +625,16 @@ function NextStepSection({
   selectedWork,
   onValidationRequest,
 }: {
-  selectedWork: WorkType;
+  selectedWork: WorkType | null;
   onValidationRequest: () => void;
 }) {
-  const workspace = workspaceMap[selectedWork];
+  const activeWork = selectedWork ?? "customer_reply";
+  const workspace = workspaceMap[activeWork];
 
   const requestValidation = () => {
     trackEvent("quick_diagnosis_consult_click", {
       mode: "reference",
-      selectedWork,
+      selectedWork: activeWork,
       ctaType: "next_steps",
       quickDiagnosisVersion,
     });
@@ -639,7 +655,7 @@ function NextStepSection({
           onClick={() =>
             trackEvent("quick_diagnosis_workspace_cta_click", {
               mode: "reference",
-              selectedWork,
+              selectedWork: activeWork,
               ctaType: "next_steps",
               quickDiagnosisVersion,
             })
@@ -685,14 +701,17 @@ function NextStepSection({
 }
 
 function getHumanReviewAdvice(workType: WorkType): string {
-  if (workType === "payment_refund_review") {
-    return "결제·환불 결정 전에는 사람이 확인해야 합니다.";
-  }
   if (workType === "customer_reply") {
     return "고객에게 보내기 전 마지막 확인이 필요합니다.";
   }
-  if (workType === "document_generation") {
+  if (workType === "grant_document") {
     return "제출 문서는 근거와 표현을 다시 봐야 합니다.";
   }
-  return "추천 기준이 바뀌면 사람이 한 번 봐야 합니다.";
+  if (workType === "business_document") {
+    return "보고에 쓰기 전 근거를 다시 봐야 합니다.";
+  }
+  if (workType === "marketing_content") {
+    return "외부에 공개하기 전 과한 표현을 봐야 합니다.";
+  }
+  return "업무를 정한 뒤 확인 기준을 잡아야 합니다.";
 }

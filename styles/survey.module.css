@@ -176,6 +176,15 @@
   display: block;
 }
 
+.referenceQuestionHelper {
+  margin: -6px 0 0;
+  color: rgb(255 255 255 / 54%);
+  font-size: 14px;
+  font-weight: 560;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
 .referenceHeroIcon {
   display: grid;
   width: 104px;
@@ -261,6 +270,14 @@
   text-align: center;
 }
 
+.referencePrimaryButton:disabled {
+  cursor: not-allowed;
+  border-color: rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 9%);
+  box-shadow: none;
+  color: rgb(255 255 255 / 42%);
+}
+
 .referenceSecondaryButton {
   border-color: rgb(255 255 255 / 14%);
   background: rgb(255 255 255 / 7%);
@@ -276,12 +293,12 @@
 .referenceOption {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  min-height: 58px;
+  min-height: 72px;
   align-items: center;
   border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 18px;
+  border-radius: 22px;
   background: rgb(255 255 255 / 5%);
-  padding: 0 15px 0 17px;
+  padding: 12px 15px 12px 17px;
   color: #ffffff;
   text-align: left;
   transition:
@@ -301,11 +318,26 @@
   transform: translateY(-1px);
 }
 
-.referenceOption span {
+.referenceOptionCopy {
+  display: grid;
+  gap: 4px;
   min-width: 0;
-  font-size: 17px;
+}
+
+.referenceOptionCopy > span {
+  min-width: 0;
+  font-size: 18px;
   font-weight: 720;
   line-height: 1.25;
+  word-break: keep-all;
+}
+
+.referenceOptionCopy > small {
+  min-width: 0;
+  color: rgb(255 255 255 / 52%);
+  font-size: 13px;
+  font-weight: 520;
+  line-height: 1.24;
   word-break: keep-all;
 }
 

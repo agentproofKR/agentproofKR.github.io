@@ -3,9 +3,10 @@ export const quickDiagnosisVersion =
 
 export type WorkType =
   | "customer_reply"
-  | "document_generation"
-  | "recommendation"
-  | "payment_refund_review";
+  | "grant_document"
+  | "business_document"
+  | "marketing_content"
+  | "unknown";
 
 export type AutonomyLevel = "high" | "medium" | "low";
 
@@ -14,6 +15,7 @@ export type ControlState = {
   behaviorLogging: boolean;
   humanReview: boolean;
   driftMonitoring: boolean;
+  riskLine: string;
 };
 
 export type AssuranceBand =
@@ -63,7 +65,8 @@ export const referenceDiagnosisScreens = [
   {
     id: "work",
     stageLabel: "업무",
-    title: "어떤 업무에\nAI를 도입하나요?",
+    title: "어떤 업무에\nAI를 써볼까요?",
+    subcopy: "업무마다 확인할 기준이 달라요",
     cta: "다음",
   },
   {
@@ -97,11 +100,28 @@ export const referenceDiagnosisScreens = [
 ] as const satisfies readonly ReferenceDiagnosisScreen[];
 
 export const workOptions = [
-  { value: "customer_reply", label: "고객 문의 응대" },
-  { value: "document_generation", label: "문서 자동 작성" },
-  { value: "recommendation", label: "상품·콘텐츠 추천" },
-  { value: "payment_refund_review", label: "결제·환불 심사" },
-] as const satisfies readonly { value: WorkType; label: string }[];
+  { value: "customer_reply", label: "고객 문의 응대", subtitle: "답변·상담·CS" },
+  {
+    value: "grant_document",
+    label: "사업계획서·지원사업",
+    subtitle: "제출 문서·신청서",
+  },
+  {
+    value: "business_document",
+    label: "보고서·문서 작성",
+    subtitle: "기획서·내부 문서",
+  },
+  {
+    value: "marketing_content",
+    label: "마케팅 콘텐츠",
+    subtitle: "SNS·블로그·상세페이지",
+  },
+  { value: "unknown", label: "아직 못 정했어요", subtitle: "추천을 받아볼게요" },
+] as const satisfies readonly {
+  value: WorkType;
+  label: string;
+  subtitle: string;
+}[];
 
 export const workspaceMap = {
   customer_reply: {
@@ -109,20 +129,25 @@ export const workspaceMap = {
     cta: "고객 문의 응대 확인하기",
     path: "/workspace/?job=customer_reply",
   },
-  document_generation: {
-    title: "문서 자동 작성",
-    cta: "문서 자동 작성 확인하기",
-    path: "/workspace/?job=document_generation",
+  grant_document: {
+    title: "사업계획서·지원사업",
+    cta: "사업계획서·지원사업 확인하기",
+    path: "/workspace/?job=grant_document",
   },
-  recommendation: {
-    title: "상품·콘텐츠 추천",
+  business_document: {
+    title: "보고서·문서 작성",
+    cta: "보고서·문서 작성 확인하기",
+    path: "/workspace/?job=business_document",
+  },
+  marketing_content: {
+    title: "마케팅 콘텐츠",
+    cta: "마케팅 콘텐츠 확인하기",
+    path: "/workspace/?job=marketing_content",
+  },
+  unknown: {
+    title: "추천 업무",
     cta: "추천 업무 확인하기",
-    path: "/workspace/?job=recommendation",
-  },
-  payment_refund_review: {
-    title: "결제·환불 심사",
-    cta: "결제·환불 심사 확인하기",
-    path: "/workspace/?job=payment_refund_review",
+    path: "/workspace/?job=unknown",
   },
 } as const satisfies Record<
   WorkType,
@@ -130,10 +155,13 @@ export const workspaceMap = {
 >;
 
 const legacyWorkspaceAliases = {
-  grant_doc: "document_generation",
-  marketing_copy: "recommendation",
-  internal_summary: "document_generation",
-  proposal_doc: "document_generation",
+  document_generation: "business_document",
+  recommendation: "marketing_content",
+  payment_refund_review: "customer_reply",
+  grant_doc: "grant_document",
+  marketing_copy: "marketing_content",
+  internal_summary: "business_document",
+  proposal_doc: "business_document",
 } as const satisfies Record<string, WorkType>;
 
 const defaultControlState = {
@@ -142,26 +170,45 @@ const defaultControlState = {
     behaviorLogging: true,
     humanReview: false,
     driftMonitoring: true,
+    riskLine: "사람 확인 없이 고객 답변 발송",
   },
-  document_generation: {
+  grant_document: {
+    autonomy: "medium",
+    behaviorLogging: false,
+    humanReview: true,
+    driftMonitoring: false,
+    riskLine: "근거 확인 없이 제출 문서 작성",
+  },
+  business_document: {
     autonomy: "medium",
     behaviorLogging: true,
     humanReview: true,
     driftMonitoring: false,
+    riskLine: "근거 부족한 보고 문장 사용",
   },
-  recommendation: {
+  marketing_content: {
     autonomy: "medium",
     behaviorLogging: true,
     humanReview: false,
     driftMonitoring: true,
+    riskLine: "과장 표현이 외부에 노출",
   },
-  payment_refund_review: {
-    autonomy: "high",
+  unknown: {
+    autonomy: "medium",
     behaviorLogging: false,
     humanReview: false,
     driftMonitoring: false,
+    riskLine: "AI 사용 업무와 확인 기준이 불명확",
   },
 } as const satisfies Record<WorkType, ControlState>;
+
+const workRisk = {
+  customer_reply: 12,
+  grant_document: 10,
+  business_document: 7,
+  marketing_content: 8,
+  unknown: 9,
+} as const satisfies Record<WorkType, number>;
 
 const autonomyLabels = {
   high: "높음",
@@ -188,10 +235,7 @@ export function calculateAssuranceResult(
   if (!controls.humanReview) score -= 22;
   if (!controls.driftMonitoring) score -= 12;
 
-  if (workType === "payment_refund_review") score -= 10;
-  if (workType === "customer_reply") score -= 8;
-  if (workType === "document_generation") score -= 5;
-  if (workType === "recommendation") score -= 6;
+  score -= workRisk[workType];
 
   const normalizedScore = clamp(score, 0, 100);
   const band = getAssuranceBand(normalizedScore);
@@ -200,7 +244,7 @@ export function calculateAssuranceResult(
     score: normalizedScore,
     band,
     bandLabel: bandLabels[band],
-    riskLine: getRiskLine(workType, controls),
+    riskLine: getRiskLine(controls),
     dailyLeakageEstimate: "₩180만",
     subsidyEstimate: "~₩3,000만",
   };
@@ -243,16 +287,8 @@ const bandLabels = {
   hold: "도입 보류",
 } as const satisfies Record<AssuranceBand, string>;
 
-function getRiskLine(workType: WorkType, controls: ControlState): string {
-  if (workType === "payment_refund_review" && !controls.humanReview) {
-    return "사람 검토 없이 환불 자동 승인";
-  }
-  if (workType === "recommendation" && !controls.behaviorLogging) {
-    return "행동 로그 없이 추천 기준 변경";
-  }
-  if (workType === "customer_reply" && !controls.humanReview) {
-    return "사람 검토 없이 고객 답변 발송";
-  }
+function getRiskLine(controls: ControlState): string {
+  if (controls.riskLine) return controls.riskLine;
   if (!controls.driftMonitoring) {
     return "드리프트 감시 없이 성능 하락 누적";
   }

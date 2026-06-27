@@ -43,29 +43,55 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
 
   await page.getByRole("button", { name: "시작하기" }).click();
   await expect(
-    page.getByRole("heading", { name: /어떤 업무에\s*AI를 도입하나요\?/ }),
+    page.getByRole("heading", { name: /어떤 업무에\s*AI를 써볼까요\?/ }),
   ).toBeVisible();
+  const secondScreenLayout = await page.evaluate(() => {
+    const header = document.querySelector("header")?.getBoundingClientRect();
+    const card = document
+      .querySelector('section[aria-labelledby="reference-title"]')
+      ?.getBoundingClientRect();
+    return {
+      cardTop: Math.round(card?.top ?? 0),
+      headerBottom: Math.round(header?.bottom ?? 0),
+    };
+  });
+  expect(secondScreenLayout.cardTop).toBeGreaterThanOrEqual(
+    secondScreenLayout.headerBottom,
+  );
+  await expect(page.getByText("업무마다 확인할 기준이 달라요")).toBeVisible();
   await expect(page.getByText("업무", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "고객 문의 응대" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "문서 자동 작성" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "상품·콘텐츠 추천" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "결제·환불 심사" })).toBeVisible();
+  await expect(page.locator("[data-reference-option]")).toHaveCount(5);
+  await expect(page.getByRole("button", { name: /고객 문의 응대/ })).toBeVisible();
+  await expect(page.getByText("답변·상담·CS")).toBeVisible();
+  await expect(page.getByRole("button", { name: /사업계획서·지원사업/ })).toBeVisible();
+  await expect(page.getByText("제출 문서·신청서")).toBeVisible();
+  await expect(page.getByRole("button", { name: /보고서·문서 작성/ })).toBeVisible();
+  await expect(page.getByText("기획서·내부 문서")).toBeVisible();
+  await expect(page.getByRole("button", { name: /마케팅 콘텐츠/ })).toBeVisible();
+  await expect(page.getByText("SNS·블로그·상세페이지")).toBeVisible();
+  await expect(page.getByRole("button", { name: /아직 못 정했어요/ })).toBeVisible();
+  await expect(page.getByText("추천을 받아볼게요")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("문서 자동 작성");
+  await expect(page.locator("body")).not.toContainText("상품·콘텐츠 추천");
+  await expect(page.locator("body")).not.toContainText("결제·환불 심사");
+  await expect(page.getByRole("button", { name: "다음" })).toBeDisabled();
 
-  await page.getByRole("button", { name: "상품·콘텐츠 추천" }).click();
-  await expect(page.getByRole("button", { name: "상품·콘텐츠 추천" })).toHaveAttribute(
+  await page.getByRole("button", { name: /마케팅 콘텐츠/ }).click();
+  await expect(page.getByRole("button", { name: /마케팅 콘텐츠/ })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
+  await expect(page.getByRole("button", { name: "다음" })).toBeEnabled();
   const optionHeights = await page
     .locator("[data-reference-option]")
     .evaluateAll((nodes) =>
       nodes.map((node) => Math.round(node.getBoundingClientRect().height)),
     );
-  expect(Math.max(...optionHeights)).toBeLessThanOrEqual(64);
+  expect(Math.max(...optionHeights)).toBeLessThanOrEqual(78);
 
   await page.getByRole("button", { name: "다음" }).click();
   await expect(page.getByRole("heading", { name: "통제 상태 진단" })).toBeVisible();
-  await expect(page.getByText("업무 · 상품·콘텐츠 추천")).toBeVisible();
+  await expect(page.getByText("업무 · 마케팅 콘텐츠")).toBeVisible();
   await expect(page.getByText("자율성 범위")).toBeVisible();
   await expect(page.getByText("보통")).toBeVisible();
   await expect(page.getByText("AI 분석 중 · 평균 3초")).toBeVisible();
@@ -78,10 +104,10 @@ test("reference diagnosis follows the six-screen buyer flow without early contac
   await page.getByRole("button", { name: "안심 점수 보기" }).click();
 
   await expect(page.getByRole("heading", { name: "안심 점수" })).toBeVisible();
-  await expect(page.getByText("64 / 100")).toBeVisible();
+  await expect(page.getByText("62 / 100")).toBeVisible();
   await expect(page.getByText("조건부 GO")).toBeVisible();
   await expect(page.getByText("가장 위험한 한 줄")).toBeVisible();
-  await expect(page.getByText("행동 로그 없이 추천 기준 변경")).toBeVisible();
+  await expect(page.getByText("과장 표현이 외부에 노출")).toBeVisible();
   await expect(page.getByText("일 누수")).toBeVisible();
   await expect(page.getByText("₩180만")).toBeVisible();
   await expect(page.getByText("지원금")).toBeVisible();
@@ -185,7 +211,7 @@ for (const width of [360, 375, 390, 430]) {
       async () => undefined,
       async () => page.getByRole("button", { name: "시작하기" }).click(),
       async () => {
-        await page.getByRole("button", { name: "결제·환불 심사" }).click();
+        await page.getByRole("button", { name: /마케팅 콘텐츠/ }).click();
         await page.getByRole("button", { name: "다음" }).click();
       },
       async () => page.getByRole("button", { name: "안심 점수 보기" }).click(),
