@@ -62,11 +62,12 @@
 }
 
 .referencePage {
+  --reference-header-height: 72px;
   min-height: 100vh;
   background:
     radial-gradient(circle at 50% 0%, rgb(255 59 122 / 12%), transparent 32rem),
     #05060a;
-  padding: 24px 16px 56px;
+  padding: calc(24px + var(--reference-header-height)) 16px 56px;
 }
 
 .referenceShell {
@@ -94,7 +95,7 @@
 .referenceTopBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 14px;
 }
 
@@ -2174,6 +2175,10 @@ button.referenceControlRow {
   .page {
     --survey-header-height: 62px;
     padding-top: calc(18px + var(--survey-header-height));
+  }
+
+  .referencePage {
+    --reference-header-height: 62px;
   }
 
   .surveyHeader {

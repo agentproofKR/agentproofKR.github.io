@@ -97,13 +97,28 @@ test("quick diagnosis preserves UTM and starts without putting answers in URLs",
   expect(JSON.stringify(events)).toContain("ai_readiness");
 });
 
-test("survey page keeps the brand inside the reference phone card", async ({
+test("survey page uses the fixed home header and keeps the phone card logo-free", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 1200 });
   await page.goto("/survey/");
 
-  await expect(page.getByRole("link", { name: /AgentProof/ })).toBeVisible();
+  const banner = page.getByRole("banner");
+  await expect(banner).toBeVisible();
+  await expect(banner.getByRole("link", { name: "AgentProof 홈" })).toHaveAttribute(
+    "href",
+    "/",
+  );
+  await expect(banner.getByRole("link", { name: "무료 체크" })).toHaveAttribute(
+    "href",
+    "/survey/",
+  );
+  await expect(banner).toHaveCSS("position", "fixed");
+
+  const phoneCard = page.locator('section[aria-labelledby="reference-title"]');
+  await expect(
+    phoneCard.getByRole("link", { name: "AgentProof 홈" }),
+  ).toHaveCount(0);
   await expect(page.getByText("시작", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "무료 진단 시작" })).toBeVisible();
 

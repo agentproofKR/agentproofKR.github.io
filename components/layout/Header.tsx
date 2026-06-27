@@ -5,13 +5,23 @@ import styles from "@/styles/landing.module.css";
 
 type HeaderProps = {
   onNavClick: (target: string) => void;
+  ctaHref?: string;
+  homeHref?: string;
+  navBaseHref?: string;
 };
 
-export function Header({ onNavClick }: HeaderProps) {
+export function Header({
+  ctaHref = "/survey/",
+  homeHref = "#top",
+  navBaseHref = "",
+  onNavClick,
+}: HeaderProps) {
+  const navHref = (target: string) => `${navBaseHref}${target}`;
+
   return (
     <header className={styles.siteHeader}>
       <div className={styles.navWrap}>
-        <a className={styles.brand} href="#top" aria-label="AgentProof 홈">
+        <a className={styles.brand} href={homeHref} aria-label="AgentProof 홈">
           <Image
             className={styles.brandMark}
             src="/agentproof-logo-mark.png"
@@ -32,19 +42,19 @@ export function Header({ onNavClick }: HeaderProps) {
           />
         </a>
         <nav className={styles.navLinks} aria-label="주요 메뉴">
-          <a href="#problem" onClick={() => onNavClick("#problem")}>
+          <a href={navHref("#problem")} onClick={() => onNavClick("#problem")}>
             문제
           </a>
-          <a href="#product" onClick={() => onNavClick("#product")}>
+          <a href={navHref("#product")} onClick={() => onNavClick("#product")}>
             대시보드
           </a>
-          <a href="#faq" onClick={() => onNavClick("#faq")}>
+          <a href={navHref("#faq")} onClick={() => onNavClick("#faq")}>
             FAQ
           </a>
         </nav>
         <Link
           className={`${styles.button} ${styles.buttonDark} ${styles.headerButton}`}
-          href="/survey/"
+          href={ctaHref}
         >
           무료 체크
         </Link>

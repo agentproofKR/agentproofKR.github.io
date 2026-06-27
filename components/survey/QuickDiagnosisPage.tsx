@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   type CSSProperties,
@@ -11,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { Header } from "@/components/layout/Header";
 import { trackEvent } from "@/lib/analytics";
 import {
   calculateAssuranceResult,
@@ -129,58 +129,66 @@ export function QuickDiagnosisPage() {
   };
 
   return (
-    <main className={`${styles.page} ${styles.referencePage}`}>
-      <div className={styles.referenceShell}>
-        <section className={styles.referenceCard} aria-labelledby="reference-title">
-          <CardTopBar screenIndex={screenIndex} />
-          {screenIndex === 0 ? <AwarenessScreen onStart={start} /> : null}
-          {screenIndex === 1 ? (
-            <WorkScreen
-              selectedWork={selectedWork}
-              onSelect={chooseWork}
-              onNext={() => goToScreen(2)}
-              onBack={() => goToScreen(0)}
-            />
-          ) : null}
-          {screenIndex === 2 ? (
-            <ControlScreen
-              controlState={controlState}
-              selectedWork={selectedWork}
-              onBack={() => goToScreen(1)}
-              onChange={setControlState}
-              onNext={showScore}
-            />
-          ) : null}
-          {screenIndex === 3 ? (
-            <ScoreScreen
-              result={result}
-              selectedWork={selectedWork}
-              onBack={() => goToScreen(2)}
-              onNext={() => goToScreen(4)}
-            />
-          ) : null}
-          {screenIndex === 4 ? (
-            <ValidationScreen
-              contact={contact}
-              decisionMaker={decisionMaker}
-              timing={timing}
-              onBack={() => goToScreen(3)}
-              onContactChange={setContact}
-              onDecisionMakerChange={setDecisionMaker}
-              onSubmit={submitValidation}
-              onTimingChange={setTiming}
-            />
-          ) : null}
-          {screenIndex === 5 ? (
-            <MonitoringScreen onBack={() => goToScreen(4)} onShare={shareReport} />
-          ) : null}
-        </section>
-        <NextStepSection
-          selectedWork={selectedWork}
-          onValidationRequest={() => goToScreen(4)}
-        />
-      </div>
-    </main>
+    <>
+      <Header
+        ctaHref="/survey/"
+        homeHref="/"
+        navBaseHref="/"
+        onNavClick={(target) => trackEvent("nav_anchor_click", { target })}
+      />
+      <main id="top" className={`${styles.page} ${styles.referencePage}`}>
+        <div className={styles.referenceShell}>
+          <section className={styles.referenceCard} aria-labelledby="reference-title">
+            <CardTopBar screenIndex={screenIndex} />
+            {screenIndex === 0 ? <AwarenessScreen onStart={start} /> : null}
+            {screenIndex === 1 ? (
+              <WorkScreen
+                selectedWork={selectedWork}
+                onSelect={chooseWork}
+                onNext={() => goToScreen(2)}
+                onBack={() => goToScreen(0)}
+              />
+            ) : null}
+            {screenIndex === 2 ? (
+              <ControlScreen
+                controlState={controlState}
+                selectedWork={selectedWork}
+                onBack={() => goToScreen(1)}
+                onChange={setControlState}
+                onNext={showScore}
+              />
+            ) : null}
+            {screenIndex === 3 ? (
+              <ScoreScreen
+                result={result}
+                selectedWork={selectedWork}
+                onBack={() => goToScreen(2)}
+                onNext={() => goToScreen(4)}
+              />
+            ) : null}
+            {screenIndex === 4 ? (
+              <ValidationScreen
+                contact={contact}
+                decisionMaker={decisionMaker}
+                timing={timing}
+                onBack={() => goToScreen(3)}
+                onContactChange={setContact}
+                onDecisionMakerChange={setDecisionMaker}
+                onSubmit={submitValidation}
+                onTimingChange={setTiming}
+              />
+            ) : null}
+            {screenIndex === 5 ? (
+              <MonitoringScreen onBack={() => goToScreen(4)} onShare={shareReport} />
+            ) : null}
+          </section>
+          <NextStepSection
+            selectedWork={selectedWork}
+            onValidationRequest={() => goToScreen(4)}
+          />
+        </div>
+      </main>
+    </>
   );
 }
 
@@ -189,23 +197,6 @@ function CardTopBar({ screenIndex }: { screenIndex: ScreenIndex }) {
 
   return (
     <div className={styles.referenceTopBar}>
-      <Link className={styles.referenceBrand} href="/" aria-label="AgentProof 홈">
-        <Image
-          src="/agentproof-logo-mark.png"
-          width={786}
-          height={891}
-          alt=""
-          aria-hidden="true"
-          priority
-        />
-        <Image
-          src="/agentproof-logo-wordmark.png"
-          width={1064}
-          height={217}
-          alt="AgentProof"
-          priority
-        />
-      </Link>
       <span>{screen.stageLabel}</span>
     </div>
   );
