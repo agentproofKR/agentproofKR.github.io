@@ -50,13 +50,15 @@ test.describe("three-page simplification", () => {
     await page.getByRole("button", { name: /고객 문의 응대/ }).click();
     await page.getByRole("button", { name: "다음" }).click();
     await expect(
-      page.getByRole("heading", { name: /AI로 무엇을\s*얻고 싶나요\?/ }),
+      page.getByRole("heading", { name: /한 달에\s*몇 건인가요\?/ }),
     ).toBeVisible();
-    await page.getByRole("button", { name: /시간을 줄이고 싶어요/ }).click();
+    await page.getByRole("button", { name: /10건 이하/ }).click();
     await page.getByRole("button", { name: "다음" }).click();
-    await page.getByRole("button", { name: /자주 반복됩니다/ }).click();
+    await page.getByRole("button", { name: /10분 이하/ }).click();
     await page.getByRole("button", { name: "다음" }).click();
     await page.getByRole("button", { name: /확인 후 사용/ }).click();
+    await page.getByRole("button", { name: "다음" }).click();
+    await page.getByRole("button", { name: /내부에서만 봅니다/ }).click();
     await page.getByRole("button", { name: "결과 보기" }).click();
     await expect(
       page.getByRole("heading", { name: /고객 문의 응대부터\s*시작해보세요/ }),

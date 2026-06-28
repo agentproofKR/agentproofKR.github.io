@@ -24,6 +24,7 @@ const qaPrefix = `qa-${Date.now()}`;
 const personas = ["practitioner", "leader", "security"];
 const managedSessionIds = new Set();
 const managedIdempotencyKeys = new Set();
+const managedQuickSessionIds = new Set();
 let cleanupAttempted = false;
 
 const evidence = {
@@ -80,6 +81,7 @@ async function runVerification() {
     "deletion_audit_events",
     "rate_limit_keys",
     "idempotency_keys",
+    "quick_diagnosis_submissions",
   ];
 
   const rlsStatus = await fetchRlsStatus();
@@ -144,6 +146,17 @@ async function runVerification() {
     evidence.security[`${persona}ReplayStatus`] = replay.status;
   }
 
+  const quickPayload = buildQuickDiagnosisPayload();
+  managedQuickSessionIds.add(quickPayload.sessionId);
+  managedIdempotencyKeys.add(quickPayload.idempotencyKey);
+  const quickResponse = await postFunction(quickPayload, productionOrigin);
+  assert(quickResponse.status === 201, `quick diagnosis submission failed: ${quickResponse.status}`);
+  evidence.submissions.quickDiagnosis = await verifyStoredQuickDiagnosis(quickPayload);
+
+  const quickReplay = await postFunction(quickPayload, productionOrigin);
+  evidence.security.quickDiagnosisReplayStatus = quickReplay.status;
+  evidence.security.quickDiagnosisReplayBody = await safeJsonObject(quickReplay);
+
   evidence.security.honeypotStatus = (
     await postFunction({ ...buildSurveyPayload("leader"), honeypot: "filled" }, productionOrigin)
   ).status;
@@ -203,6 +216,59 @@ async function runVerification() {
       expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     },
   ]);
+  const expiredQuickSessionId = crypto.randomUUID();
+  managedQuickSessionIds.add(expiredQuickSessionId);
+  await insertRows("quick_diagnosis_submissions", [
+    {
+      session_id: expiredQuickSessionId,
+      quick_diagnosis_version: "2026-06-AgentProof-quick-diagnosis-storage-v1",
+      work_type: "customer_reply",
+      monthly_volume: "low",
+      time_per_case: "short",
+      adoption_scope: "reviewed_use",
+      exposure: "internal",
+      selections_json: {
+        workType: "customer_reply",
+        monthlyVolume: "low",
+        timePerCase: "short",
+        adoptionScope: "reviewed_use",
+        exposure: "internal",
+      },
+      result_json: {
+        aiAdoptionScore: 75,
+        resultBand: "조건부 시작",
+        savingRateMin: 0.1,
+        savingRateMax: 0.25,
+        savingHoursMin: 0.0083,
+        savingHoursMax: 0.4167,
+        savingMoneyMin: 250,
+        savingMoneyMax: 12500,
+        supportReviewAverage: 3400000,
+        supportReviewMin: 1200000,
+        supportReviewMax: 5600000,
+        projectScale: "low",
+        hourlyCost: 30000,
+      },
+      ai_adoption_score: 75,
+      result_band: "조건부 시작",
+      saving_rate_min: 0.1,
+      saving_rate_max: 0.25,
+      saving_hours_min: 0.0083,
+      saving_hours_max: 0.4167,
+      saving_money_min: 250,
+      saving_money_max: 12500,
+      support_review_average: 3400000,
+      support_review_min: 1200000,
+      support_review_max: 5600000,
+      project_scale: "low",
+      hourly_cost: 30000,
+      utm_source: "agentproof_qa",
+      utm_medium: "release_verification",
+      utm_campaign: "retention",
+      utm_content: qaPrefix,
+      expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    },
+  ]);
 
   const retentionRpc = await fetch(`${supabaseUrl}/rest/v1/rpc/delete_expired_agentproof_data`, {
     method: "POST",
@@ -213,6 +279,9 @@ async function runVerification() {
   evidence.retention.expiredSessionRowsRemaining = await countRows(`survey_sessions?id=eq.${expiredSessionId}&select=id`);
   evidence.retention.expiredContactRowsRemaining = await countRows(
     `contact_requests?session_id=eq.${expiredSessionId}&select=id`,
+  );
+  evidence.retention.expiredQuickDiagnosisRowsRemaining = await countRows(
+    `quick_diagnosis_submissions?session_id=eq.${expiredQuickSessionId}&select=id`,
   );
 }
 
@@ -241,11 +310,27 @@ function assertEvidence() {
     assert(item.clientRiskIgnored === true, `${persona}: client-supplied risk flag was stored`);
     assert(item.riskFlagCount > 0, `${persona}: critical risk flags were not stored`);
   }
+  const quick = evidence.submissions.quickDiagnosis;
+  assert(quick?.rows === 1, "quick diagnosis row was not stored");
+  assert(quick.numericFieldsStored === true, "quick diagnosis numeric fields were not stored");
+  assert(quick.workType === "marketing_content", "quick diagnosis work_type mismatch");
+  assert(quick.monthlyVolume === "high", "quick diagnosis monthly_volume mismatch");
+  assert(quick.timePerCase === "long", "quick diagnosis time_per_case mismatch");
+  assert(quick.adoptionScope === "partial_automation", "quick diagnosis adoption_scope mismatch");
+  assert(quick.exposure === "external", "quick diagnosis exposure mismatch");
+  assert(quick.aiAdoptionScore === 38, "quick diagnosis score mismatch");
+  assert(quick.resultBand === "업무 선정 필요", "quick diagnosis band mismatch");
+  assert(quick.analyticsRows === 1, "quick diagnosis analytics event missing");
 
   assert(evidence.security.anonKeyRetrieved, "Could not retrieve anon key for RLS verification");
   assert(evidence.security.anonRead?.rowCount === 0, "Anonymous direct read returned rows");
   assert(evidence.security.anonWriteRejected === true, "Anonymous direct write was not rejected");
   assert(personas.every((persona) => evidence.security[`${persona}ReplayStatus`] === 409), "Replay rejection failed");
+  assert(evidence.security.quickDiagnosisReplayStatus === 200, "Quick diagnosis duplicate did not return 200");
+  assert(
+    evidence.security.quickDiagnosisReplayBody?.status === "duplicate",
+    "Quick diagnosis duplicate status mismatch",
+  );
   assert(evidence.security.honeypotStatus === 400, "Honeypot rejection failed");
   assert(evidence.security.invalidQuestionStatus === 400, "Invalid question rejection failed");
   assert(evidence.security.invalidAnswerStatus === 400, "Invalid answer rejection failed");
@@ -255,7 +340,9 @@ function assertEvidence() {
   assert(evidence.retention.rpcStatus >= 200 && evidence.retention.rpcStatus < 300, "Retention RPC failed");
   assert(evidence.retention.expiredSessionRowsRemaining === 0, "Expired session was not deleted");
   assert(evidence.retention.expiredContactRowsRemaining === 0, "Expired contact was not deleted");
+  assert(evidence.retention.expiredQuickDiagnosisRowsRemaining === 0, "Expired quick diagnosis was not deleted");
   assert(evidence.cleanup.remainingSessions === 0, "QA sessions not deleted");
+  assert(evidence.cleanup.remainingQuickDiagnosisRows === 0, "QA quick diagnosis rows not deleted");
   assert(evidence.cleanup.remainingAnalytics === 0, "QA analytics rows not deleted");
   assert(evidence.cleanup.remainingIdempotencyKeys === 0, "QA idempotency keys not deleted");
 }
@@ -347,6 +434,44 @@ function buildContactPayload(surveyPayload, requestType) {
   };
 }
 
+function buildQuickDiagnosisPayload() {
+  return {
+    kind: "quick_diagnosis",
+    sessionId: crypto.randomUUID(),
+    idempotencyKey: crypto.randomUUID(),
+    quickDiagnosisVersion: "2026-06-AgentProof-quick-diagnosis-storage-v1",
+    honeypot: "",
+    selections: {
+      workType: "marketing_content",
+      monthlyVolume: "high",
+      timePerCase: "long",
+      adoptionScope: "partial_automation",
+      exposure: "external",
+    },
+    result: {
+      aiAdoptionScore: 38,
+      resultBand: "업무 선정 필요",
+      savingRateMin: 0.2,
+      savingRateMax: 0.45,
+      savingHoursMin: 10,
+      savingHoursMax: 81,
+      savingMoneyMin: 300000,
+      savingMoneyMax: 2430000,
+      supportReviewAverage: null,
+      supportReviewMin: null,
+      supportReviewMax: null,
+      projectScale: "enterprise",
+      hourlyCost: 30000,
+    },
+    utm: {
+      source: "agentproof_qa",
+      medium: "release_verification",
+      campaign: "quick_diagnosis_storage",
+      content: qaPrefix,
+    },
+  };
+}
+
 async function verifyStoredSurvey(payload) {
   const sessionRows = await selectRows(`survey_sessions?id=eq.${payload.sessionId}&select=*`);
   const answerRows = await selectRows(`survey_answers?session_id=eq.${payload.sessionId}&select=question_id,answer_json`);
@@ -386,6 +511,50 @@ async function verifyStoredSurvey(payload) {
       JSON.stringify(row).includes("@") || JSON.stringify(row).includes("QA Tester"),
     ).length,
     analyticsRowsWithPii: analyticsText.includes("@") || analyticsText.includes("QA redacted") ? 1 : 0,
+  };
+}
+
+async function verifyStoredQuickDiagnosis(payload) {
+  const rows = await selectRows(
+    `quick_diagnosis_submissions?session_id=eq.${payload.sessionId}&select=*`,
+  );
+  const analyticsRows = await selectRows(
+    `analytics_events?event_name=eq.quick_diagnosis_completed&survey_version=eq.${payload.quickDiagnosisVersion}&select=event_name,non_sensitive_properties_json`,
+  );
+  const matchingAnalyticsRows = analyticsRows.filter(
+    (row) => row.non_sensitive_properties_json?.quick_session_id === payload.sessionId,
+  );
+  const row = rows[0] ?? {};
+  return {
+    rows: rows.length,
+    workType: row.work_type,
+    monthlyVolume: row.monthly_volume,
+    timePerCase: row.time_per_case,
+    adoptionScope: row.adoption_scope,
+    exposure: row.exposure,
+    aiAdoptionScore: row.ai_adoption_score,
+    resultBand: row.result_band,
+    savingRateMin: Number(row.saving_rate_min),
+    savingRateMax: Number(row.saving_rate_max),
+    savingHoursMin: Number(row.saving_hours_min),
+    savingHoursMax: Number(row.saving_hours_max),
+    savingMoneyMin: row.saving_money_min,
+    savingMoneyMax: row.saving_money_max,
+    supportReviewAverage: row.support_review_average,
+    supportReviewMin: row.support_review_min,
+    supportReviewMax: row.support_review_max,
+    projectScale: row.project_scale,
+    hourlyCost: row.hourly_cost,
+    analyticsRows: matchingAnalyticsRows.length,
+    numericFieldsStored:
+      typeof row.ai_adoption_score === "number" &&
+      Number.isFinite(Number(row.saving_rate_min)) &&
+      Number.isFinite(Number(row.saving_rate_max)) &&
+      Number.isFinite(Number(row.saving_hours_min)) &&
+      Number.isFinite(Number(row.saving_hours_max)) &&
+      typeof row.saving_money_min === "number" &&
+      typeof row.saving_money_max === "number" &&
+      typeof row.hourly_cost === "number",
   };
 }
 
@@ -491,6 +660,10 @@ async function cleanupQaRecords() {
   for (const row of staleQaSessions) {
     managedSessionIds.add(row.id);
   }
+  const staleQuickSessions = await selectRows("quick_diagnosis_submissions?utm_source=eq.agentproof_qa&select=session_id");
+  for (const row of staleQuickSessions) {
+    managedQuickSessionIds.add(row.session_id);
+  }
 
   for (const sessionId of managedSessionIds) {
     await deleteRows("analytics_events", `session_id=eq.${sessionId}`);
@@ -504,16 +677,37 @@ async function cleanupQaRecords() {
       },
     ]);
   }
+  for (const sessionId of managedQuickSessionIds) {
+    await deleteRows("analytics_events", `non_sensitive_properties_json->>quick_session_id=eq.${sessionId}`);
+    await deleteRows("quick_diagnosis_submissions", `session_id=eq.${sessionId}`);
+    await insertRows("deletion_audit_events", [
+      {
+        session_id: sessionId,
+        request_type: "qa_cleanup",
+        deleted_table: "quick_diagnosis_submissions",
+        deleted_count: 1,
+      },
+    ]);
+  }
   for (const idempotencyKey of managedIdempotencyKeys) {
     await deleteRows("idempotency_keys", `idempotency_key=eq.${encodeURIComponent(idempotencyKey)}`);
   }
 
   evidence.cleanup.remainingSessions = 0;
+  evidence.cleanup.remainingQuickDiagnosisRows = 0;
   evidence.cleanup.remainingAnalytics = 0;
   evidence.cleanup.remainingIdempotencyKeys = 0;
   for (const sessionId of managedSessionIds) {
     evidence.cleanup.remainingSessions += await countRows(`survey_sessions?id=eq.${sessionId}&select=id`);
     evidence.cleanup.remainingAnalytics += await countRows(`analytics_events?session_id=eq.${sessionId}&select=id`);
+  }
+  for (const sessionId of managedQuickSessionIds) {
+    evidence.cleanup.remainingQuickDiagnosisRows += await countRows(
+      `quick_diagnosis_submissions?session_id=eq.${sessionId}&select=id`,
+    );
+    evidence.cleanup.remainingAnalytics += await countRows(
+      `analytics_events?non_sensitive_properties_json->>quick_session_id=eq.${sessionId}&select=id`,
+    );
   }
   for (const idempotencyKey of managedIdempotencyKeys) {
     evidence.cleanup.remainingIdempotencyKeys += await countRows(
@@ -538,6 +732,15 @@ async function safeJsonArray(response) {
     return Array.isArray(body) ? body : [];
   } catch {
     return [];
+  }
+}
+
+async function safeJsonObject(response) {
+  try {
+    const body = await response.json();
+    return body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  } catch {
+    return {};
   }
 }
 

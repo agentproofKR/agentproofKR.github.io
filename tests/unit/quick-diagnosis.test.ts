@@ -1,40 +1,44 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  adoptionPurposeOptions,
+  adoptionScopeOptions,
   buildAdoptionReport,
-  formatResultSummary,
+  exposureOptions,
   formatKrw,
+  formatResultSummary,
   getProjectScale,
   getSupportReviewAmount,
+  monthlyVolumeOptions,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
-  usageScopeOptions,
-  workNatureOptions,
+  timePerCaseOptions,
   workOptions,
   workRisk,
-  type AdoptionPurpose,
-  type UsageScope,
-  type WorkNature,
-  type WorkType,
+  type AdoptionScope,
+  type Exposure,
+  type MonthlyVolume,
+  type QuickWorkType,
+  type TimePerCase,
 } from "../../lib/survey/quickDiagnosis";
 
-describe("AI adoption mini-report flow content", () => {
-  it("uses PAGE1 + four simple choice steps + result", () => {
+describe("quick diagnosis final five-input flow", () => {
+  it("uses hook + work, volume, time, scope, exposure + result", () => {
     expect(referenceDiagnosisScreens.map((screen) => screen.id)).toEqual([
       "awareness",
       "work",
-      "purpose",
-      "nature",
-      "scope",
+      "monthly_volume",
+      "time_per_case",
+      "adoption_scope",
+      "exposure",
       "result",
     ]);
     expect(referenceDiagnosisScreens.map((screen) => screen.stageLabel)).toEqual([
       "시작",
       "업무",
-      "목적",
-      "성격",
+      "건수",
+      "시간",
       "범위",
+      "전달",
       "결과",
     ]);
   });
@@ -54,7 +58,7 @@ describe("AI adoption mini-report flow content", () => {
     });
   });
 
-  it("offers the five practical work options with stable keys", () => {
+  it("offers the final five work options and risk weights", () => {
     expect(workOptions).toEqual([
       { value: "customer_reply", label: "고객 문의 응대", subtitle: "답변·상담·CS" },
       {
@@ -83,55 +87,45 @@ describe("AI adoption mini-report flow content", () => {
     });
   });
 
-  it("uses purpose, nature, and usage scope instead of technical controls", () => {
-    expect(referenceDiagnosisScreens[2]).toMatchObject({
-      title: "AI로 무엇을\n얻고 싶나요?",
-      subcopy: "가장 가까운 이유를 골라주세요.",
-      cta: "다음",
-    });
-    expect(referenceDiagnosisScreens[3]).toMatchObject({
-      title: "이 업무는\n어떤 성격인가요?",
-      subcopy: "성격에 따라 판단 기준이 달라집니다.",
-      cta: "다음",
-    });
-    expect(referenceDiagnosisScreens[4]).toMatchObject({
-      title: "AI에게 어디까지\n맡길까요?",
-      subcopy: "처음엔 작게 시작하는 편이 안전합니다.",
-      cta: "결과 보기",
-    });
-    expect(adoptionPurposeOptions.map((option) => option.value)).toEqual([
-      "save_time",
-      "first_draft",
-      "reduce_mistakes",
-      "improve_quality",
-      "find_use_case",
+  it("uses final volume, time, adoption scope, and exposure option sets", () => {
+    expect(monthlyVolumeOptions.map((option) => option.value)).toEqual([
+      "low",
+      "mid",
+      "high",
+      "unknown",
     ]);
-    expect(workNatureOptions.map((option) => option.value)).toEqual([
-      "repetitive",
-      "important_low_frequency",
-      "external_output",
-      "internal_decision",
-      "unclear",
+    expect(timePerCaseOptions.map((option) => option.value)).toEqual([
+      "short",
+      "medium",
+      "long",
+      "unknown",
     ]);
-    expect(usageScopeOptions.map((option) => option.value)).toEqual([
-      "idea_only",
+    expect(adoptionScopeOptions.map((option) => option.value)).toEqual([
       "draft_only",
       "reviewed_use",
       "partial_automation",
+      "direct_use",
+      "unknown",
+    ]);
+    expect(exposureOptions.map((option) => option.value)).toEqual([
+      "external",
+      "executive",
+      "internal",
       "unknown",
     ]);
 
     const visibleCopy = JSON.stringify({
       referenceDiagnosisScreens,
-      adoptionPurposeOptions,
-      workNatureOptions,
-      usageScopeOptions,
+      monthlyVolumeOptions,
+      timePerCaseOptions,
+      adoptionScopeOptions,
+      exposureOptions,
     });
     expect(visibleCopy).not.toMatch(/통제 진단|자율성|행동 로그|드리프트|HITL/);
   });
 });
 
-describe("adoption mini-report logic", () => {
+describe("quick diagnosis numeric report model", () => {
   it("formats conservative support review amount examples", () => {
     expect(formatKrw(3_400_000)).toBe("340만원");
     expect(formatKrw(8_600_000)).toBe("860만원");
@@ -141,29 +135,23 @@ describe("adoption mini-report logic", () => {
       label: "약 340만원",
       rangeLabel: "검토 범위 120만~560만원",
       averageAmount: 3_400_000,
-    });
-    expect(getSupportReviewAmount("medium")).toMatchObject({
-      label: "약 860만원",
-      rangeLabel: "검토 범위 320만~1,400만원",
-      averageAmount: 8_600_000,
-    });
-    expect(getSupportReviewAmount("high")).toMatchObject({
-      label: "약 2,150만원",
-      rangeLabel: "검토 범위 800만~3,500만원",
-      averageAmount: 21_500_000,
+      minAmount: 1_200_000,
+      maxAmount: 5_600_000,
     });
     expect(getSupportReviewAmount("enterprise")).toMatchObject({
       label: "별도 산정",
       rangeLabel: "도입 범위 확인 필요",
       averageAmount: null,
+      minAmount: null,
+      maxAmount: null,
     });
   });
 
   it("estimates project scale from selected work, volume, saving, adoption scope, and exposure", () => {
     expect(
       getProjectScale({
-        selectedWork: "unknown",
-        volume: "low",
+        workType: "unknown",
+        monthlyVolume: "low",
         savingHoursMax: 2,
         adoptionScope: "unknown",
         exposure: "unknown",
@@ -171,17 +159,17 @@ describe("adoption mini-report logic", () => {
     ).toBe("low");
     expect(
       getProjectScale({
-        selectedWork: "business_document",
-        volume: "mid",
+        workType: "business_document",
+        monthlyVolume: "mid",
         savingHoursMax: 11,
         adoptionScope: "reviewed_use",
-        exposure: "unknown",
+        exposure: "internal",
       }),
     ).toBe("medium");
     expect(
       getProjectScale({
-        selectedWork: "grant_document",
-        volume: "mid",
+        workType: "grant_document",
+        monthlyVolume: "mid",
         savingHoursMax: 11,
         adoptionScope: "partial_automation",
         exposure: "external",
@@ -189,8 +177,8 @@ describe("adoption mini-report logic", () => {
     ).toBe("high");
     expect(
       getProjectScale({
-        selectedWork: "customer_reply",
-        volume: "high",
+        workType: "customer_reply",
+        monthlyVolume: "high",
         savingHoursMax: 12,
         adoptionScope: "partial_automation",
         exposure: "external",
@@ -202,142 +190,95 @@ describe("adoption mini-report logic", () => {
     {
       input: {
         workType: "customer_reply",
-        purpose: "save_time",
-        nature: "repetitive",
-        scope: "reviewed_use",
+        monthlyVolume: "low",
+        timePerCase: "short",
+        adoptionScope: "reviewed_use",
+        exposure: "internal",
       },
       expected: {
         headline: "고객 문의 응대부터\n시작해보세요",
-        expectedValueCopy: "반복 업무 시간을 줄이는 데 초점을 둡니다.",
         method: "AI 결과를 담당자가 확인한 뒤 사용하세요.",
         reviewPoints: ["개인정보", "환불·계약", "고객 불만"],
-        pilotItems: ["실제 절감 시간", "반복 처리 건수", "수정이 필요한 결과 비율"],
         pilotSize: "문의 20건 기준",
-        timeEstimate: "월 4~12시간",
-        savingRate: "20~45%",
-        monthlySavingAmount: "12~36만원",
-        supportLabel: "약 860만원",
-        supportRangeLabel: "검토 범위 320만~1,400만원",
-      },
-    },
-    {
-      input: {
-        workType: "grant_document",
-        purpose: "first_draft",
-        nature: "important_low_frequency",
-        scope: "draft_only",
-      },
-      expected: {
-        headline: "사업계획서 작성부터\n시작해보세요",
-        expectedValueCopy: "첫 초안을 빠르게 만들고 시작 부담을 줄입니다.",
-        method: "AI는 초안 작성까지 사용하고, 담당자가 수정하세요.",
-        reviewPoints: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
-        pilotItems: ["초안 작성 시간", "수정이 필요한 문장 비율", "최종 사용 가능 비율"],
-        pilotSize: "문서 3~5건 기준",
-        timeEstimate: "월 3~8시간",
-        savingRate: "15~35%",
-        monthlySavingAmount: "9~24만원",
-        supportLabel: "약 860만원",
-        supportRangeLabel: "검토 범위 320만~1,400만원",
-      },
-    },
-    {
-      input: {
-        workType: "business_document",
-        purpose: "reduce_mistakes",
-        nature: "internal_decision",
-        scope: "reviewed_use",
-      },
-      expected: {
-        headline: "보고서·문서 작성부터\n시작해보세요",
-        expectedValueCopy: "누락과 실수를 줄이는 기준을 만들 수 있습니다.",
-        method: "AI 결과를 담당자가 확인한 뒤 사용하세요.",
-        reviewPoints: ["수치 근거", "외부 공유", "예산·계약 문장"],
-        pilotItems: ["누락된 항목 수", "사람이 고친 부분", "확인이 필요한 유형"],
-        pilotSize: "문서 5건 기준",
-        timeEstimate: "월 4~12시간",
-        savingRate: "15~40%",
-        monthlySavingAmount: "12~36만원",
-        supportLabel: "약 860만원",
-        supportRangeLabel: "검토 범위 320만~1,400만원",
+        aiAdoptionScore: 75,
+        resultBand: "조건부 시작",
+        savingRateMin: 0.1,
+        savingRateMax: 0.25,
+        savingHoursMin: 0.0083,
+        savingHoursMax: 0.4167,
+        savingMoneyMin: 250,
+        savingMoneyMax: 12_500,
+        projectScale: "low",
+        supportReviewAverage: 3_400_000,
       },
     },
     {
       input: {
         workType: "marketing_content",
-        purpose: "improve_quality",
-        nature: "external_output",
-        scope: "draft_only",
+        monthlyVolume: "high",
+        timePerCase: "long",
+        adoptionScope: "partial_automation",
+        exposure: "external",
       },
       expected: {
         headline: "마케팅 콘텐츠부터\n시작해보세요",
-        expectedValueCopy: "문장·구성·표현을 다듬는 데 도움이 됩니다.",
-        method: "AI는 초안 작성까지 사용하고, 담당자가 수정하세요.",
+        method: "정해진 기준 안에서 일부 반복 업무만 자동화하세요.",
         reviewPoints: ["과장 표현", "가격·효과", "고객 오해"],
-        pilotItems: ["표현 수정 비율", "최종 결과물 만족도", "다시 사용할 수 있는 문장 유형"],
         pilotSize: "콘텐츠 10건 기준",
-        timeEstimate: "월 4~10시간",
-        savingRate: "20~45%",
-        monthlySavingAmount: "12~30만원",
-        supportLabel: "약 2,150만원",
-        supportRangeLabel: "검토 범위 800만~3,500만원",
-      },
-    },
-    {
-      input: {
-        workType: "unknown",
-        purpose: "find_use_case",
-        nature: "unclear",
-        scope: "unknown",
-      },
-      expected: {
-        headline: "부담이 낮은 업무부터\n정해보세요",
-        expectedValueCopy: "어디부터 시작할지 정하는 데 도움이 됩니다.",
-        method: "먼저 작은 업무 1개에서 초안 작성부터 시작하세요.",
-        reviewPoints: ["개인정보", "외부 전달", "금액·계약"],
-        pilotItems: ["가장 효과가 큰 업무", "위험이 낮은 업무", "계속 쓸 수 있는 업무"],
-        pilotSize: "작은 업무 1개 기준",
-        timeEstimate: "월 2~6시간",
-        savingRate: "10~20%",
-        monthlySavingAmount: "6~18만원",
-        supportLabel: "약 340만원",
-        supportRangeLabel: "검토 범위 120만~560만원",
+        aiAdoptionScore: 38,
+        resultBand: "업무 선정 필요",
+        savingRateMin: 0.2,
+        savingRateMax: 0.45,
+        savingHoursMin: 10,
+        savingHoursMax: 81,
+        savingMoneyMin: 300_000,
+        savingMoneyMax: 2_430_000,
+        projectScale: "enterprise",
+        supportReviewAverage: null,
       },
     },
   ] satisfies {
     input: {
-      workType: WorkType;
-      purpose: AdoptionPurpose;
-      nature: WorkNature;
-      scope: UsageScope;
+      workType: QuickWorkType;
+      monthlyVolume: MonthlyVolume;
+      timePerCase: TimePerCase;
+      adoptionScope: AdoptionScope;
+      exposure: Exposure;
     };
     expected: {
       headline: string;
-      expectedValueCopy: string;
       method: string;
       reviewPoints: string[];
-      pilotItems: string[];
       pilotSize: string;
-      timeEstimate: string | null;
-      savingRate: string;
-      monthlySavingAmount: string;
-      supportLabel: string;
-      supportRangeLabel: string;
+      aiAdoptionScore: number;
+      resultBand: string;
+      savingRateMin: number;
+      savingRateMax: number;
+      savingHoursMin: number;
+      savingHoursMax: number;
+      savingMoneyMin: number;
+      savingMoneyMax: number;
+      projectScale: string;
+      supportReviewAverage: number | null;
     };
-  }[])("builds the requested report for $input.workType", ({ input, expected }) => {
+  }[])("builds raw numeric report values for $input.workType", ({ input, expected }) => {
     const report = buildAdoptionReport(input);
 
     expect(report.headline).toBe(expected.headline);
-    expect(report.expectedValueCopy).toBe(expected.expectedValueCopy);
     expect(report.method).toBe(expected.method);
     expect(report.reviewPoints).toEqual(expected.reviewPoints);
-    expect(report.pilotItems).toEqual(expected.pilotItems);
     expect(report.pilotSize).toBe(expected.pilotSize);
-    expect(report.timeEstimate).toBe(expected.timeEstimate);
-    expect(report.savingRate).toBe(expected.savingRate);
-    expect(report.monthlySavingAmount).toBe(expected.monthlySavingAmount);
-    expect(report.supportReview.label).toBe(expected.supportLabel);
-    expect(report.supportReview.rangeLabel).toBe(expected.supportRangeLabel);
+    expect(report.aiAdoptionScore).toBe(expected.aiAdoptionScore);
+    expect(report.resultBand).toBe(expected.resultBand);
+    expect(report.savingRateMin).toBe(expected.savingRateMin);
+    expect(report.savingRateMax).toBe(expected.savingRateMax);
+    expect(report.savingHoursMin).toBeCloseTo(expected.savingHoursMin, 4);
+    expect(report.savingHoursMax).toBeCloseTo(expected.savingHoursMax, 4);
+    expect(report.savingMoneyMin).toBe(expected.savingMoneyMin);
+    expect(report.savingMoneyMax).toBe(expected.savingMoneyMax);
+    expect(report.projectScale).toBe(expected.projectScale);
+    expect(report.supportReviewAverage).toBe(expected.supportReviewAverage);
+    expect(report.hourlyCost).toBe(30_000);
     expect(report.metricCards.map((card) => card.title)).toEqual([
       "AI 도입 점수",
       "예상 절감률",
@@ -346,61 +287,23 @@ describe("adoption mini-report logic", () => {
       "지원사업 검토 평균",
       "30일 파일럿",
     ]);
-    expect(report.supportDisclaimer).toBe(
-      "예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.",
-    );
-    expect(report.supportNote).toBe(
-      "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.",
-    );
-    expect(report.supportNote).not.toMatch(
-      /지원금 보장|받을 수 있는 금액|정부지원금 확정|최대 지원금|지원금 수령 가능|선정 보장/,
-    );
   });
 
-  it("formats the copy-to-clipboard summary in the requested structure", () => {
+  it("formats the copy-to-clipboard summary without using display strings as storage", () => {
     const report = buildAdoptionReport({
       workType: "customer_reply",
-      purpose: "save_time",
-      nature: "repetitive",
-      scope: "reviewed_use",
+      monthlyVolume: "low",
+      timePerCase: "short",
+      adoptionScope: "reviewed_use",
+      exposure: "internal",
     });
 
-    expect(formatResultSummary(report)).toBe(
-      [
-        "AgentProof AI 도입 간단 점검 결과",
-        "",
-        "추천 업무: 고객 문의 응대",
-        "도입 목적: 시간을 줄이고 싶어요",
-        "업무 성격: 자주 반복됩니다",
-        "권장 방식: AI 결과를 담당자가 확인한 뒤 사용하세요.",
-        "",
-        "기대효과:",
-        "반복 업무 시간을 줄이는 데 초점을 둡니다.",
-        "",
-        "AI 도입 점수: 80점 (파일럿 적합)",
-        "예상 절감률: 20~45%",
-        "예상 절감 시간: 월 4~12시간",
-        "월 절감 금액: 12~36만원",
-        "지원사업 검토 평균: 약 860만원",
-        "검토 범위 320만~1,400만원",
-        "30일 파일럿: 문의 20건 기준",
-        "",
-        "사람이 봐야 하는 경우:",
-        "",
-        "- 개인정보",
-        "- 환불·계약",
-        "- 고객 불만",
-        "",
-        "30일 파일럿에서 확인할 것:",
-        "",
-        "- 실제 절감 시간",
-        "- 반복 처리 건수",
-        "- 수정이 필요한 결과 비율",
-        "",
-        "지원사업 준비 자료로 활용할 수 있습니다.",
-        "예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.",
-      ].join("\n"),
-    );
+    expect(formatResultSummary(report)).toContain("추천 업무: 고객 문의 응대");
+    expect(formatResultSummary(report)).toContain("월 처리량: 10건 이하");
+    expect(formatResultSummary(report)).toContain("건당 소요시간: 10분 이하");
+    expect(formatResultSummary(report)).toContain("사용 범위: 확인 후 사용");
+    expect(formatResultSummary(report)).toContain("결과 사용처: 내부에서만 봅니다");
+    expect(formatResultSummary(report)).toContain("AI 도입 점수: 75점 (조건부 시작)");
     expect(formatResultSummary(report)).not.toMatch(
       /지원금 보장|받을 수 있는 금액|정부지원금 확정|최대 지원금|지원금 수령 가능|선정 보장/,
     );
@@ -408,7 +311,7 @@ describe("adoption mini-report logic", () => {
 
   it("uses the updated quick diagnosis version", () => {
     expect(quickDiagnosisVersion).toBe(
-      "2026-06-AgentProof-adoption-mini-report-v2",
+      "2026-06-AgentProof-quick-diagnosis-storage-v1",
     );
   });
 });

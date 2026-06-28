@@ -25,6 +25,25 @@ const server = createServer(async (request, response) => {
       writeJson(response, 400, { ok: false, code: "HONEYPOT" });
       return;
     }
+    if (payload.kind === "quick_diagnosis") {
+      if (seenKeys.has(payload.idempotencyKey)) {
+        writeJson(response, 200, {
+          ok: true,
+          status: "duplicate",
+          sessionId: seenKeys.get(payload.idempotencyKey),
+        });
+        return;
+      }
+
+      seenKeys.set(payload.idempotencyKey, payload.sessionId);
+      writeJson(response, 201, {
+        ok: true,
+        status: "quick_diagnosis_stored",
+        sessionId: payload.sessionId,
+      });
+      return;
+    }
+
     if (!payload.consents?.age14OrOlder || !payload.consents?.surveyProcessing) {
       writeJson(response, 400, { ok: false, code: "MISSING_REQUIRED_CONSENT" });
       return;

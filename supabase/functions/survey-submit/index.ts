@@ -71,6 +71,59 @@ type ContactPayload = {
   honeypot?: string;
 };
 
+type QuickWorkType =
+  | "customer_reply"
+  | "grant_document"
+  | "business_document"
+  | "marketing_content"
+  | "unknown";
+type MonthlyVolume = "low" | "mid" | "high" | "unknown";
+type TimePerCase = "short" | "medium" | "long" | "unknown";
+type AdoptionScope =
+  | "draft_only"
+  | "reviewed_use"
+  | "partial_automation"
+  | "direct_use"
+  | "unknown";
+type Exposure = "external" | "executive" | "internal" | "unknown";
+type ProjectScale = "low" | "medium" | "high" | "enterprise";
+
+type QuickDiagnosisPayload = {
+  kind: "quick_diagnosis";
+  sessionId: string;
+  idempotencyKey: string;
+  quickDiagnosisVersion: string;
+  honeypot?: string;
+  selections: {
+    workType: QuickWorkType;
+    monthlyVolume: MonthlyVolume;
+    timePerCase: TimePerCase;
+    adoptionScope: AdoptionScope;
+    exposure: Exposure;
+  };
+  result: {
+    aiAdoptionScore: number;
+    resultBand: string;
+    savingRateMin: number;
+    savingRateMax: number;
+    savingHoursMin: number;
+    savingHoursMax: number;
+    savingMoneyMin: number;
+    savingMoneyMax: number;
+    supportReviewAverage: number | null;
+    supportReviewMin: number | null;
+    supportReviewMax: number | null;
+    projectScale: ProjectScale;
+    hourlyCost: number;
+  };
+  utm?: {
+    source?: string;
+    medium?: string;
+    campaign?: string;
+    content?: string;
+  };
+};
+
 const unifiedIds = rangeIds("U", 1, 10);
 const commonIds = ["C01", "C02", "C03", "C04", "C05", "C06"];
 const allowedQuestionIds: Record<Persona, Set<string>> = {
@@ -333,9 +386,9 @@ Deno.serve(async (request) => {
     return json({ ok: false, code: "PAYLOAD_TOO_LARGE" }, 413, headers);
   }
 
-  let payload: SurveyPayload | ContactPayload;
+  let payload: SurveyPayload | ContactPayload | QuickDiagnosisPayload;
   try {
-    payload = JSON.parse(raw) as SurveyPayload | ContactPayload;
+    payload = JSON.parse(raw) as SurveyPayload | ContactPayload | QuickDiagnosisPayload;
     if ((payload as { honeypot?: string }).honeypot) {
       throw new Error("HONEYPOT");
     }
@@ -347,6 +400,9 @@ Deno.serve(async (request) => {
   try {
     if (payload.kind === "contact_request") {
       return await handleContactRequest(payload, supabaseUrl, serviceRoleKey, headers);
+    }
+    if (payload.kind === "quick_diagnosis") {
+      return await handleQuickDiagnosis(payload, supabaseUrl, serviceRoleKey, headers);
     }
     return await handleSurvey(payload as SurveyPayload, supabaseUrl, serviceRoleKey, headers);
   } catch (error) {
@@ -525,6 +581,87 @@ async function handleContactRequest(
   return json({ ok: true, sessionId: payload.sessionId, status: "contact_stored" }, 201, headers);
 }
 
+async function handleQuickDiagnosis(
+  payload: QuickDiagnosisPayload,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  headers: HeadersInit,
+): Promise<Response> {
+  validateQuickDiagnosisPayload(payload);
+
+  const existingSessionId = await findIdempotencySession(
+    supabaseUrl,
+    serviceRoleKey,
+    payload.idempotencyKey,
+  );
+  if (existingSessionId) {
+    return json(
+      { ok: true, status: "duplicate", sessionId: existingSessionId },
+      200,
+      headers,
+    );
+  }
+
+  const createdAt = new Date();
+  await checkedTableRequest(supabaseUrl, serviceRoleKey, "quick_diagnosis_submissions", [
+    {
+      session_id: payload.sessionId,
+      quick_diagnosis_version: payload.quickDiagnosisVersion,
+      work_type: payload.selections.workType,
+      monthly_volume: payload.selections.monthlyVolume,
+      time_per_case: payload.selections.timePerCase,
+      adoption_scope: payload.selections.adoptionScope,
+      exposure: payload.selections.exposure,
+      selections_json: payload.selections,
+      result_json: payload.result,
+      ai_adoption_score: payload.result.aiAdoptionScore,
+      result_band: payload.result.resultBand,
+      saving_rate_min: payload.result.savingRateMin,
+      saving_rate_max: payload.result.savingRateMax,
+      saving_hours_min: payload.result.savingHoursMin,
+      saving_hours_max: payload.result.savingHoursMax,
+      saving_money_min: payload.result.savingMoneyMin,
+      saving_money_max: payload.result.savingMoneyMax,
+      support_review_average: payload.result.supportReviewAverage,
+      support_review_min: payload.result.supportReviewMin,
+      support_review_max: payload.result.supportReviewMax,
+      project_scale: payload.result.projectScale,
+      hourly_cost: payload.result.hourlyCost,
+      utm_source: normalizeText(payload.utm?.source, 80),
+      utm_medium: normalizeText(payload.utm?.medium, 80),
+      utm_campaign: normalizeText(payload.utm?.campaign, 120),
+      utm_content: normalizeText(payload.utm?.content, 120),
+      expires_at: addMonths(createdAt, 6).toISOString(),
+    },
+  ]);
+
+  await checkedTableRequest(supabaseUrl, serviceRoleKey, "idempotency_keys", [
+    { idempotency_key: payload.idempotencyKey, session_id: payload.sessionId },
+  ]);
+
+  await checkedTableRequest(supabaseUrl, serviceRoleKey, "analytics_events", [
+    {
+      session_id: null,
+      event_name: "quick_diagnosis_completed",
+      persona: null,
+      survey_version: payload.quickDiagnosisVersion,
+      non_sensitive_properties_json: {
+        quick_session_id: payload.sessionId,
+        work_type: payload.selections.workType,
+        result_band: payload.result.resultBand,
+        ai_adoption_score: payload.result.aiAdoptionScore,
+        project_scale: payload.result.projectScale,
+      },
+    },
+  ]);
+
+  return json(
+    { ok: true, status: "quick_diagnosis_stored", sessionId: payload.sessionId },
+    201,
+    headers,
+  );
+}
+
 function validateSurveyPayload(payload: SurveyPayload): void {
   if (!isUuid(payload.sessionId)) throw new Error("INVALID_SESSION_ID");
   if (!isPersona(payload.persona)) throw new Error("INVALID_PERSONA");
@@ -684,6 +821,56 @@ function validateContactPayload(payload: ContactPayload): void {
   }
 }
 
+function validateQuickDiagnosisPayload(payload: QuickDiagnosisPayload): void {
+  if (!isUuid(payload.sessionId)) throw new Error("INVALID_SESSION_ID");
+  if (!payload.idempotencyKey || payload.idempotencyKey.length > 160 || hasUnsafeChars(payload.idempotencyKey)) {
+    throw new Error("INVALID_IDEMPOTENCY_KEY");
+  }
+  if (!payload.quickDiagnosisVersion || payload.quickDiagnosisVersion.length > 120 || hasUnsafeChars(payload.quickDiagnosisVersion)) {
+    throw new Error("INVALID_QUICK_DIAGNOSIS_VERSION");
+  }
+  if (!isQuickWorkType(payload.selections?.workType)) throw new Error("INVALID_QUICK_WORK_TYPE");
+  if (!isMonthlyVolume(payload.selections?.monthlyVolume)) throw new Error("INVALID_QUICK_MONTHLY_VOLUME");
+  if (!isTimePerCase(payload.selections?.timePerCase)) throw new Error("INVALID_QUICK_TIME_PER_CASE");
+  if (!isAdoptionScope(payload.selections?.adoptionScope)) throw new Error("INVALID_QUICK_ADOPTION_SCOPE");
+  if (!isExposure(payload.selections?.exposure)) throw new Error("INVALID_QUICK_EXPOSURE");
+
+  if (!payload.result) throw new Error("INVALID_QUICK_DIAGNOSIS_RESULT");
+  const result = payload.result;
+  if (!Number.isInteger(result?.aiAdoptionScore) || result.aiAdoptionScore < 0 || result.aiAdoptionScore > 100) {
+    throw new Error("INVALID_QUICK_DIAGNOSIS_SCORE");
+  }
+  if (!result.resultBand || result.resultBand.length > 80 || hasUnsafeChars(result.resultBand)) {
+    throw new Error("INVALID_QUICK_DIAGNOSIS_BAND");
+  }
+  assertOrderedNumbers(result.savingRateMin, result.savingRateMax, "INVALID_QUICK_SAVING_RATE");
+  assertOrderedNumbers(result.savingHoursMin, result.savingHoursMax, "INVALID_QUICK_SAVING_HOURS");
+  assertOrderedIntegers(result.savingMoneyMin, result.savingMoneyMax, "INVALID_QUICK_SAVING_MONEY");
+  assertNullableNonNegativeInteger(result.supportReviewAverage, "INVALID_QUICK_SUPPORT_AVERAGE");
+  assertNullableNonNegativeInteger(result.supportReviewMin, "INVALID_QUICK_SUPPORT_MIN");
+  assertNullableNonNegativeInteger(result.supportReviewMax, "INVALID_QUICK_SUPPORT_MAX");
+  if (
+    result.supportReviewMin !== null &&
+    result.supportReviewMax !== null &&
+    result.supportReviewMin > result.supportReviewMax
+  ) {
+    throw new Error("INVALID_QUICK_SUPPORT_RANGE");
+  }
+  if (!isProjectScale(result.projectScale)) throw new Error("INVALID_QUICK_PROJECT_SCALE");
+  if (!Number.isInteger(result.hourlyCost) || result.hourlyCost <= 0) {
+    throw new Error("INVALID_QUICK_HOURLY_COST");
+  }
+
+  for (const value of [
+    payload.utm?.source,
+    payload.utm?.medium,
+    payload.utm?.campaign,
+    payload.utm?.content,
+  ]) {
+    if (hasUnsafeChars(value)) throw new Error("INVALID_QUICK_UTM");
+  }
+}
+
 function normalizeSurveyContacts(contacts: SurveyContact[]): SurveyContact[] {
   if (contacts.length > 3) throw new Error("TOO_MANY_CONTACTS");
   return contacts.map((contact) => {
@@ -708,13 +895,26 @@ async function rejectDuplicateIdempotency(
   serviceRoleKey: string,
   idempotencyKey: string,
 ): Promise<void> {
+  const existingSessionId = await findIdempotencySession(
+    supabaseUrl,
+    serviceRoleKey,
+    idempotencyKey,
+  );
+  if (existingSessionId) throw new Error("DUPLICATE_IDEMPOTENCY_KEY");
+}
+
+async function findIdempotencySession(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  idempotencyKey: string,
+): Promise<string | null> {
   const key = encodeURIComponent(idempotencyKey);
   const existing = await fetch(`${supabaseUrl}/rest/v1/idempotency_keys?idempotency_key=eq.${key}&select=session_id`, {
     headers: restHeaders(serviceRoleKey),
   });
   if (!existing.ok) throw new Error("IDEMPOTENCY_CHECK_FAILED");
-  const rows = (await existing.json()) as unknown[];
-  if (rows.length > 0) throw new Error("DUPLICATE_IDEMPOTENCY_KEY");
+  const rows = (await existing.json()) as Array<{ session_id?: string }>;
+  return rows[0]?.session_id ?? null;
 }
 
 async function applyRateLimit(
@@ -900,8 +1100,73 @@ function isPersona(value: string): value is Persona {
   return value === "practitioner" || value === "leader" || value === "security";
 }
 
+function isQuickWorkType(value: unknown): value is QuickWorkType {
+  return (
+    value === "customer_reply" ||
+    value === "grant_document" ||
+    value === "business_document" ||
+    value === "marketing_content" ||
+    value === "unknown"
+  );
+}
+
+function isMonthlyVolume(value: unknown): value is MonthlyVolume {
+  return value === "low" || value === "mid" || value === "high" || value === "unknown";
+}
+
+function isTimePerCase(value: unknown): value is TimePerCase {
+  return value === "short" || value === "medium" || value === "long" || value === "unknown";
+}
+
+function isAdoptionScope(value: unknown): value is AdoptionScope {
+  return (
+    value === "draft_only" ||
+    value === "reviewed_use" ||
+    value === "partial_automation" ||
+    value === "direct_use" ||
+    value === "unknown"
+  );
+}
+
+function isExposure(value: unknown): value is Exposure {
+  return value === "external" || value === "executive" || value === "internal" || value === "unknown";
+}
+
+function isProjectScale(value: unknown): value is ProjectScale {
+  return value === "low" || value === "medium" || value === "high" || value === "enterprise";
+}
+
 function isUuid(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function assertOrderedNumbers(min: unknown, max: unknown, code: string): void {
+  if (typeof min !== "number" || typeof max !== "number" || !Number.isFinite(min) || !Number.isFinite(max)) {
+    throw new Error(code);
+  }
+  if (min < 0 || max < 0 || min > max) {
+    throw new Error(code);
+  }
+}
+
+function assertOrderedIntegers(min: unknown, max: unknown, code: string): void {
+  if (!Number.isInteger(min) || !Number.isInteger(max)) {
+    throw new Error(code);
+  }
+  if ((min as number) < 0 || (max as number) < 0 || (min as number) > (max as number)) {
+    throw new Error(code);
+  }
+}
+
+function assertNullableNonNegativeInteger(value: unknown, code: string): void {
+  if (value === null) return;
+  if (!Number.isInteger(value) || (value as number) < 0) {
+    throw new Error(code);
+  }
+}
+
+function hasUnsafeChars(value: string | undefined): boolean {
+  return typeof value === "string" && /[<>]/.test(value);
 }
 
 function addMonths(date: Date, months: number): Date {

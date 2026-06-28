@@ -13,6 +13,7 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      CONTACT_ENCRYPTION_KEY: ${{ secrets.CONTACT_ENCRYPTION_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
       SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       NEXT_PUBLIC_SURVEY_API_URL: ${{ vars.NEXT_PUBLIC_SURVEY_API_URL }}
@@ -37,6 +38,7 @@ jobs:
           test -n "$SUPABASE_ACCESS_TOKEN"
           test -n "$SUPABASE_DB_PASSWORD"
           test -n "$SUPABASE_SERVICE_ROLE_KEY"
+          test -n "$CONTACT_ENCRYPTION_KEY"
           test -n "$SUPABASE_URL"
           test -n "$NEXT_PUBLIC_SURVEY_API_URL"
           url_ref="$(node -e "const host = new URL(process.env.SUPABASE_URL).host; console.log(host.split('.')[0]);")"
@@ -56,6 +58,14 @@ jobs:
 
       - name: Apply database migrations
         run: supabase db push --password "$SUPABASE_DB_PASSWORD" --include-all
+
+      - name: Configure Edge Function secrets
+        run: |
+          supabase secrets set \
+            SUPABASE_URL="$SUPABASE_URL" \
+            SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+            CONTACT_ENCRYPTION_KEY="$CONTACT_ENCRYPTION_KEY" \
+            --project-ref "$PROJECT_REF"
 
       - name: Deploy survey submit function
         run: supabase functions deploy survey-submit --project-ref "$PROJECT_REF"

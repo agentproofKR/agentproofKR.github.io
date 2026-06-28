@@ -651,6 +651,20 @@
   text-align: center;
 }
 
+.referencePrivacyNote,
+.referenceStoredNote {
+  margin: 0;
+  color: rgb(255 255 255 / 42%);
+  font-size: 12px;
+  font-weight: 620;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.referenceStoredNote {
+  color: rgb(50 224 173 / 78%);
+}
+
 .referenceVisuallyHidden {
   position: absolute;
   width: 1px;

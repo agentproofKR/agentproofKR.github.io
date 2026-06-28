@@ -1,51 +1,74 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { Header } from "@/components/layout/Header";
 import { trackEvent } from "@/lib/analytics";
 import {
-  adoptionPurposeOptions,
+  adoptionScopeOptions,
   buildAdoptionReport,
+  exposureOptions,
   formatResultSummary,
+  monthlyVolumeOptions,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
-  usageScopeOptions,
-  workNatureOptions,
+  timePerCaseOptions,
   workOptions,
-  type AdoptionPurpose,
+  type AdoptionScope,
   type AdoptionReport,
   type DiagnosisOption,
+  type Exposure,
+  type MonthlyVolume,
   type ReferenceDiagnosisScreen,
-  type UsageScope,
-  type WorkNature,
+  type TimePerCase,
   type WorkType,
 } from "@/lib/survey/quickDiagnosis";
+import {
+  getQuickDiagnosisSubmissionMode,
+  submitQuickDiagnosisToEndpoint,
+  type QuickDiagnosisPayload,
+} from "@/lib/survey/quickDiagnosisSubmission";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-type ScreenIndex = 0 | 1 | 2 | 3 | 4 | 5;
+type ScreenIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export function QuickDiagnosisPage() {
   const [screenIndex, setScreenIndex] = useState<ScreenIndex>(0);
   const [selectedWork, setSelectedWork] = useState<WorkType | null>(null);
-  const [selectedPurpose, setSelectedPurpose] = useState<AdoptionPurpose | null>(
+  const [selectedMonthlyVolume, setSelectedMonthlyVolume] = useState<MonthlyVolume | null>(
     null,
   );
-  const [selectedNature, setSelectedNature] = useState<WorkNature | null>(null);
-  const [selectedScope, setSelectedScope] = useState<UsageScope | null>(null);
+  const [selectedTimePerCase, setSelectedTimePerCase] = useState<TimePerCase | null>(
+    null,
+  );
+  const [selectedAdoptionScope, setSelectedAdoptionScope] = useState<AdoptionScope | null>(
+    null,
+  );
+  const [selectedExposure, setSelectedExposure] = useState<Exposure | null>(null);
   const [toastMessage, setToastMessage] = useState("");
+  const [quickStorageStatus, setQuickStorageStatus] = useState("");
+  const quickSessionIdRef = useRef<string | null>(null);
+  const quickIdempotencyKeyRef = useRef<string | null>(null);
+  const hasSubmittedQuickDiagnosisRef = useRef(false);
 
   const report = useMemo(
     () =>
       buildAdoptionReport({
         workType: selectedWork ?? "unknown",
-        purpose: selectedPurpose ?? "find_use_case",
-        nature: selectedNature ?? "unclear",
-        scope: selectedScope ?? "unknown",
+        monthlyVolume: selectedMonthlyVolume ?? "unknown",
+        timePerCase: selectedTimePerCase ?? "unknown",
+        adoptionScope: selectedAdoptionScope ?? "unknown",
+        exposure: selectedExposure ?? "unknown",
       }),
-    [selectedNature, selectedPurpose, selectedScope, selectedWork],
+    [
+      selectedAdoptionScope,
+      selectedExposure,
+      selectedMonthlyVolume,
+      selectedTimePerCase,
+      selectedWork,
+    ],
   );
 
   useEffect(() => {
@@ -60,6 +83,87 @@ export function QuickDiagnosisPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (
+      screenIndex !== 6 ||
+      selectedWork === null ||
+      selectedMonthlyVolume === null ||
+      selectedTimePerCase === null ||
+      selectedAdoptionScope === null ||
+      selectedExposure === null ||
+      hasSubmittedQuickDiagnosisRef.current
+    ) {
+      return;
+    }
+
+    const mode = getQuickDiagnosisSubmissionMode(
+      process.env.NEXT_PUBLIC_SURVEY_API_URL,
+    );
+    if (mode.mode === "disabled") {
+      return;
+    }
+
+    hasSubmittedQuickDiagnosisRef.current = true;
+    const { idempotencyKey, sessionId } = getQuickDiagnosisIds({
+      idempotencyKeyRef: quickIdempotencyKeyRef,
+      sessionIdRef: quickSessionIdRef,
+    });
+    const stored = getStoredUtm(window.sessionStorage);
+    const payload: QuickDiagnosisPayload = {
+      kind: "quick_diagnosis",
+      sessionId,
+      idempotencyKey,
+      quickDiagnosisVersion,
+      honeypot: "",
+      selections: {
+        workType: selectedWork,
+        monthlyVolume: selectedMonthlyVolume,
+        timePerCase: selectedTimePerCase,
+        adoptionScope: selectedAdoptionScope,
+        exposure: selectedExposure,
+      },
+      result: {
+        aiAdoptionScore: report.aiAdoptionScore,
+        resultBand: report.resultBand,
+        savingRateMin: report.savingRateMin,
+        savingRateMax: report.savingRateMax,
+        savingHoursMin: report.savingHoursMin,
+        savingHoursMax: report.savingHoursMax,
+        savingMoneyMin: report.savingMoneyMin,
+        savingMoneyMax: report.savingMoneyMax,
+        supportReviewAverage: report.supportReviewAverage,
+        supportReviewMin: report.supportReviewMin,
+        supportReviewMax: report.supportReviewMax,
+        projectScale: report.projectScale,
+        hourlyCost: report.hourlyCost,
+      },
+      utm: {
+        source: stored.source ?? undefined,
+        medium: stored.medium ?? undefined,
+        campaign: stored.campaign ?? undefined,
+        content: stored.content ?? undefined,
+      },
+    };
+
+    void submitQuickDiagnosisToEndpoint(mode.endpoint, payload).then((result) => {
+      if (result.ok) {
+        setQuickStorageStatus("익명 결과가 저장되었습니다");
+        return;
+      }
+      if (process.env.NODE_ENV === "development") {
+        console.warn("quick diagnosis submission failed", result.code);
+      }
+    });
+  }, [
+    report,
+    screenIndex,
+    selectedAdoptionScope,
+    selectedExposure,
+    selectedMonthlyVolume,
+    selectedTimePerCase,
+    selectedWork,
+  ]);
+
   const goToScreen = (nextIndex: ScreenIndex) => {
     setScreenIndex(nextIndex);
     setToastMessage("");
@@ -71,9 +175,10 @@ export function QuickDiagnosisPage() {
       mode: "adoption_mini_report",
       step: referenceDiagnosisScreens[nextIndex].id,
       selectedWork: selectedWork ?? "",
-      selectedPurpose: selectedPurpose ?? "",
-      selectedNature: selectedNature ?? "",
-      selectedScope: selectedScope ?? "",
+      monthlyVolume: selectedMonthlyVolume ?? "",
+      timePerCase: selectedTimePerCase ?? "",
+      adoptionScope: selectedAdoptionScope ?? "",
+      exposure: selectedExposure ?? "",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -93,9 +198,12 @@ export function QuickDiagnosisPage() {
 
   const chooseWork = (workType: WorkType) => {
     setSelectedWork(workType);
-    setSelectedPurpose(null);
-    setSelectedNature(null);
-    setSelectedScope(null);
+    setSelectedMonthlyVolume(null);
+    setSelectedTimePerCase(null);
+    setSelectedAdoptionScope(null);
+    setSelectedExposure(null);
+    hasSubmittedQuickDiagnosisRef.current = false;
+    setQuickStorageStatus("");
     trackEvent("quick_diagnosis_option_select", {
       mode: "adoption_mini_report",
       field: "work",
@@ -104,41 +212,66 @@ export function QuickDiagnosisPage() {
     });
   };
 
-  const choosePurpose = (purpose: AdoptionPurpose) => {
-    setSelectedPurpose(purpose);
-    setSelectedNature(null);
-    setSelectedScope(null);
+  const chooseMonthlyVolume = (monthlyVolume: MonthlyVolume) => {
+    setSelectedMonthlyVolume(monthlyVolume);
+    setSelectedTimePerCase(null);
+    setSelectedAdoptionScope(null);
+    setSelectedExposure(null);
+    hasSubmittedQuickDiagnosisRef.current = false;
+    setQuickStorageStatus("");
     trackEvent("quick_diagnosis_option_select", {
       mode: "adoption_mini_report",
-      field: "purpose",
-      value: purpose,
+      field: "monthly_volume",
+      value: monthlyVolume,
       selectedWork: selectedWork ?? "",
       quickDiagnosisVersion,
     });
   };
 
-  const chooseNature = (nature: WorkNature) => {
-    setSelectedNature(nature);
-    setSelectedScope(null);
+  const chooseTimePerCase = (timePerCase: TimePerCase) => {
+    setSelectedTimePerCase(timePerCase);
+    setSelectedAdoptionScope(null);
+    setSelectedExposure(null);
+    hasSubmittedQuickDiagnosisRef.current = false;
+    setQuickStorageStatus("");
     trackEvent("quick_diagnosis_option_select", {
       mode: "adoption_mini_report",
-      field: "nature",
-      value: nature,
+      field: "time_per_case",
+      value: timePerCase,
       selectedWork: selectedWork ?? "",
-      selectedPurpose: selectedPurpose ?? "",
+      monthlyVolume: selectedMonthlyVolume ?? "",
       quickDiagnosisVersion,
     });
   };
 
-  const chooseScope = (scope: UsageScope) => {
-    setSelectedScope(scope);
+  const chooseAdoptionScope = (adoptionScope: AdoptionScope) => {
+    setSelectedAdoptionScope(adoptionScope);
+    setSelectedExposure(null);
+    hasSubmittedQuickDiagnosisRef.current = false;
+    setQuickStorageStatus("");
     trackEvent("quick_diagnosis_option_select", {
       mode: "adoption_mini_report",
-      field: "scope",
-      value: scope,
+      field: "adoption_scope",
+      value: adoptionScope,
       selectedWork: selectedWork ?? "",
-      selectedPurpose: selectedPurpose ?? "",
-      selectedNature: selectedNature ?? "",
+      monthlyVolume: selectedMonthlyVolume ?? "",
+      timePerCase: selectedTimePerCase ?? "",
+      quickDiagnosisVersion,
+    });
+  };
+
+  const chooseExposure = (exposure: Exposure) => {
+    setSelectedExposure(exposure);
+    hasSubmittedQuickDiagnosisRef.current = false;
+    setQuickStorageStatus("");
+    trackEvent("quick_diagnosis_option_select", {
+      mode: "adoption_mini_report",
+      field: "exposure",
+      value: exposure,
+      selectedWork: selectedWork ?? "",
+      monthlyVolume: selectedMonthlyVolume ?? "",
+      timePerCase: selectedTimePerCase ?? "",
+      adoptionScope: selectedAdoptionScope ?? "",
       quickDiagnosisVersion,
     });
   };
@@ -146,9 +279,10 @@ export function QuickDiagnosisPage() {
   const showResult = () => {
     if (
       selectedWork === null ||
-      selectedPurpose === null ||
-      selectedNature === null ||
-      selectedScope === null
+      selectedMonthlyVolume === null ||
+      selectedTimePerCase === null ||
+      selectedAdoptionScope === null ||
+      selectedExposure === null
     ) {
       return;
     }
@@ -157,23 +291,25 @@ export function QuickDiagnosisPage() {
     trackEvent("quick_diagnosis_complete", {
       mode: "adoption_mini_report",
       selectedWork,
-      selectedPurpose,
-      selectedNature,
-      selectedScope,
+      monthlyVolume: selectedMonthlyVolume,
+      timePerCase: selectedTimePerCase,
+      adoptionScope: selectedAdoptionScope,
+      exposure: selectedExposure,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-    goToScreen(5);
+    goToScreen(6);
   };
 
   const requestPilot = () => {
     trackEvent("quick_diagnosis_pilot_cta_click", {
       mode: "adoption_mini_report",
       selectedWork: selectedWork ?? "",
-      selectedPurpose: selectedPurpose ?? "",
-      selectedNature: selectedNature ?? "",
-      selectedScope: selectedScope ?? "",
+      monthlyVolume: selectedMonthlyVolume ?? "",
+      timePerCase: selectedTimePerCase ?? "",
+      adoptionScope: selectedAdoptionScope ?? "",
+      exposure: selectedExposure ?? "",
       quickDiagnosisVersion,
     });
   };
@@ -230,39 +366,50 @@ export function QuickDiagnosisPage() {
             ) : null}
             {screenIndex === 2 ? (
               <OptionStepScreen
-                options={adoptionPurposeOptions}
+                options={monthlyVolumeOptions}
                 screenIndex={2}
-                selectedValue={selectedPurpose}
+                selectedValue={selectedMonthlyVolume}
                 onBack={() => goToScreen(1)}
                 onNext={() => goToScreen(3)}
-                onSelect={choosePurpose}
+                onSelect={chooseMonthlyVolume}
               />
             ) : null}
             {screenIndex === 3 ? (
               <OptionStepScreen
-                options={workNatureOptions}
+                options={timePerCaseOptions}
                 screenIndex={3}
-                selectedValue={selectedNature}
+                selectedValue={selectedTimePerCase}
                 onBack={() => goToScreen(2)}
                 onNext={() => goToScreen(4)}
-                onSelect={chooseNature}
+                onSelect={chooseTimePerCase}
               />
             ) : null}
             {screenIndex === 4 ? (
               <OptionStepScreen
-                options={usageScopeOptions}
+                options={adoptionScopeOptions}
                 screenIndex={4}
-                selectedValue={selectedScope}
+                selectedValue={selectedAdoptionScope}
                 onBack={() => goToScreen(3)}
-                onNext={showResult}
-                onSelect={chooseScope}
+                onNext={() => goToScreen(5)}
+                onSelect={chooseAdoptionScope}
               />
             ) : null}
             {screenIndex === 5 ? (
+              <OptionStepScreen
+                options={exposureOptions}
+                screenIndex={5}
+                selectedValue={selectedExposure}
+                onBack={() => goToScreen(4)}
+                onNext={showResult}
+                onSelect={chooseExposure}
+              />
+            ) : null}
+            {screenIndex === 6 ? (
               <ReportScreen
                 report={report}
+                storageStatus={quickStorageStatus}
                 toastMessage={toastMessage}
-                onBack={() => goToScreen(4)}
+                onBack={() => goToScreen(5)}
                 onCopy={() => void copyResult()}
                 onPilotClick={requestPilot}
                 onSave={saveResult}
@@ -381,6 +528,7 @@ function OptionStepScreen<TValue extends string>({
 
 function ReportScreen({
   report,
+  storageStatus,
   toastMessage,
   onBack,
   onCopy,
@@ -388,13 +536,14 @@ function ReportScreen({
   onSave,
 }: {
   report: AdoptionReport;
+  storageStatus: string;
   toastMessage: string;
   onBack: () => void;
   onCopy: () => void;
   onPilotClick: () => void;
   onSave: () => void;
 }) {
-  const screen = referenceDiagnosisScreens[5];
+  const screen = referenceDiagnosisScreens[6];
   const pilotHref = `mailto:agentproof.ai@gmail.com?subject=${encodeURIComponent(
     "30일 파일럿 설계 요청",
   )}`;
@@ -470,6 +619,12 @@ function ReportScreen({
           결과 복사하기
         </button>
       </ReferenceActions>
+      <p className={styles.referencePrivacyNote}>
+        익명 결과는 서비스 개선을 위해 저장될 수 있습니다.
+      </p>
+      {storageStatus ? (
+        <p className={styles.referenceStoredNote}>{storageStatus}</p>
+      ) : null}
       <div className={styles.referenceCopyStatus} role="status" aria-live="polite">
         {toastMessage}
       </div>
@@ -541,4 +696,44 @@ async function writeClipboardText(text: string): Promise<void> {
   } finally {
     document.body.removeChild(textArea);
   }
+}
+
+function getQuickDiagnosisIds({
+  idempotencyKeyRef,
+  sessionIdRef,
+}: {
+  sessionIdRef: { current: string | null };
+  idempotencyKeyRef: { current: string | null };
+}) {
+  const sessionStorageKey = "agentproof-quick-diagnosis-session-id";
+  const idempotencyStorageKey = "agentproof-quick-diagnosis-idempotency-key";
+  const storedSessionId = window.sessionStorage.getItem(sessionStorageKey);
+  const storedIdempotencyKey = window.sessionStorage.getItem(idempotencyStorageKey);
+
+  const sessionId = sessionIdRef.current ?? storedSessionId ?? createUuid();
+  const idempotencyKey =
+    idempotencyKeyRef.current ??
+    storedIdempotencyKey ??
+    `quick-${sessionId}-${quickDiagnosisVersion}`;
+
+  sessionIdRef.current = sessionId;
+  idempotencyKeyRef.current = idempotencyKey;
+  window.sessionStorage.setItem(sessionStorageKey, sessionId);
+  window.sessionStorage.setItem(idempotencyStorageKey, idempotencyKey);
+
+  return { idempotencyKey, sessionId };
+}
+
+function createUuid() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex
+    .slice(6, 8)
+    .join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
 }
