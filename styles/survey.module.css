@@ -249,6 +249,7 @@
 .referenceBackButton,
 .referenceOption,
 .referenceControlRow,
+.referencePillButton,
 .referenceTiming button {
   font: inherit;
   letter-spacing: 0;
@@ -367,6 +368,197 @@
   color: rgb(255 255 255 / 70%);
   font-size: 14px;
   font-weight: 720;
+}
+
+.referenceCalculator {
+  display: grid;
+  gap: 12px;
+}
+
+.referenceEffortGroup {
+  display: grid;
+  gap: 10px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 4.5%);
+  margin: 0;
+  padding: 14px;
+}
+
+.referenceEffortGroup legend {
+  padding: 0;
+  color: rgb(255 255 255 / 78%);
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.32;
+  word-break: keep-all;
+}
+
+.referencePillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.referencePillButton {
+  min-height: 38px;
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 5%);
+  padding: 0 12px;
+  color: rgb(255 255 255 / 72%);
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.1;
+}
+
+.referencePillButton[data-selected="true"] {
+  border-color: rgb(255 59 122 / 66%);
+  background: rgb(255 59 122 / 14%);
+  color: #ffffff;
+}
+
+.referenceReportScreen {
+  gap: 11px;
+  margin-top: 18px;
+}
+
+.referenceReportHero,
+.referenceReportCard {
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 4.5%);
+  padding: 14px;
+}
+
+.referenceReportHero {
+  display: grid;
+  gap: 8px;
+  background:
+    linear-gradient(180deg, rgb(255 59 122 / 13%), rgb(255 255 255 / 4%)),
+    rgb(255 255 255 / 4.5%);
+}
+
+.referenceReportHero > span {
+  color: #ff83aa;
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.referenceReportHero h1 {
+  font-size: clamp(26px, 8vw, 34px);
+}
+
+.referenceReportCard {
+  display: grid;
+  gap: 10px;
+}
+
+.referenceReportCard h2 {
+  margin: 0;
+  color: rgb(255 255 255 / 88%);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.28;
+}
+
+.referenceEffectGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.referenceMetricBlock {
+  display: grid;
+  gap: 5px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 4%);
+  padding: 12px;
+}
+
+.referenceMetricBlock span,
+.referenceMetricBlock small,
+.referenceReportNote {
+  color: rgb(255 255 255 / 56%);
+  font-size: 12px;
+  font-weight: 690;
+  line-height: 1.35;
+}
+
+.referenceMetricBlock strong {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.referenceReportNote,
+.referenceMethod,
+.referencePilotSize,
+.referenceSupportNote {
+  margin: 0;
+  word-break: keep-all;
+}
+
+.referenceMethod,
+.referencePilotSize {
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 760;
+  line-height: 1.38;
+}
+
+.referenceSupportNote {
+  color: rgb(255 255 255 / 76%);
+  font-size: 14px;
+  font-weight: 640;
+  line-height: 1.5;
+}
+
+.referenceCompactList {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.referenceCompactList li {
+  position: relative;
+  padding-left: 18px;
+  color: rgb(255 255 255 / 82%);
+  font-size: 14px;
+  font-weight: 680;
+  line-height: 1.38;
+}
+
+.referenceCompactList li::before {
+  content: "";
+  position: absolute;
+  top: 0.58em;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #32e0ad;
+}
+
+.referenceCopyStatus {
+  min-height: 20px;
+  color: #32e0ad;
+  font-size: 13px;
+  font-weight: 720;
+  text-align: center;
+}
+
+.referenceVisuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 
 .referenceControlList {
@@ -812,6 +1004,7 @@ button.referenceControlRow {
 .referencePrimaryButton:focus-visible,
 .referenceBackButton:focus-visible,
 .referenceOption:focus-visible,
+.referencePillButton:focus-visible,
 .referenceControlRow:focus-visible,
 .referenceField input:focus-visible,
 .referenceTiming button:focus-visible,
@@ -2269,6 +2462,30 @@ button.referenceControlRow {
     padding: 0 11px;
     font-size: 11px;
     font-weight: 720;
+  }
+
+  .referencePage {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+
+  .referenceCard {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .referenceEffectGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .referencePillGroup {
+    gap: 7px;
+  }
+
+  .referencePillButton {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 13px;
   }
 
   .hero,

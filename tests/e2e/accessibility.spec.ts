@@ -33,7 +33,7 @@ test("passes core automated accessibility checks", async ({ page }) => {
   expect(results.violations).toEqual([]);
 });
 
-test("keyboard users can start the survey and move through the first question", async ({
+test("keyboard users can start the survey and move through the calculator", async ({
   page,
 }) => {
   await page.goto("/");
@@ -57,6 +57,18 @@ test("keyboard users can start the survey and move through the first question", 
   await page.getByRole("button", { name: "다음" }).focus();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("heading", { name: /고객 답변에\s*AI를 어디까지 쓸까요\?/ }),
+    page.getByRole("heading", { name: "효과를 계산해볼게요" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "10건 이하" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "10분 이하" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "내부용" }).focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "결과 보기" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("heading", { name: /고객 문의 응대부터\s*시작해보세요/ }),
   ).toBeVisible();
 });

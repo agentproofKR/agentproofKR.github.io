@@ -1,59 +1,68 @@
 "use client";
 
 import Link from "next/link";
-import {
-  type CSSProperties,
-  type FormEvent,
-  type ReactNode,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 
 import { Header } from "@/components/layout/Header";
 import { trackEvent } from "@/lib/analytics";
 import {
-  calculateAssuranceResult,
-  getAdoptionScopeTitle,
-  getAutonomyLabel,
-  getDefaultControlState,
+  buildMiniReport,
+  calculateAdoptionEffect,
+  effortQuestionGroups,
+  formatMonthlyEstimate,
+  formatResultSummary,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
-  workspaceMap,
   workOptions,
-  type AssuranceResult,
-  type ControlState,
+  type AdoptionEffectResult,
+  type EffortQuestionGroup,
+  type ExposureScope,
+  type MiniReport,
+  type PartialAdoptionInputState,
   type WorkType,
 } from "@/lib/survey/quickDiagnosis";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-type ScreenIndex = 0 | 1 | 2 | 3 | 4 | 5;
-type TimingOption = "즉시" | "1개월" | "검토 중";
+type ScreenIndex = 0 | 1 | 2 | 3;
+type EffortValue = NonNullable<PartialAdoptionInputState[keyof PartialAdoptionInputState]>;
 
-const timingOptions: readonly TimingOption[] = ["즉시", "1개월", "검토 중"];
+const defaultEffortInput: PartialAdoptionInputState = {
+  volume: null,
+  time: null,
+  exposure: null,
+};
 
 export function QuickDiagnosisPage() {
   const [screenIndex, setScreenIndex] = useState<ScreenIndex>(0);
   const [selectedWork, setSelectedWork] = useState<WorkType | null>(null);
-  const [controlState, setControlState] = useState<ControlState>(
-    getDefaultControlState("unknown"),
-  );
+  const [effortInput, setEffortInput] =
+    useState<PartialAdoptionInputState>(defaultEffortInput);
+  const [copyStatus, setCopyStatus] = useState("");
   const activeWork = selectedWork ?? "unknown";
-  const [decisionMaker, setDecisionMaker] = useState("");
-  const [contact, setContact] = useState("");
-  const [timing, setTiming] = useState<TimingOption>("즉시");
-  const result = useMemo(
-    () => calculateAssuranceResult(activeWork, controlState),
-    [activeWork, controlState],
+  const completeEffortInput = getCompleteEffortInput(effortInput);
+  const effect = useMemo(
+    () =>
+      calculateAdoptionEffect(
+        activeWork,
+        completeEffortInput ?? {
+          volume: "unknown",
+          time: "unknown",
+          exposure: "internal",
+        },
+      ),
+    [activeWork, completeEffortInput],
   );
+  const report = useMemo(() => buildMiniReport(activeWork), [activeWork]);
+  const workLabel =
+    workOptions.find((option) => option.value === activeWork)?.label ?? "추천 업무";
 
   useEffect(() => {
     const initial = readUtmFromUrl(window.location.href);
     storeInitialUtm(initial, window.sessionStorage);
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_view", {
-      mode: "reference",
+      mode: "adoption_report",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -62,12 +71,13 @@ export function QuickDiagnosisPage() {
 
   const goToScreen = (nextIndex: ScreenIndex) => {
     setScreenIndex(nextIndex);
+    setCopyStatus("");
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "auto" });
     });
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_step_view", {
-      mode: "reference",
+      mode: "adoption_report",
       step: referenceDiagnosisScreens[nextIndex].id,
       selectedWork: activeWork,
       quickDiagnosisVersion,
@@ -79,7 +89,7 @@ export function QuickDiagnosisPage() {
   const start = () => {
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_start", {
-      mode: "reference",
+      mode: "adoption_report",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -89,21 +99,32 @@ export function QuickDiagnosisPage() {
 
   const chooseWork = (workType: WorkType) => {
     setSelectedWork(workType);
-    setControlState(getDefaultControlState(workType));
+    setEffortInput(defaultEffortInput);
     trackEvent("quick_diagnosis_option_select", {
-      mode: "reference",
+      mode: "adoption_report",
       selectedWork: workType,
       quickDiagnosisVersion,
     });
   };
 
-  const showScore = () => {
+  const selectEffort = (groupId: EffortQuestionGroup["id"], value: EffortValue) => {
+    setEffortInput((current) => ({
+      ...current,
+      [groupId]: value,
+    }));
+  };
+
+  const showReport = () => {
+    if (!completeEffortInput) return;
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_complete", {
-      mode: "reference",
+      mode: "adoption_report",
       selectedWork: activeWork,
-      score: result.score,
-      band: result.band,
+      volume: completeEffortInput.volume,
+      time: completeEffortInput.time,
+      exposure: completeEffortInput.exposure,
+      monthlyHoursRange: effect.monthlyHoursRange,
+      savingHoursRange: effect.savingHoursRange,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -111,24 +132,21 @@ export function QuickDiagnosisPage() {
     goToScreen(3);
   };
 
-  const submitValidation = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    trackEvent("quick_diagnosis_validation_submit", {
-      mode: "reference",
+  const requestPilot = () => {
+    trackEvent("quick_diagnosis_pilot_cta_click", {
+      mode: "adoption_report",
       selectedWork: activeWork,
-      timing,
-      score: result.score,
-      band: result.band,
       quickDiagnosisVersion,
     });
-    goToScreen(5);
   };
 
-  const shareReport = () => {
-    trackEvent("quick_diagnosis_report_share_click", {
-      mode: "reference",
+  const copyResult = async () => {
+    const summary = formatResultSummary(workLabel, effect, report);
+    await navigator.clipboard.writeText(summary);
+    setCopyStatus("결과를 복사했습니다");
+    trackEvent("quick_diagnosis_result_copy", {
+      mode: "adoption_report",
       selectedWork: activeWork,
-      score: result.score,
       quickDiagnosisVersion,
     });
   };
@@ -160,42 +178,27 @@ export function QuickDiagnosisPage() {
               />
             ) : null}
             {screenIndex === 2 ? (
-              <ControlScreen
-                controlState={controlState}
-                selectedWork={activeWork}
+              <CalculatorScreen
+                effortInput={effortInput}
+                selectedWorkLabel={workLabel}
                 onBack={() => goToScreen(1)}
-                onChange={setControlState}
-                onNext={showScore}
+                onNext={showReport}
+                onSelect={selectEffort}
               />
             ) : null}
             {screenIndex === 3 ? (
-              <ScoreScreen
-                result={result}
+              <ReportScreen
+                copyStatus={copyStatus}
+                effect={effect}
+                report={report}
                 selectedWork={activeWork}
+                selectedWorkLabel={workLabel}
                 onBack={() => goToScreen(2)}
-                onNext={() => goToScreen(4)}
+                onCopy={copyResult}
+                onPilotClick={requestPilot}
               />
-            ) : null}
-            {screenIndex === 4 ? (
-              <ValidationScreen
-                contact={contact}
-                decisionMaker={decisionMaker}
-                timing={timing}
-                onBack={() => goToScreen(3)}
-                onContactChange={setContact}
-                onDecisionMakerChange={setDecisionMaker}
-                onSubmit={submitValidation}
-                onTimingChange={setTiming}
-              />
-            ) : null}
-            {screenIndex === 5 ? (
-              <MonitoringScreen onBack={() => goToScreen(4)} onShare={shareReport} />
             ) : null}
           </section>
-          <NextStepSection
-            selectedWork={selectedWork}
-            onValidationRequest={() => goToScreen(4)}
-          />
         </div>
       </main>
     </>
@@ -302,73 +305,46 @@ function WorkScreen({
   );
 }
 
-function ControlScreen({
-  controlState,
-  selectedWork,
+function CalculatorScreen({
+  effortInput,
+  selectedWorkLabel,
   onBack,
-  onChange,
   onNext,
+  onSelect,
 }: {
-  controlState: ControlState;
-  selectedWork: WorkType;
+  effortInput: PartialAdoptionInputState;
+  selectedWorkLabel: string;
   onBack: () => void;
-  onChange: (controlState: ControlState) => void;
   onNext: () => void;
+  onSelect: (groupId: EffortQuestionGroup["id"], value: EffortValue) => void;
 }) {
   const screen = referenceDiagnosisScreens[2];
-  const workLabel =
-    workOptions.find((option) => option.value === selectedWork)?.label ?? "";
+  const canContinue = getCompleteEffortInput(effortInput) !== null;
 
   return (
     <div className={styles.referenceScreen}>
-      <h1 id="reference-title">
-        {getAdoptionScopeTitle(selectedWork)
-          .split("\n")
-          .map((line) => (
-            <span key={line}>{line}</span>
-          ))}
-      </h1>
-      <p className={styles.referenceSelectedWork}>업무 · {workLabel}</p>
-      <div className={styles.referenceControlList}>
-        <div className={styles.referenceControlRow}>
-          <span>자율성 범위</span>
-          <strong>{getAutonomyLabel(controlState.autonomy)}</strong>
-        </div>
-        <ControlToggle
-          checked={controlState.behaviorLogging}
-          label="행동 로그 수집"
-          onChange={(checked) =>
-            onChange({ ...controlState, behaviorLogging: checked })
-          }
-        />
-        <ControlToggle
-          checked={controlState.humanReview}
-          label="사람 검토(HITL)"
-          onChange={(checked) => onChange({ ...controlState, humanReview: checked })}
-        />
-        <ControlToggle
-          checked={controlState.driftMonitoring}
-          label="드리프트 감시"
-          onChange={(checked) =>
-            onChange({ ...controlState, driftMonitoring: checked })
-          }
-        />
-      </div>
-      <div className={styles.referenceAnalysis}>
-        <span>{screen.analysisText}</span>
-        <div
-          className={styles.referenceAnalysisBar}
-          role="progressbar"
-          aria-label="AI 분석 진행률"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={72}
-        >
-          <i />
-        </div>
+      <h1 id="reference-title">{screen.title}</h1>
+      {screen.subcopy ? (
+        <p className={styles.referenceQuestionHelper}>{screen.subcopy}</p>
+      ) : null}
+      <p className={styles.referenceSelectedWork}>업무 · {selectedWorkLabel}</p>
+      <div className={styles.referenceCalculator}>
+        {effortQuestionGroups.map((group) => (
+          <EffortQuestionBlock
+            group={group}
+            key={group.id}
+            selectedValue={effortInput[group.id]}
+            onSelect={onSelect}
+          />
+        ))}
       </div>
       <ReferenceActions onBack={onBack}>
-        <button className={styles.referencePrimaryButton} type="button" onClick={onNext}>
+        <button
+          className={styles.referencePrimaryButton}
+          disabled={!canContinue}
+          type="button"
+          onClick={onNext}
+        >
           {screen.cta}
         </button>
       </ReferenceActions>
@@ -376,238 +352,170 @@ function ControlScreen({
   );
 }
 
-function ControlToggle({
-  checked,
-  label,
-  onChange,
+function EffortQuestionBlock({
+  group,
+  selectedValue,
+  onSelect,
 }: {
-  checked: boolean;
-  label: string;
-  onChange: (checked: boolean) => void;
+  group: EffortQuestionGroup;
+  selectedValue: EffortValue | null;
+  onSelect: (groupId: EffortQuestionGroup["id"], value: EffortValue) => void;
 }) {
   return (
-    <button
-      aria-checked={checked}
-      aria-label={label}
-      className={styles.referenceControlRow}
-      role="switch"
-      type="button"
-      onClick={() => onChange(!checked)}
-    >
-      <span>{label}</span>
-      <i data-checked={checked ? "true" : "false"} aria-hidden="true">
-        <b />
-      </i>
-    </button>
+    <fieldset className={styles.referenceEffortGroup}>
+      <legend>{group.label}</legend>
+      <div className={styles.referencePillGroup}>
+        {group.options.map((option) => {
+          const selected = option.value === selectedValue;
+          return (
+            <button
+              aria-pressed={selected}
+              className={styles.referencePillButton}
+              data-selected={selected ? "true" : "false"}
+              key={option.value}
+              type="button"
+              onClick={() => onSelect(group.id, option.value)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
   );
 }
 
-function ScoreScreen({
-  result,
+function ReportScreen({
+  copyStatus,
+  effect,
+  report,
   selectedWork,
+  selectedWorkLabel,
   onBack,
-  onNext,
+  onCopy,
+  onPilotClick,
 }: {
-  result: AssuranceResult;
+  copyStatus: string;
+  effect: AdoptionEffectResult;
+  report: MiniReport;
   selectedWork: WorkType;
+  selectedWorkLabel: string;
   onBack: () => void;
-  onNext: () => void;
+  onCopy: () => Promise<void>;
+  onPilotClick: () => void;
 }) {
   const screen = referenceDiagnosisScreens[3];
-  const workspace = workspaceMap[selectedWork];
-  const reviewAdvice = getHumanReviewAdvice(selectedWork);
-
-  const trackWorkspaceClick = () => {
-    trackEvent("quick_diagnosis_workspace_cta_click", {
-      mode: "reference",
-      selectedWork,
-      score: result.score,
-      ctaType: "score_primary",
-      quickDiagnosisVersion,
-    });
-  };
-
-  const requestValidation = () => {
-    trackEvent("quick_diagnosis_consult_click", {
-      mode: "reference",
-      selectedWork,
-      score: result.score,
-      ctaType: "score_secondary",
-      quickDiagnosisVersion,
-    });
-    onNext();
-  };
+  const pilotHref = `mailto:agentproof.ai@gmail.com?subject=${encodeURIComponent(
+    "30일 파일럿 설계 요청",
+  )}`;
 
   return (
-    <div className={styles.referenceScreen}>
-      <h1 id="reference-title">{screen.title}</h1>
-      <div
-        className={styles.referenceScoreGauge}
-        style={{ "--score": result.score } as CSSProperties}
-      >
-        <strong>{result.score} / 100</strong>
-      </div>
-      <p className={styles.referenceBand}>{result.bandLabel}</p>
-      <section className={styles.referenceRiskBox}>
-        <span>{screen.riskTitle}</span>
-        <strong>{result.riskLine}</strong>
+    <div className={`${styles.referenceScreen} ${styles.referenceReportScreen}`}>
+      <section className={styles.referenceReportHero} aria-labelledby="reference-title">
+        <span>{selectedWorkLabel}</span>
+        <h1 id="reference-title">
+          {report.headline.split("\n").map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </h1>
       </section>
-      <div className={styles.referenceMetrics}>
-        <div>
-          <span>일 누수</span>
-          <strong>{result.dailyLeakageEstimate}</strong>
+
+      <ReportCard title="예상 효과">
+        <div className={styles.referenceEffectGrid}>
+          <MetricBlock
+            label="예상 업무량"
+            range={effect.monthlyHoursRange}
+            estimateLabel={effect.estimateLabel}
+          />
+          <MetricBlock
+            label="줄일 수 있는 시간"
+            range={effect.savingHoursRange}
+            estimateLabel={effect.estimateLabel}
+          />
         </div>
-        <div>
-          <span>지원금</span>
-          <strong>{result.subsidyEstimate}</strong>
-        </div>
-      </div>
-      <div className={styles.referenceResultSummary}>
-        <section>
-          <span>먼저 시험해볼 업무</span>
-          <strong>{workspace.title}</strong>
-        </section>
-        <section>
-          <span>사람이 봐야 할 경우</span>
-          <strong>{reviewAdvice}</strong>
-        </section>
-      </div>
+        <p className={styles.referenceReportNote}>
+          입력한 빈도와 소요시간 기준 예상 범위입니다.
+        </p>
+      </ReportCard>
+
+      <ReportCard title="권장 방식">
+        <p className={styles.referenceMethod}>{report.method}</p>
+        <p className={styles.referenceReportNote}>노출 범위 · {effect.exposureLabel}</p>
+      </ReportCard>
+
+      <ReportCard title="사람이 봐야 하는 경우">
+        <CompactList items={report.reviewPoints} />
+      </ReportCard>
+
+      <ReportCard title="30일 파일럿에서 볼 것">
+        <p className={styles.referencePilotSize}>{report.pilotSize}</p>
+        <CompactList items={report.pilotItems} />
+      </ReportCard>
+
+      <ReportCard title="지원사업 준비에 활용">
+        <p className={styles.referenceSupportNote}>{report.supportNote}</p>
+      </ReportCard>
+
       <ReferenceActions onBack={onBack}>
         <Link
           className={styles.referencePrimaryButton}
-          href={workspace.path}
-          onClick={trackWorkspaceClick}
+          href={pilotHref}
+          onClick={onPilotClick}
         >
-          추천 업무 체험하기
+          {screen.cta}
         </Link>
         <button
           className={`${styles.referencePrimaryButton} ${styles.referenceSecondaryButton}`}
           type="button"
-          onClick={requestValidation}
+          onClick={() => void onCopy()}
         >
-          {screen.cta}
+          결과 저장하기
         </button>
       </ReferenceActions>
+      <div className={styles.referenceCopyStatus} role="status" aria-live="polite">
+        {copyStatus}
+      </div>
+      <span className={styles.referenceVisuallyHidden}>
+        선택한 업무 키: {selectedWork}
+      </span>
     </div>
   );
 }
 
-function ValidationScreen({
-  contact,
-  decisionMaker,
-  timing,
-  onBack,
-  onContactChange,
-  onDecisionMakerChange,
-  onSubmit,
-  onTimingChange,
+function MetricBlock({
+  label,
+  range,
+  estimateLabel,
 }: {
-  contact: string;
-  decisionMaker: string;
-  timing: TimingOption;
-  onBack: () => void;
-  onContactChange: (value: string) => void;
-  onDecisionMakerChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onTimingChange: (value: TimingOption) => void;
+  label: string;
+  range: string;
+  estimateLabel: string;
 }) {
-  const screen = referenceDiagnosisScreens[4];
-
   return (
-    <form className={styles.referenceScreen} onSubmit={onSubmit}>
-      <h1 id="reference-title">{screen.title}</h1>
-      <label className={styles.referenceField}>
-        <span>담당자 · 결재자</span>
-        <input
-          autoComplete="name"
-          name="decisionMaker"
-          placeholder="김대표 · 구매 결정권자"
-          type="text"
-          value={decisionMaker}
-          onChange={(event) => onDecisionMakerChange(event.target.value)}
-        />
-      </label>
-      <label className={styles.referenceField}>
-        <span>연락처</span>
-        <input
-          autoComplete="tel"
-          inputMode="tel"
-          name="contact"
-          placeholder="010--"
-          type="tel"
-          value={contact}
-          onChange={(event) => onContactChange(event.target.value)}
-        />
-      </label>
-      <div className={styles.referenceTiming} role="group" aria-label="도입 시점">
-        <span>도입 시점</span>
-        <div>
-          {timingOptions.map((option) => (
-            <button
-              aria-pressed={timing === option}
-              key={option}
-              type="button"
-              onClick={() => onTimingChange(option)}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.referencePriceBox}>
-        <span>30일 업무 검증 · 업무당</span>
-        <strong>₩50–150만 / 건</strong>
-      </div>
-      <ReferenceActions onBack={onBack}>
-        <button className={styles.referencePrimaryButton} type="submit">
-          {screen.cta}
-        </button>
-      </ReferenceActions>
-    </form>
+    <div className={styles.referenceMetricBlock}>
+      <span>{label}</span>
+      <strong>{formatMonthlyEstimate(range)}</strong>
+      <small>{estimateLabel}</small>
+    </div>
   );
 }
 
-function MonitoringScreen({
-  onBack,
-  onShare,
-}: {
-  onBack: () => void;
-  onShare: () => void;
-}) {
-  const screen = referenceDiagnosisScreens[5];
-
+function ReportCard({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <div className={styles.referenceScreen}>
-      <h1 id="reference-title">{screen.title}</h1>
-      <p className={styles.referenceSubcopy}>{screen.subcopy}</p>
-      <div
-        className={styles.referenceChart}
-        data-testid="reference-monitoring-chart"
-        aria-label="최근 8주 안심 점수 추이"
-      >
-        <svg viewBox="0 0 280 120" role="img" aria-hidden="true">
-          <polyline points="8,86 48,72 88,78 128,52 168,58 208,40 248,34 272,28" />
-          <circle cx="272" cy="28" r="6" />
-        </svg>
-      </div>
-      <section className={styles.referenceAlertCard}>
-        <strong>{screen.alertTitle}</strong>
-        <span>권장 대비 -6점 · 재진단 권장</span>
-      </section>
-      <ul className={styles.referenceChecklist}>
-        <li>재진단 예약됨 (D-2)</li>
-        <li>규제 체크 통과 (AI 기본법)</li>
-      </ul>
-      <ReferenceActions onBack={onBack}>
-        <button
-          className={styles.referencePrimaryButton}
-          type="button"
-          onClick={onShare}
-        >
-          {screen.cta}
-        </button>
-      </ReferenceActions>
-    </div>
+    <section className={styles.referenceReportCard}>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  );
+}
+
+function CompactList({ items }: { items: readonly [string, string, string] }) {
+  return (
+    <ul className={styles.referenceCompactList}>
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
   );
 }
 
@@ -628,97 +536,13 @@ function ReferenceActions({
   );
 }
 
-function NextStepSection({
-  selectedWork,
-  onValidationRequest,
-}: {
-  selectedWork: WorkType | null;
-  onValidationRequest: () => void;
-}) {
-  const activeWork = selectedWork ?? "customer_reply";
-  const workspace = workspaceMap[activeWork];
-
-  const requestValidation = () => {
-    trackEvent("quick_diagnosis_consult_click", {
-      mode: "reference",
-      selectedWork: activeWork,
-      ctaType: "next_steps",
-      quickDiagnosisVersion,
-    });
-    onValidationRequest();
+function getCompleteEffortInput(input: PartialAdoptionInputState) {
+  if (input.volume === null || input.time === null || input.exposure === null) {
+    return null;
+  }
+  return {
+    volume: input.volume,
+    time: input.time,
+    exposure: input.exposure as ExposureScope,
   };
-
-  return (
-    <section
-      className={styles.referenceNextSteps}
-      id="next-steps"
-      aria-labelledby="next-steps-title"
-    >
-      <h2 id="next-steps-title">다음 단계</h2>
-      <div className={styles.referenceNextStepGrid}>
-        <Link
-          className={styles.referenceNextStepCard}
-          href={workspace.path}
-          onClick={() =>
-            trackEvent("quick_diagnosis_workspace_cta_click", {
-              mode: "reference",
-              selectedWork: activeWork,
-              ctaType: "next_steps",
-              quickDiagnosisVersion,
-            })
-          }
-        >
-          <strong>추천 업무 체험하기</strong>
-          <span>진단 결과에 맞는 업무를 1회 써봅니다.</span>
-          <i aria-hidden="true">체험하기</i>
-        </Link>
-        <button
-          className={styles.referenceNextStepCard}
-          type="button"
-          onClick={requestValidation}
-        >
-          <strong>30일 업무 검증 문의하기</strong>
-          <span>실제 사용 기록으로 도입 여부를 판단합니다.</span>
-          <i aria-hidden="true">문의하기</i>
-        </button>
-        <a className={styles.referenceNextStepCard} href="#ai-policy-sample">
-          <strong>AI 사용 기준 샘플 보기</strong>
-          <span>직원들이 어디까지 AI를 써도 되는지 기준을 확인합니다.</span>
-          <i aria-hidden="true">샘플 보기</i>
-        </a>
-      </div>
-      <details className={styles.referencePolicySample} id="ai-policy-sample">
-        <summary>AI 사용 기준 샘플</summary>
-        <ul>
-          <li>고객에게 나가는 문장은 사람이 확인합니다.</li>
-          <li>개인정보가 들어간 자료는 입력하지 않습니다.</li>
-          <li>가격·환불·보장 표현은 기록을 남깁니다.</li>
-        </ul>
-      </details>
-      <div className={styles.referenceRoleLinks}>
-        <span>역할별로 더 자세히 보고 싶다면</span>
-        <div>
-          <Link href="/survey/practitioner/">실무자</Link>
-          <Link href="/survey/leader/">대표·도입 담당자</Link>
-          <Link href="/survey/security/">보안·정책 담당자</Link>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function getHumanReviewAdvice(workType: WorkType): string {
-  if (workType === "customer_reply") {
-    return "고객에게 보내기 전 마지막 확인이 필요합니다.";
-  }
-  if (workType === "grant_document") {
-    return "제출 문서는 근거와 표현을 다시 봐야 합니다.";
-  }
-  if (workType === "business_document") {
-    return "보고에 쓰기 전 근거를 다시 봐야 합니다.";
-  }
-  if (workType === "marketing_content") {
-    return "외부에 공개하기 전 과한 표현을 봐야 합니다.";
-  }
-  return "업무를 정한 뒤 확인 기준을 잡아야 합니다.";
 }

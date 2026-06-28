@@ -46,9 +46,17 @@ test.describe("three-page simplification", () => {
     await expect(
       page.getByRole("button", { name: "시작하기" }),
     ).toBeVisible();
-
-    await expect(page.getByRole("heading", { name: "다음 단계" })).toBeVisible();
-    await expect(page.getByText("역할별로 더 자세히 보고 싶다면")).toBeVisible();
+    await page.getByRole("button", { name: "시작하기" }).click();
+    await page.getByRole("button", { name: /고객 문의 응대/ }).click();
+    await page.getByRole("button", { name: "다음" }).click();
+    await expect(page.getByRole("heading", { name: "효과를 계산해볼게요" })).toBeVisible();
+    await page.getByRole("button", { name: "10건 이하" }).click();
+    await page.getByRole("button", { name: "10분 이하" }).click();
+    await page.getByRole("button", { name: "내부용" }).click();
+    await page.getByRole("button", { name: "결과 보기" }).click();
+    await expect(
+      page.getByRole("heading", { name: /고객 문의 응대부터\s*시작해보세요/ }),
+    ).toBeVisible();
     await expect(page.locator("main")).not.toContainText("결과물");
     await expect(page.locator('input[type="text"], input[type="tel"]')).toHaveCount(0);
   });

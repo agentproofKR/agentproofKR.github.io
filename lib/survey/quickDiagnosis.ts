@@ -1,5 +1,5 @@
 export const quickDiagnosisVersion =
-  "2026-06-AgentProof-reference-six-screen-v1";
+  "2026-06-AgentProof-four-page-adoption-report-v1";
 
 export type WorkType =
   | "customer_reply"
@@ -8,47 +8,66 @@ export type WorkType =
   | "marketing_content"
   | "unknown";
 
-export type AutonomyLevel = "high" | "medium" | "low";
+export type EffortVolume = "low" | "mid" | "high" | "unknown";
+export type EffortTime = "short" | "medium" | "long" | "unknown";
+export type ExposureScope = "external" | "executive" | "internal";
 
-export type ControlState = {
-  autonomy: AutonomyLevel;
-  behaviorLogging: boolean;
-  humanReview: boolean;
-  driftMonitoring: boolean;
-  riskLine: string;
+export type AdoptionInputState = {
+  volume: EffortVolume;
+  time: EffortTime;
+  exposure: ExposureScope;
 };
 
-export type AssuranceBand =
-  | "go"
-  | "conditional"
-  | "needs_verification"
-  | "hold";
-
-export type AssuranceResult = {
-  score: number;
-  band: AssuranceBand;
-  bandLabel: string;
-  riskLine: string;
-  dailyLeakageEstimate: string;
-  subsidyEstimate: string;
+export type PartialAdoptionInputState = {
+  volume: EffortVolume | null;
+  time: EffortTime | null;
+  exposure: ExposureScope | null;
 };
+
+export type AdoptionEffectResult = {
+  monthlyHoursMin: number;
+  monthlyHoursMax: number;
+  savingHoursMin: number;
+  savingHoursMax: number;
+  monthlyHoursRange: string;
+  savingHoursRange: string;
+  estimateLabel: "예상 범위";
+  exposureLabel: string;
+};
+
+export type MiniReport = {
+  headline: string;
+  method: string;
+  reviewPoints: readonly [string, string, string];
+  pilotItems: readonly [string, string, string];
+  pilotSize: string;
+  supportNote: string;
+};
+
+export type EffortQuestionGroup =
+  | {
+      id: "volume";
+      label: string;
+      options: readonly { value: EffortVolume; label: string }[];
+    }
+  | {
+      id: "time";
+      label: string;
+      options: readonly { value: EffortTime; label: string }[];
+    }
+  | {
+      id: "exposure";
+      label: string;
+      options: readonly { value: ExposureScope; label: string }[];
+    };
 
 export type ReferenceDiagnosisScreen = {
-  id:
-    | "awareness"
-    | "work"
-    | "controls"
-    | "score"
-    | "validation"
-    | "monitoring";
+  id: "awareness" | "work" | "calculator" | "report";
   stageLabel: string;
   title: string;
   subcopy?: string;
   pill?: string;
   trustNote?: string;
-  analysisText?: string;
-  riskTitle?: string;
-  alertTitle?: string;
   cta: string;
 };
 
@@ -70,32 +89,17 @@ export const referenceDiagnosisScreens = [
     cta: "다음",
   },
   {
-    id: "controls",
-    stageLabel: "진단",
-    title: "통제 상태 진단",
-    analysisText: "AI 분석 중 · 평균 3초",
-    cta: "안심 점수 보기",
+    id: "calculator",
+    stageLabel: "계산",
+    title: "효과를 계산해볼게요",
+    subcopy: "대략 골라도 괜찮아요",
+    cta: "결과 보기",
   },
   {
-    id: "score",
+    id: "report",
     stageLabel: "리포트",
-    title: "안심 점수",
-    riskTitle: "가장 위험한 한 줄",
-    cta: "30일 업무 검증 문의하기",
-  },
-  {
-    id: "validation",
-    stageLabel: "전환",
-    title: "30일 업무 검증 문의",
-    cta: "문의 보내기",
-  },
-  {
-    id: "monitoring",
-    stageLabel: "모니터링",
-    title: "모니터링",
-    subcopy: "최근 8주 · 도입 후 상시 점검됨",
-    alertTitle: "드리프트 감지",
-    cta: "리포트 공유",
+    title: "AI 도입 간단 리포트",
+    cta: "30일 파일럿 설계 받기",
   },
 ] as const satisfies readonly ReferenceDiagnosisScreen[];
 
@@ -122,6 +126,38 @@ export const workOptions = [
   label: string;
   subtitle: string;
 }[];
+
+export const effortQuestionGroups = [
+  {
+    id: "volume",
+    label: "한 달에 몇 건 정도인가요?",
+    options: [
+      { value: "low", label: "10건 이하" },
+      { value: "mid", label: "10~50건" },
+      { value: "high", label: "50건 이상" },
+      { value: "unknown", label: "잘 모르겠어요" },
+    ],
+  },
+  {
+    id: "time",
+    label: "한 건에 얼마나 걸리나요?",
+    options: [
+      { value: "short", label: "10분 이하" },
+      { value: "medium", label: "30분 안팎" },
+      { value: "long", label: "1시간 이상" },
+      { value: "unknown", label: "잘 모르겠어요" },
+    ],
+  },
+  {
+    id: "exposure",
+    label: "결과가 어디로 나가나요?",
+    options: [
+      { value: "external", label: "고객·기관" },
+      { value: "executive", label: "대표·팀장" },
+      { value: "internal", label: "내부용" },
+    ],
+  },
+] as const satisfies readonly EffortQuestionGroup[];
 
 export const workspaceMap = {
   customer_reply: {
@@ -164,102 +200,144 @@ const legacyWorkspaceAliases = {
   proposal_doc: "business_document",
 } as const satisfies Record<string, WorkType>;
 
-const defaultControlState = {
+const volumeMap = {
+  low: { min: 1, max: 10 },
+  mid: { min: 10, max: 50 },
+  high: { min: 50, max: 120 },
+  unknown: { min: 10, max: 30 },
+} as const satisfies Record<EffortVolume, { min: number; max: number }>;
+
+const timeMap = {
+  short: { min: 5, max: 10 },
+  medium: { min: 20, max: 40 },
+  long: { min: 60, max: 90 },
+  unknown: { min: 15, max: 30 },
+} as const satisfies Record<EffortTime, { min: number; max: number }>;
+
+const savingsRate = {
+  customer_reply: { min: 0.25, max: 0.45 },
+  grant_document: { min: 0.2, max: 0.35 },
+  business_document: { min: 0.2, max: 0.4 },
+  marketing_content: { min: 0.25, max: 0.45 },
+  unknown: { min: 0.15, max: 0.3 },
+} as const satisfies Record<WorkType, { min: number; max: number }>;
+
+const exposureLabels = {
+  external: "고객·기관 전달",
+  executive: "대표·팀장 보고",
+  internal: "내부 참고",
+} as const satisfies Record<ExposureScope, string>;
+
+const miniReportCopy = {
   customer_reply: {
-    autonomy: "high",
-    behaviorLogging: true,
-    humanReview: false,
-    driftMonitoring: true,
-    riskLine: "사람 확인 없이 고객 답변 발송",
+    headline: "고객 문의 응대부터\n시작해보세요",
+    reviewPoints: ["개인정보", "환불·계약", "고객 불만"],
+    pilotSize: "문의 20건 기준",
   },
   grant_document: {
-    autonomy: "medium",
-    behaviorLogging: false,
-    humanReview: true,
-    driftMonitoring: false,
-    riskLine: "근거 확인 없이 제출 문서 작성",
+    headline: "사업계획서 작성부터\n시작해보세요",
+    reviewPoints: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
+    pilotSize: "문서 3~5건 기준",
   },
   business_document: {
-    autonomy: "medium",
-    behaviorLogging: true,
-    humanReview: true,
-    driftMonitoring: false,
-    riskLine: "근거 부족한 보고 문장 사용",
+    headline: "보고서·문서 작성부터\n시작해보세요",
+    reviewPoints: ["수치 근거", "외부 공유", "예산·계약 문장"],
+    pilotSize: "문서 5건 기준",
   },
   marketing_content: {
-    autonomy: "medium",
-    behaviorLogging: true,
-    humanReview: false,
-    driftMonitoring: true,
-    riskLine: "과장 표현이 외부에 노출",
+    headline: "마케팅 콘텐츠부터\n시작해보세요",
+    reviewPoints: ["과장 표현", "가격·효과", "고객 오해"],
+    pilotSize: "콘텐츠 10건 기준",
   },
   unknown: {
-    autonomy: "medium",
-    behaviorLogging: false,
-    humanReview: false,
-    driftMonitoring: false,
-    riskLine: "AI 사용 업무와 확인 기준이 불명확",
+    headline: "부담이 낮은 업무부터\n정해보세요",
+    reviewPoints: ["개인정보", "외부 전달", "금액·계약"],
+    pilotSize: "작은 업무 1개 기준",
   },
-} as const satisfies Record<WorkType, ControlState>;
+} as const satisfies Record<
+  WorkType,
+  {
+    headline: string;
+    reviewPoints: readonly [string, string, string];
+    pilotSize: string;
+  }
+>;
 
-const workRisk = {
-  customer_reply: 12,
-  grant_document: 10,
-  business_document: 7,
-  marketing_content: 8,
-  unknown: 9,
-} as const satisfies Record<WorkType, number>;
+const pilotItems = [
+  "실제 절감 시간",
+  "수정 필요한 결과 비율",
+  "사람이 봐야 하는 유형",
+] as const satisfies readonly [string, string, string];
 
-const adoptionScopeTitles = {
-  customer_reply: "고객 답변에\nAI를 어디까지 쓸까요?",
-  grant_document: "제출 문서에\nAI를 어디까지 쓸까요?",
-  business_document: "문서 작성에\nAI를 어디까지 쓸까요?",
-  marketing_content: "마케팅 콘텐츠에\nAI를 어디까지 쓸까요?",
-  unknown: "먼저 어느 범위부터\n시작해볼까요?",
-} as const satisfies Record<WorkType, string>;
-
-const autonomyLabels = {
-  high: "높음",
-  medium: "보통",
-  low: "낮음",
-} as const satisfies Record<AutonomyLevel, string>;
-
-export function getDefaultControlState(workType: WorkType): ControlState {
-  return { ...defaultControlState[workType] };
-}
-
-export function getAutonomyLabel(autonomy: AutonomyLevel): string {
-  return autonomyLabels[autonomy];
-}
-
-export function getAdoptionScopeTitle(workType: WorkType): string {
-  return adoptionScopeTitles[workType];
-}
-
-export function calculateAssuranceResult(
+export function calculateAdoptionEffect(
   workType: WorkType,
-  controls: ControlState,
-): AssuranceResult {
-  let score = 100;
-
-  if (controls.autonomy === "high") score -= 18;
-  if (!controls.behaviorLogging) score -= 18;
-  if (!controls.humanReview) score -= 22;
-  if (!controls.driftMonitoring) score -= 12;
-
-  score -= workRisk[workType];
-
-  const normalizedScore = clamp(score, 0, 100);
-  const band = getAssuranceBand(normalizedScore);
+  input: AdoptionInputState,
+): AdoptionEffectResult {
+  const volume = volumeMap[input.volume];
+  const time = timeMap[input.time];
+  const rate = savingsRate[workType];
+  const monthlyHoursMin = (volume.min * time.min) / 60;
+  const monthlyHoursMax = (volume.max * time.max) / 60;
+  const savingHoursMin = monthlyHoursMin * rate.min;
+  const savingHoursMax = monthlyHoursMax * rate.max;
 
   return {
-    score: normalizedScore,
-    band,
-    bandLabel: bandLabels[band],
-    riskLine: getRiskLine(controls),
-    dailyLeakageEstimate: "₩180만",
-    subsidyEstimate: "~₩3,000만",
+    monthlyHoursMin,
+    monthlyHoursMax,
+    savingHoursMin,
+    savingHoursMax,
+    monthlyHoursRange: formatEstimatedHours(monthlyHoursMin, monthlyHoursMax),
+    savingHoursRange: formatEstimatedHours(savingHoursMin, savingHoursMax),
+    estimateLabel: "예상 범위",
+    exposureLabel: exposureLabels[input.exposure],
   };
+}
+
+export function buildMiniReport(workType: WorkType): MiniReport {
+  const copy = miniReportCopy[workType];
+
+  return {
+    headline: copy.headline,
+    method:
+      workType === "unknown"
+        ? "작은 업무 1개 선택 → 초안 작성 → 담당자 확인"
+        : "AI 초안 작성 → 담당자 확인",
+    reviewPoints: copy.reviewPoints,
+    pilotItems,
+    pilotSize: copy.pilotSize,
+    supportNote: "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.",
+  };
+}
+
+export function formatResultSummary(
+  workLabel: string,
+  effect: AdoptionEffectResult,
+  report: MiniReport,
+): string {
+  return [
+    "AgentProof AI 도입 간단 점검 결과",
+    "",
+    `추천 업무: ${workLabel}`,
+    `예상 업무량: ${formatMonthlyEstimate(effect.monthlyHoursRange)}`,
+    `예상 절감: ${formatMonthlyEstimate(effect.savingHoursRange)}`,
+    "",
+    "권장 방식:",
+    report.method,
+    "",
+    "사람이 봐야 하는 경우:",
+    "",
+    ...report.reviewPoints.map((item) => `* ${item}`),
+    "",
+    "30일 파일럿에서 확인할 것:",
+    "",
+    ...report.pilotItems.map((item) => `* ${item}`),
+    "",
+    "지원사업 준비 자료로 활용할 수 있습니다.",
+  ].join("\n");
+}
+
+export function formatMonthlyEstimate(range: string): string {
+  return range.includes("시간") ? `월 ${range}` : `월 ${range}시간`;
 }
 
 export function getWorkspaceByJob(job: string | null | undefined) {
@@ -279,40 +357,20 @@ export function normalizeWorkType(value: string | null | undefined): WorkType {
   return "customer_reply";
 }
 
+function formatEstimatedHours(min: number, max: number): string {
+  const roundedMax = Math.max(Math.round(max), Math.ceil(min), 1);
+
+  if (roundedMax <= 3) {
+    return "1~3";
+  }
+  if (roundedMax <= 12) {
+    return "4~12";
+  }
+  return "15시간 이상";
+}
+
 function isLegacyWorkspaceAlias(
   value: string | null | undefined,
 ): value is keyof typeof legacyWorkspaceAliases {
   return typeof value === "string" && value in legacyWorkspaceAliases;
-}
-
-function getAssuranceBand(score: number): AssuranceBand {
-  if (score >= 80) return "go";
-  if (score >= 60) return "conditional";
-  if (score >= 40) return "needs_verification";
-  return "hold";
-}
-
-const bandLabels = {
-  go: "즉시 GO",
-  conditional: "조건부 GO",
-  needs_verification: "검증 필요",
-  hold: "도입 보류",
-} as const satisfies Record<AssuranceBand, string>;
-
-function getRiskLine(controls: ControlState): string {
-  if (controls.riskLine) return controls.riskLine;
-  if (!controls.driftMonitoring) {
-    return "드리프트 감시 없이 성능 하락 누적";
-  }
-  if (!controls.behaviorLogging) {
-    return "행동 로그 없이 의사결정 실행";
-  }
-  if (controls.autonomy === "high") {
-    return "높은 자율성 범위에서 기준 미확인";
-  }
-  return "현재 통제 상태 유지 필요";
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
 }
