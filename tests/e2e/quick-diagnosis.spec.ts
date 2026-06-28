@@ -74,8 +74,17 @@ test("survey flow collects work, purpose, nature, scope and shows a mini adoptio
   ).toBeVisible();
   await expect(page.getByText("기대효과")).toBeVisible();
   await expect(page.getByText("반복 업무 시간을 줄이는 데 초점을 둡니다.")).toBeVisible();
-  await expect(page.getByText("예상 절감")).toBeVisible();
+  await expect(page.getByText("AI 도입 점수")).toBeVisible();
+  await expect(page.getByText("예상 절감률")).toBeVisible();
+  await expect(page.getByText("20~45%")).toBeVisible();
+  await expect(page.getByText("예상 절감 시간")).toBeVisible();
   await expect(page.getByText("월 4~12시간")).toBeVisible();
+  await expect(page.getByText("월 절감 금액")).toBeVisible();
+  await expect(page.getByText("12~36만원")).toBeVisible();
+  await expect(page.getByText("지원사업 검토 평균")).toBeVisible();
+  await expect(page.getByText("약 860만원")).toBeVisible();
+  await expect(page.getByText("검토 범위 320만~1,400만원")).toBeVisible();
+  await expect(page.getByText("예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.")).toBeVisible();
   await expect(page.getByText("권장 방식")).toBeVisible();
   await expect(page.getByText("AI 결과를 담당자가 확인한 뒤 사용하세요.")).toBeVisible();
   await expect(page.getByText("사람이 봐야 하는 경우")).toBeVisible();
@@ -98,6 +107,10 @@ test("survey flow collects work, purpose, nature, scope and shows a mini adoptio
   await expect(page.locator("body")).not.toContainText("드리프트");
   await expect(page.locator("body")).not.toContainText("HITL");
   await expect(page.locator("body")).not.toContainText("지원금 보장");
+  await expect(page.locator("body")).not.toContainText("지원금 확정");
+  await expect(page.locator("body")).not.toContainText("지원금 수령 가능");
+  await expect(page.locator("body")).not.toContainText("받을 수 있는 금액");
+  await expect(page.locator("body")).not.toContainText("최대 2억 원");
   await expect(page.locator("body")).not.toContainText("정부지원금 확정");
   await expect(page.locator("body")).not.toContainText("최대 지원금");
   await expect(page.locator("body")).not.toContainText("지원금 수령 가능");
@@ -163,6 +176,8 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
       },
       heading: /고객 문의 응대부터\s*시작해보세요/,
       expectedValue: "반복 업무 시간을 줄이는 데 초점을 둡니다.",
+      supportAverage: "약 860만원",
+      supportRange: "검토 범위 320만~1,400만원",
       method: "AI 결과를 담당자가 확인한 뒤 사용하세요.",
       review: ["개인정보", "환불·계약", "고객 불만"],
       pilot: ["실제 절감 시간", "반복 처리 건수", "수정이 필요한 결과 비율"],
@@ -177,6 +192,8 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
       },
       heading: /사업계획서 작성부터\s*시작해보세요/,
       expectedValue: "첫 초안을 빠르게 만들고 시작 부담을 줄입니다.",
+      supportAverage: "약 860만원",
+      supportRange: "검토 범위 320만~1,400만원",
       method: "AI는 초안 작성까지 사용하고, 담당자가 수정하세요.",
       review: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
       pilot: ["초안 작성 시간", "수정이 필요한 문장 비율", "최종 사용 가능 비율"],
@@ -191,6 +208,8 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
       },
       heading: /보고서·문서 작성부터\s*시작해보세요/,
       expectedValue: "누락과 실수를 줄이는 기준을 만들 수 있습니다.",
+      supportAverage: "약 860만원",
+      supportRange: "검토 범위 320만~1,400만원",
       method: "AI 결과를 담당자가 확인한 뒤 사용하세요.",
       review: ["수치 근거", "외부 공유", "예산·계약 문장"],
       pilot: ["누락된 항목 수", "사람이 고친 부분", "확인이 필요한 유형"],
@@ -205,6 +224,8 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
       },
       heading: /마케팅 콘텐츠부터\s*시작해보세요/,
       expectedValue: "문장·구성·표현을 다듬는 데 도움이 됩니다.",
+      supportAverage: "약 2,150만원",
+      supportRange: "검토 범위 800만~3,500만원",
       method: "AI는 초안 작성까지 사용하고, 담당자가 수정하세요.",
       review: ["과장 표현", "가격·효과", "고객 오해"],
       pilot: ["표현 수정 비율", "최종 결과물 만족도", "다시 사용할 수 있는 문장 유형"],
@@ -219,6 +240,8 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
       },
       heading: /부담이 낮은 업무부터\s*정해보세요/,
       expectedValue: "어디부터 시작할지 정하는 데 도움이 됩니다.",
+      supportAverage: "약 340만원",
+      supportRange: "검토 범위 120만~560만원",
       method: "먼저 작은 업무 1개에서 초안 작성부터 시작하세요.",
       review: ["개인정보", "외부 전달", "금액·계약"],
       pilot: ["가장 효과가 큰 업무", "위험이 낮은 업무", "계속 쓸 수 있는 업무"],
@@ -232,6 +255,9 @@ test("five QA scenarios personalize the result content", async ({ page }) => {
 
     await expect(page.getByRole("heading", { name: item.heading })).toBeVisible();
     await expect(page.getByText(item.expectedValue)).toBeVisible();
+    await expect(page.getByText("지원사업 검토 평균")).toBeVisible();
+    await expect(page.getByText(item.supportAverage)).toBeVisible();
+    await expect(page.getByText(item.supportRange)).toBeVisible();
     await expect(page.getByText(item.method)).toBeVisible();
     for (const reviewPoint of item.review) {
       await expect(page.getByText(reviewPoint)).toBeVisible();

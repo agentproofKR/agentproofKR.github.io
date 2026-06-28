@@ -29,6 +29,27 @@ export type UsageScope =
   | "partial_automation"
   | "unknown";
 
+export type VolumeLevel = "low" | "mid" | "high";
+export type SupportAdoptionScope =
+  | "unknown"
+  | "reviewed_use"
+  | "partial_automation"
+  | "direct_use";
+export type ExposureLevel = "unknown" | "external" | "executive";
+export type ProjectScale = "low" | "medium" | "high" | "enterprise";
+
+export type SupportReviewAmount = {
+  label: string;
+  rangeLabel: string;
+  averageAmount: number | null;
+};
+
+export type ResultMetricCard = {
+  title: string;
+  value: string;
+  caption?: string;
+};
+
 export type ReferenceDiagnosisScreen = {
   id: "awareness" | "work" | "purpose" | "nature" | "scope" | "result";
   stageLabel: string;
@@ -54,6 +75,15 @@ export type AdoptionReport = {
   natureLine: string;
   expectedValueCopy: string;
   timeEstimate: string | null;
+  savingRate: string;
+  monthlySavingAmount: string;
+  adoptionScore: {
+    score: number;
+    label: string;
+  };
+  supportReview: SupportReviewAmount;
+  supportDisclaimer: string;
+  metricCards: readonly ResultMetricCard[];
   valueItems: readonly [string, string, string] | null;
   method: string;
   reviewPoints: readonly [string, string, string];
@@ -285,22 +315,20 @@ const expectedValueCopy = {
   find_use_case: "어디부터 시작할지 정하는 데 도움이 됩니다.",
 } as const satisfies Record<AdoptionPurpose, string>;
 
-const qualitativeValueItems = {
-  first_draft: ["초안 작성 시간 단축", "검토 기준 정리", "최종 문장 정리"],
-  reduce_mistakes: ["누락 항목 확인", "검토 기준 정리", "반복 실수 줄이기"],
-  improve_quality: ["표현 다듬기", "구성 정리", "결과물 품질 개선"],
-  find_use_case: ["우선 적용 업무 선정", "위험 낮은 업무 확인", "파일럿 기준 정리"],
-} as const satisfies Record<
-  Exclude<AdoptionPurpose, "save_time">,
-  readonly [string, string, string]
->;
+const monthlySavingHours = {
+  customer_reply: { min: 4, max: 12 },
+  grant_document: { min: 3, max: 8 },
+  business_document: { min: 4, max: 12 },
+  marketing_content: { min: 4, max: 10 },
+  unknown: { min: 2, max: 6 },
+} as const satisfies Record<WorkType, { min: number; max: number }>;
 
-const monthlySavingEstimate = {
-  customer_reply: "4~12",
-  grant_document: "3~8",
-  business_document: "3~9",
-  marketing_content: "4~10",
-  unknown: "2~6",
+const savingRateEstimate = {
+  customer_reply: "20~45%",
+  grant_document: "15~35%",
+  business_document: "15~40%",
+  marketing_content: "20~45%",
+  unknown: "10~20%",
 } as const satisfies Record<WorkType, string>;
 
 const methodCopy = {
@@ -338,6 +366,24 @@ const pilotSize = {
 const supportNote =
   "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.";
 
+const supportDisclaimer =
+  "예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.";
+
+const projectBudgetRange = {
+  low: { min: 3_000_000, max: 8_000_000 },
+  medium: { min: 8_000_000, max: 20_000_000 },
+  high: { min: 20_000_000, max: 50_000_000 },
+  enterprise: null,
+} as const satisfies Record<
+  ProjectScale,
+  { min: number; max: number } | null
+>;
+
+const supportRate = {
+  min: 0.4,
+  max: 0.7,
+} as const;
+
 export function buildAdoptionReport({
   nature,
   purpose,
@@ -349,10 +395,48 @@ export function buildAdoptionReport({
   nature: WorkNature;
   scope: UsageScope;
 }): AdoptionReport {
-  const timeEstimate =
-    purpose === "save_time" || nature === "repetitive"
-      ? `월 ${monthlySavingEstimate[workType]}시간`
-      : null;
+  const savingHours = monthlySavingHours[workType];
+  const timeEstimate = `월 ${savingHours.min}~${savingHours.max}시간`;
+  const savingRate = savingRateEstimate[workType];
+  const monthlySavingAmount = formatMonthlySavingAmount(savingHours);
+  const adoptionScore = getAdoptionScore({ workType, purpose, nature, scope });
+  const supportReview = getSupportReviewAmount(
+    getProjectScale({
+      selectedWork: workType,
+      volume: getEstimatedVolume(workType, nature),
+      savingHoursMax: getConservativeSupportSavingHoursMax(savingHours.max),
+      adoptionScope: getSupportAdoptionScope(scope),
+      exposure: getExposure(nature),
+    }),
+  );
+  const metricCards = [
+    {
+      title: "AI 도입 점수",
+      value: `${adoptionScore.score}점`,
+      caption: adoptionScore.label,
+    },
+    {
+      title: "예상 절감률",
+      value: savingRate,
+    },
+    {
+      title: "예상 절감 시간",
+      value: timeEstimate,
+    },
+    {
+      title: "월 절감 금액",
+      value: monthlySavingAmount,
+    },
+    {
+      title: "지원사업 검토 평균",
+      value: supportReview.label,
+      caption: supportReview.rangeLabel,
+    },
+    {
+      title: "30일 파일럿",
+      value: pilotSize[workType],
+    },
+  ] as const satisfies readonly ResultMetricCard[];
 
   return {
     workLabel: getOptionLabel(workOptions, workType),
@@ -363,16 +447,203 @@ export function buildAdoptionReport({
     natureLine: natureLines[nature],
     expectedValueCopy: expectedValueCopy[purpose],
     timeEstimate,
-    valueItems:
-      timeEstimate === null
-        ? qualitativeValueItems[purpose === "save_time" ? "first_draft" : purpose]
-        : null,
+    savingRate,
+    monthlySavingAmount,
+    adoptionScore,
+    supportReview,
+    supportDisclaimer,
+    metricCards,
+    valueItems: null,
     method: methodCopy[scope],
     reviewPoints: reviewPoints[workType],
     pilotItems: pilotItems[purpose],
     pilotSize: pilotSize[workType],
     supportNote,
   };
+}
+
+export function getProjectScale({
+  selectedWork,
+  volume,
+  savingHoursMax,
+  adoptionScope,
+  exposure,
+}: {
+  selectedWork: WorkType;
+  volume: VolumeLevel;
+  savingHoursMax: number;
+  adoptionScope: SupportAdoptionScope;
+  exposure: ExposureLevel;
+}): ProjectScale {
+  let score = 0;
+
+  if (selectedWork !== "unknown") score += 20;
+  if (volume === "mid") score += 15;
+  if (volume === "high") score += 25;
+  if (savingHoursMax >= 3) score += 15;
+  if (savingHoursMax >= 12) score += 25;
+  if (adoptionScope === "reviewed_use") score += 10;
+  if (adoptionScope === "partial_automation") score += 20;
+  if (adoptionScope === "direct_use") score += 10;
+  if (exposure === "external") score += 10;
+  if (exposure === "executive") score += 5;
+
+  if (score < 35) return "low";
+  if (score < 65) return "medium";
+  if (score < 90) return "high";
+  return "enterprise";
+}
+
+export function getSupportReviewAmount(
+  projectScale: ProjectScale,
+): SupportReviewAmount {
+  if (projectScale === "enterprise") {
+    return {
+      label: "별도 산정",
+      rangeLabel: "도입 범위 확인 필요",
+      averageAmount: null,
+    };
+  }
+
+  const budget = projectBudgetRange[projectScale];
+  const min = budget.min * supportRate.min;
+  const max = budget.max * supportRate.max;
+  const average = (min + max) / 2;
+
+  return {
+    label: `약 ${formatKrw(average)}`,
+    rangeLabel: `검토 범위 ${formatKrwRange(min, max)}`,
+    averageAmount: average,
+  };
+}
+
+export function formatKrw(value: number): string {
+  const rounded = Math.round(value / 10_000) * 10_000;
+
+  if (rounded < 100_000_000) {
+    return `${Math.round(rounded / 10_000).toLocaleString()}만원`;
+  }
+
+  return `${(rounded / 100_000_000).toFixed(1)}억원`;
+}
+
+function formatKrwRange(min: number, max: number): string {
+  const minLabel = formatKrw(min);
+  const maxLabel = formatKrw(max);
+
+  if (minLabel.endsWith("만원") && maxLabel.endsWith("만원")) {
+    return `${minLabel.slice(0, -1)}~${maxLabel}`;
+  }
+
+  return `${minLabel}~${maxLabel}`;
+}
+
+function formatMonthlySavingAmount({
+  min,
+  max,
+}: {
+  min: number;
+  max: number;
+}): string {
+  const hourlyValue = 30_000;
+  const minManwon = Math.round((min * hourlyValue) / 10_000);
+  const maxManwon = Math.round((max * hourlyValue) / 10_000);
+
+  return `${minManwon.toLocaleString()}~${maxManwon.toLocaleString()}만원`;
+}
+
+function getAdoptionScore({
+  workType,
+  purpose,
+  nature,
+  scope,
+}: {
+  workType: WorkType;
+  purpose: AdoptionPurpose;
+  nature: WorkNature;
+  scope: UsageScope;
+}): { score: number; label: string } {
+  let score = 40;
+
+  if (workType !== "unknown") score += 8;
+
+  score +=
+    purpose === "save_time"
+      ? 10
+      : purpose === "first_draft"
+        ? 8
+        : purpose === "reduce_mistakes"
+          ? 7
+          : purpose === "improve_quality"
+            ? 6
+            : 0;
+
+  score +=
+    nature === "repetitive"
+      ? 14
+      : nature === "important_low_frequency"
+        ? 10
+        : nature === "internal_decision"
+          ? 9
+          : nature === "external_output"
+            ? 8
+            : 0;
+
+  score +=
+    scope === "partial_automation"
+      ? 10
+      : scope === "reviewed_use"
+        ? 8
+        : scope === "draft_only"
+          ? 5
+          : scope === "idea_only"
+            ? 2
+            : 0;
+
+  const normalized = Math.max(0, Math.min(100, score));
+  const label =
+    normalized >= 80
+      ? "파일럿 적합"
+      : normalized >= 60
+        ? "조건부 시작"
+        : normalized >= 50
+          ? "준비 필요"
+          : "업무 선정 필요";
+
+  return { score: normalized, label };
+}
+
+function getEstimatedVolume(workType: WorkType, nature: WorkNature): VolumeLevel {
+  if (workType === "unknown" || nature === "unclear") {
+    return "low";
+  }
+
+  if (nature === "repetitive") {
+    return "mid";
+  }
+
+  return "mid";
+}
+
+function getConservativeSupportSavingHoursMax(savingHoursMax: number): number {
+  return Math.min(savingHoursMax, 11);
+}
+
+function getSupportAdoptionScope(scope: UsageScope): SupportAdoptionScope {
+  if (scope === "reviewed_use" || scope === "partial_automation") {
+    return scope;
+  }
+  if (scope === "draft_only") {
+    return "direct_use";
+  }
+  return "unknown";
+}
+
+function getExposure(nature: WorkNature): ExposureLevel {
+  if (nature === "external_output") {
+    return "external";
+  }
+  return "unknown";
 }
 
 export function formatResultSummary(report: AdoptionReport): string {
@@ -387,6 +658,14 @@ export function formatResultSummary(report: AdoptionReport): string {
     "기대효과:",
     report.expectedValueCopy,
     "",
+    `AI 도입 점수: ${report.adoptionScore.score}점 (${report.adoptionScore.label})`,
+    `예상 절감률: ${report.savingRate}`,
+    `예상 절감 시간: ${report.timeEstimate}`,
+    `월 절감 금액: ${report.monthlySavingAmount}`,
+    `지원사업 검토 평균: ${report.supportReview.label}`,
+    report.supportReview.rangeLabel,
+    `30일 파일럿: ${report.pilotSize}`,
+    "",
     "사람이 봐야 하는 경우:",
     "",
     ...report.reviewPoints.map((item) => `- ${item}`),
@@ -396,6 +675,7 @@ export function formatResultSummary(report: AdoptionReport): string {
     ...report.pilotItems.map((item) => `- ${item}`),
     "",
     "지원사업 준비 자료로 활용할 수 있습니다.",
+    report.supportDisclaimer,
   ].join("\n");
 }
 

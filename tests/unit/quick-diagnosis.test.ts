@@ -4,6 +4,9 @@ import {
   adoptionPurposeOptions,
   buildAdoptionReport,
   formatResultSummary,
+  formatKrw,
+  getProjectScale,
+  getSupportReviewAmount,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
   usageScopeOptions,
@@ -129,6 +132,72 @@ describe("AI adoption mini-report flow content", () => {
 });
 
 describe("adoption mini-report logic", () => {
+  it("formats conservative support review amount examples", () => {
+    expect(formatKrw(3_400_000)).toBe("340만원");
+    expect(formatKrw(8_600_000)).toBe("860만원");
+    expect(formatKrw(21_500_000)).toBe("2,150만원");
+
+    expect(getSupportReviewAmount("low")).toMatchObject({
+      label: "약 340만원",
+      rangeLabel: "검토 범위 120만~560만원",
+      averageAmount: 3_400_000,
+    });
+    expect(getSupportReviewAmount("medium")).toMatchObject({
+      label: "약 860만원",
+      rangeLabel: "검토 범위 320만~1,400만원",
+      averageAmount: 8_600_000,
+    });
+    expect(getSupportReviewAmount("high")).toMatchObject({
+      label: "약 2,150만원",
+      rangeLabel: "검토 범위 800만~3,500만원",
+      averageAmount: 21_500_000,
+    });
+    expect(getSupportReviewAmount("enterprise")).toMatchObject({
+      label: "별도 산정",
+      rangeLabel: "도입 범위 확인 필요",
+      averageAmount: null,
+    });
+  });
+
+  it("estimates project scale from selected work, volume, saving, adoption scope, and exposure", () => {
+    expect(
+      getProjectScale({
+        selectedWork: "unknown",
+        volume: "low",
+        savingHoursMax: 2,
+        adoptionScope: "unknown",
+        exposure: "unknown",
+      }),
+    ).toBe("low");
+    expect(
+      getProjectScale({
+        selectedWork: "business_document",
+        volume: "mid",
+        savingHoursMax: 11,
+        adoptionScope: "reviewed_use",
+        exposure: "unknown",
+      }),
+    ).toBe("medium");
+    expect(
+      getProjectScale({
+        selectedWork: "grant_document",
+        volume: "mid",
+        savingHoursMax: 11,
+        adoptionScope: "partial_automation",
+        exposure: "external",
+      }),
+    ).toBe("high");
+    expect(
+      getProjectScale({
+        selectedWork: "customer_reply",
+        volume: "high",
+        savingHoursMax: 12,
+        adoptionScope: "partial_automation",
+        exposure: "external",
+      }),
+    ).toBe("enterprise");
+  });
+
   it.each([
     {
       input: {
@@ -145,6 +214,10 @@ describe("adoption mini-report logic", () => {
         pilotItems: ["실제 절감 시간", "반복 처리 건수", "수정이 필요한 결과 비율"],
         pilotSize: "문의 20건 기준",
         timeEstimate: "월 4~12시간",
+        savingRate: "20~45%",
+        monthlySavingAmount: "12~36만원",
+        supportLabel: "약 860만원",
+        supportRangeLabel: "검토 범위 320만~1,400만원",
       },
     },
     {
@@ -161,7 +234,11 @@ describe("adoption mini-report logic", () => {
         reviewPoints: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
         pilotItems: ["초안 작성 시간", "수정이 필요한 문장 비율", "최종 사용 가능 비율"],
         pilotSize: "문서 3~5건 기준",
-        timeEstimate: null,
+        timeEstimate: "월 3~8시간",
+        savingRate: "15~35%",
+        monthlySavingAmount: "9~24만원",
+        supportLabel: "약 860만원",
+        supportRangeLabel: "검토 범위 320만~1,400만원",
       },
     },
     {
@@ -178,7 +255,11 @@ describe("adoption mini-report logic", () => {
         reviewPoints: ["수치 근거", "외부 공유", "예산·계약 문장"],
         pilotItems: ["누락된 항목 수", "사람이 고친 부분", "확인이 필요한 유형"],
         pilotSize: "문서 5건 기준",
-        timeEstimate: null,
+        timeEstimate: "월 4~12시간",
+        savingRate: "15~40%",
+        monthlySavingAmount: "12~36만원",
+        supportLabel: "약 860만원",
+        supportRangeLabel: "검토 범위 320만~1,400만원",
       },
     },
     {
@@ -195,7 +276,11 @@ describe("adoption mini-report logic", () => {
         reviewPoints: ["과장 표현", "가격·효과", "고객 오해"],
         pilotItems: ["표현 수정 비율", "최종 결과물 만족도", "다시 사용할 수 있는 문장 유형"],
         pilotSize: "콘텐츠 10건 기준",
-        timeEstimate: null,
+        timeEstimate: "월 4~10시간",
+        savingRate: "20~45%",
+        monthlySavingAmount: "12~30만원",
+        supportLabel: "약 2,150만원",
+        supportRangeLabel: "검토 범위 800만~3,500만원",
       },
     },
     {
@@ -212,7 +297,11 @@ describe("adoption mini-report logic", () => {
         reviewPoints: ["개인정보", "외부 전달", "금액·계약"],
         pilotItems: ["가장 효과가 큰 업무", "위험이 낮은 업무", "계속 쓸 수 있는 업무"],
         pilotSize: "작은 업무 1개 기준",
-        timeEstimate: null,
+        timeEstimate: "월 2~6시간",
+        savingRate: "10~20%",
+        monthlySavingAmount: "6~18만원",
+        supportLabel: "약 340만원",
+        supportRangeLabel: "검토 범위 120만~560만원",
       },
     },
   ] satisfies {
@@ -230,6 +319,10 @@ describe("adoption mini-report logic", () => {
       pilotItems: string[];
       pilotSize: string;
       timeEstimate: string | null;
+      savingRate: string;
+      monthlySavingAmount: string;
+      supportLabel: string;
+      supportRangeLabel: string;
     };
   }[])("builds the requested report for $input.workType", ({ input, expected }) => {
     const report = buildAdoptionReport(input);
@@ -241,6 +334,21 @@ describe("adoption mini-report logic", () => {
     expect(report.pilotItems).toEqual(expected.pilotItems);
     expect(report.pilotSize).toBe(expected.pilotSize);
     expect(report.timeEstimate).toBe(expected.timeEstimate);
+    expect(report.savingRate).toBe(expected.savingRate);
+    expect(report.monthlySavingAmount).toBe(expected.monthlySavingAmount);
+    expect(report.supportReview.label).toBe(expected.supportLabel);
+    expect(report.supportReview.rangeLabel).toBe(expected.supportRangeLabel);
+    expect(report.metricCards.map((card) => card.title)).toEqual([
+      "AI 도입 점수",
+      "예상 절감률",
+      "예상 절감 시간",
+      "월 절감 금액",
+      "지원사업 검토 평균",
+      "30일 파일럿",
+    ]);
+    expect(report.supportDisclaimer).toBe(
+      "예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.",
+    );
     expect(report.supportNote).toBe(
       "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.",
     );
@@ -269,6 +377,14 @@ describe("adoption mini-report logic", () => {
         "기대효과:",
         "반복 업무 시간을 줄이는 데 초점을 둡니다.",
         "",
+        "AI 도입 점수: 80점 (파일럿 적합)",
+        "예상 절감률: 20~45%",
+        "예상 절감 시간: 월 4~12시간",
+        "월 절감 금액: 12~36만원",
+        "지원사업 검토 평균: 약 860만원",
+        "검토 범위 320만~1,400만원",
+        "30일 파일럿: 문의 20건 기준",
+        "",
         "사람이 봐야 하는 경우:",
         "",
         "- 개인정보",
@@ -282,6 +398,7 @@ describe("adoption mini-report logic", () => {
         "- 수정이 필요한 결과 비율",
         "",
         "지원사업 준비 자료로 활용할 수 있습니다.",
+        "예상 수치입니다. 지원사업은 공고와 기업 요건에 따라 달라집니다.",
       ].join("\n"),
     );
     expect(formatResultSummary(report)).not.toMatch(

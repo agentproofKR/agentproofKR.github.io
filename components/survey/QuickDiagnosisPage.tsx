@@ -413,16 +413,23 @@ function ReportScreen({
 
       <ReportCard title="기대효과">
         <p className={styles.referenceSupportNote}>{report.expectedValueCopy}</p>
-        {report.timeEstimate ? (
-          <div className={styles.referenceEstimateBox}>
-            <span>예상 절감</span>
-            <strong>{report.timeEstimate}</strong>
-            <small>예상 범위</small>
-          </div>
-        ) : report.valueItems ? (
-          <CompactList items={report.valueItems} />
-        ) : null}
       </ReportCard>
+
+      <section
+        className={styles.referenceMetricGrid}
+        aria-label="AI 도입 결과 요약"
+      >
+        {report.metricCards.map((card) => (
+          <article className={styles.referenceMetricCard} key={card.title}>
+            <span>{card.title}</span>
+            <strong>{card.value}</strong>
+            {card.caption ? <small>{card.caption}</small> : null}
+          </article>
+        ))}
+      </section>
+      <p className={styles.referenceMetricDisclaimer}>
+        {report.supportDisclaimer}
+      </p>
 
       <ReportCard title="권장 방식">
         <p className={styles.referenceMethod}>{report.method}</p>
@@ -433,7 +440,6 @@ function ReportScreen({
       </ReportCard>
 
       <ReportCard title="30일 파일럿에서 볼 것">
-        <p className={styles.referencePilotSize}>{report.pilotSize}</p>
         <CompactList items={report.pilotItems} />
       </ReportCard>
 
