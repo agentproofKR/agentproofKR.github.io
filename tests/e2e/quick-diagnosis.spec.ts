@@ -110,6 +110,30 @@ test("survey PAGE3 collects compact effort inputs and PAGE4 shows a mini adoptio
   expect(eventText).toContain("quick_diagnosis_complete");
 });
 
+test("result save still shows a toast when the Clipboard API is unavailable", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/survey/");
+  await page.getByRole("button", { name: "시작하기" }).click();
+  await page.getByRole("button", { name: /고객 문의 응대/ }).click();
+  await page.getByRole("button", { name: "다음" }).click();
+  await page.getByRole("button", { name: "10건 이하" }).click();
+  await page.getByRole("button", { name: "10분 이하" }).click();
+  await page.getByRole("button", { name: "내부용" }).click();
+  await page.getByRole("button", { name: "결과 보기" }).click();
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined,
+    });
+  });
+
+  await page.getByRole("button", { name: "결과 저장하기" }).click();
+
+  await expect(page.getByRole("status")).toHaveText("결과를 복사했습니다");
+});
+
 test("selected work personalizes the PAGE4 recommendation and review points", async ({
   page,
 }) => {

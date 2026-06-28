@@ -142,7 +142,7 @@ export function QuickDiagnosisPage() {
 
   const copyResult = async () => {
     const summary = formatResultSummary(workLabel, effect, report);
-    await navigator.clipboard.writeText(summary);
+    await writeClipboardText(summary);
     setCopyStatus("결과를 복사했습니다");
     trackEvent("quick_diagnosis_result_copy", {
       mode: "adoption_report",
@@ -545,4 +545,34 @@ function getCompleteEffortInput(input: PartialAdoptionInputState) {
     time: input.time,
     exposure: input.exposure as ExposureScope,
   };
+}
+
+async function writeClipboardText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.top = "0";
+  textArea.style.left = "0";
+  textArea.style.width = "1px";
+  textArea.style.height = "1px";
+  textArea.style.opacity = "0";
+
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+
+  try {
+    const copied = document.execCommand("copy");
+    if (!copied) {
+      throw new Error("Clipboard copy fallback failed");
+    }
+  } finally {
+    document.body.removeChild(textArea);
+  }
 }
