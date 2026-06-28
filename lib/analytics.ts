@@ -39,6 +39,7 @@ export type AnalyticsEvent =
   | "quick_diagnosis_consult_click"
   | "quick_diagnosis_pilot_cta_click"
   | "quick_diagnosis_result_copy"
+  | "quick_diagnosis_result_save"
   | "quick_diagnosis_advanced_survey_click"
   | "quick_diagnosis_validation_submit"
   | "quick_diagnosis_report_share_click"
@@ -67,6 +68,11 @@ const allowedKeys = new Set([
   "mode",
   "selectedJob",
   "selectedWork",
+  "selectedPurpose",
+  "selectedNature",
+  "selectedScope",
+  "field",
+  "value",
   "audience",
   "concern",
   "band",

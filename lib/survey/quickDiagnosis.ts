@@ -1,5 +1,5 @@
 export const quickDiagnosisVersion =
-  "2026-06-AgentProof-four-page-adoption-report-v1";
+  "2026-06-AgentProof-adoption-mini-report-v2";
 
 export type WorkType =
   | "customer_reply"
@@ -8,67 +8,58 @@ export type WorkType =
   | "marketing_content"
   | "unknown";
 
-export type EffortVolume = "low" | "mid" | "high" | "unknown";
-export type EffortTime = "short" | "medium" | "long" | "unknown";
-export type ExposureScope = "external" | "executive" | "internal";
+export type AdoptionPurpose =
+  | "save_time"
+  | "first_draft"
+  | "reduce_mistakes"
+  | "improve_quality"
+  | "find_use_case";
 
-export type AdoptionInputState = {
-  volume: EffortVolume;
-  time: EffortTime;
-  exposure: ExposureScope;
-};
+export type WorkNature =
+  | "repetitive"
+  | "important_low_frequency"
+  | "external_output"
+  | "internal_decision"
+  | "unclear";
 
-export type PartialAdoptionInputState = {
-  volume: EffortVolume | null;
-  time: EffortTime | null;
-  exposure: ExposureScope | null;
-};
-
-export type AdoptionEffectResult = {
-  monthlyHoursMin: number;
-  monthlyHoursMax: number;
-  savingHoursMin: number;
-  savingHoursMax: number;
-  monthlyHoursRange: string;
-  savingHoursRange: string;
-  estimateLabel: "예상 범위";
-  exposureLabel: string;
-};
-
-export type MiniReport = {
-  headline: string;
-  method: string;
-  reviewPoints: readonly [string, string, string];
-  pilotItems: readonly [string, string, string];
-  pilotSize: string;
-  supportNote: string;
-};
-
-export type EffortQuestionGroup =
-  | {
-      id: "volume";
-      label: string;
-      options: readonly { value: EffortVolume; label: string }[];
-    }
-  | {
-      id: "time";
-      label: string;
-      options: readonly { value: EffortTime; label: string }[];
-    }
-  | {
-      id: "exposure";
-      label: string;
-      options: readonly { value: ExposureScope; label: string }[];
-    };
+export type UsageScope =
+  | "idea_only"
+  | "draft_only"
+  | "reviewed_use"
+  | "partial_automation"
+  | "unknown";
 
 export type ReferenceDiagnosisScreen = {
-  id: "awareness" | "work" | "calculator" | "report";
+  id: "awareness" | "work" | "purpose" | "nature" | "scope" | "result";
   stageLabel: string;
   title: string;
   subcopy?: string;
   pill?: string;
   trustNote?: string;
   cta: string;
+};
+
+export type DiagnosisOption<TValue extends string> = {
+  value: TValue;
+  label: string;
+  subtitle: string;
+};
+
+export type AdoptionReport = {
+  workLabel: string;
+  purposeLabel: string;
+  natureLabel: string;
+  scopeLabel: string;
+  headline: string;
+  natureLine: string;
+  expectedValueCopy: string;
+  timeEstimate: string | null;
+  valueItems: readonly [string, string, string] | null;
+  method: string;
+  reviewPoints: readonly [string, string, string];
+  pilotItems: readonly [string, string, string];
+  pilotSize: string;
+  supportNote: string;
 };
 
 export const referenceDiagnosisScreens = [
@@ -85,20 +76,34 @@ export const referenceDiagnosisScreens = [
     id: "work",
     stageLabel: "업무",
     title: "어떤 업무에\nAI를 쓸까요?",
-    subcopy: "업무마다 확인할 기준이 달라요.",
+    subcopy: "가장 먼저 확인할 업무를 골라주세요.",
     cta: "다음",
   },
   {
-    id: "calculator",
-    stageLabel: "계산",
-    title: "효과를 계산해볼게요",
-    subcopy: "대략 골라도 괜찮아요",
+    id: "purpose",
+    stageLabel: "목적",
+    title: "AI로 무엇을\n얻고 싶나요?",
+    subcopy: "가장 가까운 이유를 골라주세요.",
+    cta: "다음",
+  },
+  {
+    id: "nature",
+    stageLabel: "성격",
+    title: "이 업무는\n어떤 성격인가요?",
+    subcopy: "성격에 따라 판단 기준이 달라집니다.",
+    cta: "다음",
+  },
+  {
+    id: "scope",
+    stageLabel: "범위",
+    title: "AI에게 어디까지\n맡길까요?",
+    subcopy: "처음엔 작게 시작하는 편이 안전합니다.",
     cta: "결과 보기",
   },
   {
-    id: "report",
-    stageLabel: "리포트",
-    title: "AI 도입 간단 리포트",
+    id: "result",
+    stageLabel: "결과",
+    title: "AI 도입 간단 점검 결과",
     cta: "30일 파일럿 설계 받기",
   },
 ] as const satisfies readonly ReferenceDiagnosisScreen[];
@@ -121,43 +126,99 @@ export const workOptions = [
     subtitle: "SNS·블로그·상세페이지",
   },
   { value: "unknown", label: "아직 못 정했어요", subtitle: "추천을 받아볼게요" },
-] as const satisfies readonly {
-  value: WorkType;
-  label: string;
-  subtitle: string;
-}[];
+] as const satisfies readonly DiagnosisOption<WorkType>[];
 
-export const effortQuestionGroups = [
+export const adoptionPurposeOptions = [
   {
-    id: "volume",
-    label: "한 달에 몇 건 정도인가요?",
-    options: [
-      { value: "low", label: "10건 이하" },
-      { value: "mid", label: "10~50건" },
-      { value: "high", label: "50건 이상" },
-      { value: "unknown", label: "잘 모르겠어요" },
-    ],
+    value: "save_time",
+    label: "시간을 줄이고 싶어요",
+    subtitle: "반복되는 일을 빠르게",
   },
   {
-    id: "time",
-    label: "한 건에 얼마나 걸리나요?",
-    options: [
-      { value: "short", label: "10분 이하" },
-      { value: "medium", label: "30분 안팎" },
-      { value: "long", label: "1시간 이상" },
-      { value: "unknown", label: "잘 모르겠어요" },
-    ],
+    value: "first_draft",
+    label: "초안을 빨리 만들고 싶어요",
+    subtitle: "처음부터 쓰기 막막해서",
   },
   {
-    id: "exposure",
-    label: "결과가 어디로 나가나요?",
-    options: [
-      { value: "external", label: "고객·기관" },
-      { value: "executive", label: "대표·팀장" },
-      { value: "internal", label: "내부용" },
-    ],
+    value: "reduce_mistakes",
+    label: "빠뜨린 걸 줄이고 싶어요",
+    subtitle: "누락·실수를 줄이고 싶어서",
   },
-] as const satisfies readonly EffortQuestionGroup[];
+  {
+    value: "improve_quality",
+    label: "결과물을 더 좋게 만들고 싶어요",
+    subtitle: "문장·구성·표현을 다듬고 싶어서",
+  },
+  {
+    value: "find_use_case",
+    label: "어디에 쓰면 좋을지 알고 싶어요",
+    subtitle: "AI 도입 방향을 못 정해서",
+  },
+] as const satisfies readonly DiagnosisOption<AdoptionPurpose>[];
+
+export const workNatureOptions = [
+  {
+    value: "repetitive",
+    label: "자주 반복됩니다",
+    subtitle: "매주 또는 매월 계속 발생",
+  },
+  {
+    value: "important_low_frequency",
+    label: "가끔이지만 중요합니다",
+    subtitle: "제출·보고·계약처럼 영향이 큼",
+  },
+  {
+    value: "external_output",
+    label: "고객이나 기관에 나갑니다",
+    subtitle: "외부에 전달되는 결과물",
+  },
+  {
+    value: "internal_decision",
+    label: "내부 판단에 씁니다",
+    subtitle: "대표·팀장·팀원이 보는 자료",
+  },
+  {
+    value: "unclear",
+    label: "아직 잘 모르겠습니다",
+    subtitle: "먼저 기준을 잡고 싶음",
+  },
+] as const satisfies readonly DiagnosisOption<WorkNature>[];
+
+export const usageScopeOptions = [
+  {
+    value: "idea_only",
+    label: "아이디어만 받기",
+    subtitle: "방향·구성 참고",
+  },
+  {
+    value: "draft_only",
+    label: "초안까지 만들기",
+    subtitle: "사람이 고쳐서 사용",
+  },
+  {
+    value: "reviewed_use",
+    label: "확인 후 사용",
+    subtitle: "담당자가 보고 사용",
+  },
+  {
+    value: "partial_automation",
+    label: "일부 자동화",
+    subtitle: "정해진 기준 안에서 처리",
+  },
+  {
+    value: "unknown",
+    label: "아직 모르겠습니다",
+    subtitle: "추천을 받아보고 싶음",
+  },
+] as const satisfies readonly DiagnosisOption<UsageScope>[];
+
+export const workRisk = {
+  customer_reply: 12,
+  grant_document: 10,
+  business_document: 7,
+  marketing_content: 8,
+  unknown: 9,
+} as const satisfies Record<WorkType, number>;
 
 export const workspaceMap = {
   customer_reply: {
@@ -200,144 +261,142 @@ const legacyWorkspaceAliases = {
   proposal_doc: "business_document",
 } as const satisfies Record<string, WorkType>;
 
-const volumeMap = {
-  low: { min: 1, max: 10 },
-  mid: { min: 10, max: 50 },
-  high: { min: 50, max: 120 },
-  unknown: { min: 10, max: 30 },
-} as const satisfies Record<EffortVolume, { min: number; max: number }>;
+const workHeadlines = {
+  customer_reply: "고객 문의 응대부터\n시작해보세요",
+  grant_document: "사업계획서 작성부터\n시작해보세요",
+  business_document: "보고서·문서 작성부터\n시작해보세요",
+  marketing_content: "마케팅 콘텐츠부터\n시작해보세요",
+  unknown: "부담이 낮은 업무부터\n정해보세요",
+} as const satisfies Record<WorkType, string>;
 
-const timeMap = {
-  short: { min: 5, max: 10 },
-  medium: { min: 20, max: 40 },
-  long: { min: 60, max: 90 },
-  unknown: { min: 15, max: 30 },
-} as const satisfies Record<EffortTime, { min: number; max: number }>;
+const natureLines = {
+  repetitive: "반복성이 있어 작은 파일럿으로 효과를 보기 좋습니다.",
+  important_low_frequency: "자주 하지는 않지만 결과 영향이 큰 업무입니다.",
+  external_output: "외부로 나가는 결과물이므로 사람 확인 기준이 필요합니다.",
+  internal_decision: "내부 의사결정에 쓰이는 만큼 근거 확인이 중요합니다.",
+  unclear: "먼저 위험이 낮은 업무 1개를 정해보는 것이 좋습니다.",
+} as const satisfies Record<WorkNature, string>;
 
-const savingsRate = {
-  customer_reply: { min: 0.25, max: 0.45 },
-  grant_document: { min: 0.2, max: 0.35 },
-  business_document: { min: 0.2, max: 0.4 },
-  marketing_content: { min: 0.25, max: 0.45 },
-  unknown: { min: 0.15, max: 0.3 },
-} as const satisfies Record<WorkType, { min: number; max: number }>;
+const expectedValueCopy = {
+  save_time: "반복 업무 시간을 줄이는 데 초점을 둡니다.",
+  first_draft: "첫 초안을 빠르게 만들고 시작 부담을 줄입니다.",
+  reduce_mistakes: "누락과 실수를 줄이는 기준을 만들 수 있습니다.",
+  improve_quality: "문장·구성·표현을 다듬는 데 도움이 됩니다.",
+  find_use_case: "어디부터 시작할지 정하는 데 도움이 됩니다.",
+} as const satisfies Record<AdoptionPurpose, string>;
 
-const exposureLabels = {
-  external: "고객·기관 전달",
-  executive: "대표·팀장 보고",
-  internal: "내부 참고",
-} as const satisfies Record<ExposureScope, string>;
-
-const miniReportCopy = {
-  customer_reply: {
-    headline: "고객 문의 응대부터\n시작해보세요",
-    reviewPoints: ["개인정보", "환불·계약", "고객 불만"],
-    pilotSize: "문의 20건 기준",
-  },
-  grant_document: {
-    headline: "사업계획서 작성부터\n시작해보세요",
-    reviewPoints: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
-    pilotSize: "문서 3~5건 기준",
-  },
-  business_document: {
-    headline: "보고서·문서 작성부터\n시작해보세요",
-    reviewPoints: ["수치 근거", "외부 공유", "예산·계약 문장"],
-    pilotSize: "문서 5건 기준",
-  },
-  marketing_content: {
-    headline: "마케팅 콘텐츠부터\n시작해보세요",
-    reviewPoints: ["과장 표현", "가격·효과", "고객 오해"],
-    pilotSize: "콘텐츠 10건 기준",
-  },
-  unknown: {
-    headline: "부담이 낮은 업무부터\n정해보세요",
-    reviewPoints: ["개인정보", "외부 전달", "금액·계약"],
-    pilotSize: "작은 업무 1개 기준",
-  },
+const qualitativeValueItems = {
+  first_draft: ["초안 작성 시간 단축", "검토 기준 정리", "최종 문장 정리"],
+  reduce_mistakes: ["누락 항목 확인", "검토 기준 정리", "반복 실수 줄이기"],
+  improve_quality: ["표현 다듬기", "구성 정리", "결과물 품질 개선"],
+  find_use_case: ["우선 적용 업무 선정", "위험 낮은 업무 확인", "파일럿 기준 정리"],
 } as const satisfies Record<
-  WorkType,
-  {
-    headline: string;
-    reviewPoints: readonly [string, string, string];
-    pilotSize: string;
-  }
+  Exclude<AdoptionPurpose, "save_time">,
+  readonly [string, string, string]
 >;
 
-const pilotItems = [
-  "실제 절감 시간",
-  "수정 필요한 결과 비율",
-  "사람이 봐야 하는 유형",
-] as const satisfies readonly [string, string, string];
+const monthlySavingEstimate = {
+  customer_reply: "4~12",
+  grant_document: "3~8",
+  business_document: "3~9",
+  marketing_content: "4~10",
+  unknown: "2~6",
+} as const satisfies Record<WorkType, string>;
 
-export function calculateAdoptionEffect(
-  workType: WorkType,
-  input: AdoptionInputState,
-): AdoptionEffectResult {
-  const volume = volumeMap[input.volume];
-  const time = timeMap[input.time];
-  const rate = savingsRate[workType];
-  const monthlyHoursMin = (volume.min * time.min) / 60;
-  const monthlyHoursMax = (volume.max * time.max) / 60;
-  const savingHoursMin = monthlyHoursMin * rate.min;
-  const savingHoursMax = monthlyHoursMax * rate.max;
+const methodCopy = {
+  idea_only: "AI는 아이디어와 방향 잡기에만 사용하세요.",
+  draft_only: "AI는 초안 작성까지 사용하고, 담당자가 수정하세요.",
+  reviewed_use: "AI 결과를 담당자가 확인한 뒤 사용하세요.",
+  partial_automation: "정해진 기준 안에서 일부 반복 업무만 자동화하세요.",
+  unknown: "먼저 작은 업무 1개에서 초안 작성부터 시작하세요.",
+} as const satisfies Record<UsageScope, string>;
+
+const reviewPoints = {
+  customer_reply: ["개인정보", "환불·계약", "고객 불만"],
+  grant_document: ["성과 수치", "근거 문장", "제출 전 최종 검토"],
+  business_document: ["수치 근거", "외부 공유", "예산·계약 문장"],
+  marketing_content: ["과장 표현", "가격·효과", "고객 오해"],
+  unknown: ["개인정보", "외부 전달", "금액·계약"],
+} as const satisfies Record<WorkType, readonly [string, string, string]>;
+
+const pilotItems = {
+  save_time: ["실제 절감 시간", "반복 처리 건수", "수정이 필요한 결과 비율"],
+  first_draft: ["초안 작성 시간", "수정이 필요한 문장 비율", "최종 사용 가능 비율"],
+  reduce_mistakes: ["누락된 항목 수", "사람이 고친 부분", "확인이 필요한 유형"],
+  improve_quality: ["표현 수정 비율", "최종 결과물 만족도", "다시 사용할 수 있는 문장 유형"],
+  find_use_case: ["가장 효과가 큰 업무", "위험이 낮은 업무", "계속 쓸 수 있는 업무"],
+} as const satisfies Record<AdoptionPurpose, readonly [string, string, string]>;
+
+const pilotSize = {
+  customer_reply: "문의 20건 기준",
+  grant_document: "문서 3~5건 기준",
+  business_document: "문서 5건 기준",
+  marketing_content: "콘텐츠 10건 기준",
+  unknown: "작은 업무 1개 기준",
+} as const satisfies Record<WorkType, string>;
+
+const supportNote =
+  "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.";
+
+export function buildAdoptionReport({
+  nature,
+  purpose,
+  scope,
+  workType,
+}: {
+  workType: WorkType;
+  purpose: AdoptionPurpose;
+  nature: WorkNature;
+  scope: UsageScope;
+}): AdoptionReport {
+  const timeEstimate =
+    purpose === "save_time" || nature === "repetitive"
+      ? `월 ${monthlySavingEstimate[workType]}시간`
+      : null;
 
   return {
-    monthlyHoursMin,
-    monthlyHoursMax,
-    savingHoursMin,
-    savingHoursMax,
-    monthlyHoursRange: formatEstimatedHours(monthlyHoursMin, monthlyHoursMax),
-    savingHoursRange: formatEstimatedHours(savingHoursMin, savingHoursMax),
-    estimateLabel: "예상 범위",
-    exposureLabel: exposureLabels[input.exposure],
+    workLabel: getOptionLabel(workOptions, workType),
+    purposeLabel: getOptionLabel(adoptionPurposeOptions, purpose),
+    natureLabel: getOptionLabel(workNatureOptions, nature),
+    scopeLabel: getOptionLabel(usageScopeOptions, scope),
+    headline: workHeadlines[workType],
+    natureLine: natureLines[nature],
+    expectedValueCopy: expectedValueCopy[purpose],
+    timeEstimate,
+    valueItems:
+      timeEstimate === null
+        ? qualitativeValueItems[purpose === "save_time" ? "first_draft" : purpose]
+        : null,
+    method: methodCopy[scope],
+    reviewPoints: reviewPoints[workType],
+    pilotItems: pilotItems[purpose],
+    pilotSize: pilotSize[workType],
+    supportNote,
   };
 }
 
-export function buildMiniReport(workType: WorkType): MiniReport {
-  const copy = miniReportCopy[workType];
-
-  return {
-    headline: copy.headline,
-    method:
-      workType === "unknown"
-        ? "작은 업무 1개 선택 → 초안 작성 → 담당자 확인"
-        : "AI 초안 작성 → 담당자 확인",
-    reviewPoints: copy.reviewPoints,
-    pilotItems,
-    pilotSize: copy.pilotSize,
-    supportNote: "AI 도입 필요성, 적용 업무, 검증 계획을 정리할 수 있습니다.",
-  };
-}
-
-export function formatResultSummary(
-  workLabel: string,
-  effect: AdoptionEffectResult,
-  report: MiniReport,
-): string {
+export function formatResultSummary(report: AdoptionReport): string {
   return [
     "AgentProof AI 도입 간단 점검 결과",
     "",
-    `추천 업무: ${workLabel}`,
-    `예상 업무량: ${formatMonthlyEstimate(effect.monthlyHoursRange)}`,
-    `예상 절감: ${formatMonthlyEstimate(effect.savingHoursRange)}`,
+    `추천 업무: ${report.workLabel}`,
+    `도입 목적: ${report.purposeLabel}`,
+    `업무 성격: ${report.natureLabel}`,
+    `권장 방식: ${report.method}`,
     "",
-    "권장 방식:",
-    report.method,
+    "기대효과:",
+    report.expectedValueCopy,
     "",
     "사람이 봐야 하는 경우:",
     "",
-    ...report.reviewPoints.map((item) => `* ${item}`),
+    ...report.reviewPoints.map((item) => `- ${item}`),
     "",
     "30일 파일럿에서 확인할 것:",
     "",
-    ...report.pilotItems.map((item) => `* ${item}`),
+    ...report.pilotItems.map((item) => `- ${item}`),
     "",
     "지원사업 준비 자료로 활용할 수 있습니다.",
   ].join("\n");
-}
-
-export function formatMonthlyEstimate(range: string): string {
-  return range.includes("시간") ? `월 ${range}` : `월 ${range}시간`;
 }
 
 export function getWorkspaceByJob(job: string | null | undefined) {
@@ -357,16 +416,11 @@ export function normalizeWorkType(value: string | null | undefined): WorkType {
   return "customer_reply";
 }
 
-function formatEstimatedHours(min: number, max: number): string {
-  const roundedMax = Math.max(Math.round(max), Math.ceil(min), 1);
-
-  if (roundedMax <= 3) {
-    return "1~3";
-  }
-  if (roundedMax <= 12) {
-    return "4~12";
-  }
-  return "15시간 이상";
+function getOptionLabel<TValue extends string>(
+  options: readonly DiagnosisOption<TValue>[],
+  value: TValue,
+) {
+  return options.find((option) => option.value === value)?.label ?? value;
 }
 
 function isLegacyWorkspaceAlias(

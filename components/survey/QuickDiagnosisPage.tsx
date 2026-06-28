@@ -6,63 +6,54 @@ import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { trackEvent } from "@/lib/analytics";
 import {
-  buildMiniReport,
-  calculateAdoptionEffect,
-  effortQuestionGroups,
-  formatMonthlyEstimate,
+  adoptionPurposeOptions,
+  buildAdoptionReport,
   formatResultSummary,
   quickDiagnosisVersion,
   referenceDiagnosisScreens,
+  usageScopeOptions,
+  workNatureOptions,
   workOptions,
-  type AdoptionEffectResult,
-  type EffortQuestionGroup,
-  type ExposureScope,
-  type MiniReport,
-  type PartialAdoptionInputState,
+  type AdoptionPurpose,
+  type AdoptionReport,
+  type DiagnosisOption,
+  type ReferenceDiagnosisScreen,
+  type UsageScope,
+  type WorkNature,
   type WorkType,
 } from "@/lib/survey/quickDiagnosis";
 import { getStoredUtm, readUtmFromUrl, storeInitialUtm } from "@/lib/utm";
 import styles from "@/styles/survey.module.css";
 
-type ScreenIndex = 0 | 1 | 2 | 3;
-type EffortValue = NonNullable<PartialAdoptionInputState[keyof PartialAdoptionInputState]>;
-
-const defaultEffortInput: PartialAdoptionInputState = {
-  volume: null,
-  time: null,
-  exposure: null,
-};
+type ScreenIndex = 0 | 1 | 2 | 3 | 4 | 5;
 
 export function QuickDiagnosisPage() {
   const [screenIndex, setScreenIndex] = useState<ScreenIndex>(0);
   const [selectedWork, setSelectedWork] = useState<WorkType | null>(null);
-  const [effortInput, setEffortInput] =
-    useState<PartialAdoptionInputState>(defaultEffortInput);
-  const [copyStatus, setCopyStatus] = useState("");
-  const activeWork = selectedWork ?? "unknown";
-  const completeEffortInput = getCompleteEffortInput(effortInput);
-  const effect = useMemo(
-    () =>
-      calculateAdoptionEffect(
-        activeWork,
-        completeEffortInput ?? {
-          volume: "unknown",
-          time: "unknown",
-          exposure: "internal",
-        },
-      ),
-    [activeWork, completeEffortInput],
+  const [selectedPurpose, setSelectedPurpose] = useState<AdoptionPurpose | null>(
+    null,
   );
-  const report = useMemo(() => buildMiniReport(activeWork), [activeWork]);
-  const workLabel =
-    workOptions.find((option) => option.value === activeWork)?.label ?? "추천 업무";
+  const [selectedNature, setSelectedNature] = useState<WorkNature | null>(null);
+  const [selectedScope, setSelectedScope] = useState<UsageScope | null>(null);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const report = useMemo(
+    () =>
+      buildAdoptionReport({
+        workType: selectedWork ?? "unknown",
+        purpose: selectedPurpose ?? "find_use_case",
+        nature: selectedNature ?? "unclear",
+        scope: selectedScope ?? "unknown",
+      }),
+    [selectedNature, selectedPurpose, selectedScope, selectedWork],
+  );
 
   useEffect(() => {
     const initial = readUtmFromUrl(window.location.href);
     storeInitialUtm(initial, window.sessionStorage);
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_view", {
-      mode: "adoption_report",
+      mode: "adoption_mini_report",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -71,15 +62,18 @@ export function QuickDiagnosisPage() {
 
   const goToScreen = (nextIndex: ScreenIndex) => {
     setScreenIndex(nextIndex);
-    setCopyStatus("");
+    setToastMessage("");
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "auto" });
     });
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_step_view", {
-      mode: "adoption_report",
+      mode: "adoption_mini_report",
       step: referenceDiagnosisScreens[nextIndex].id,
-      selectedWork: activeWork,
+      selectedWork: selectedWork ?? "",
+      selectedPurpose: selectedPurpose ?? "",
+      selectedNature: selectedNature ?? "",
+      selectedScope: selectedScope ?? "",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -89,7 +83,7 @@ export function QuickDiagnosisPage() {
   const start = () => {
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_start", {
-      mode: "adoption_report",
+      mode: "adoption_mini_report",
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
@@ -99,54 +93,109 @@ export function QuickDiagnosisPage() {
 
   const chooseWork = (workType: WorkType) => {
     setSelectedWork(workType);
-    setEffortInput(defaultEffortInput);
+    setSelectedPurpose(null);
+    setSelectedNature(null);
+    setSelectedScope(null);
     trackEvent("quick_diagnosis_option_select", {
-      mode: "adoption_report",
-      selectedWork: workType,
+      mode: "adoption_mini_report",
+      field: "work",
+      value: workType,
       quickDiagnosisVersion,
     });
   };
 
-  const selectEffort = (groupId: EffortQuestionGroup["id"], value: EffortValue) => {
-    setEffortInput((current) => ({
-      ...current,
-      [groupId]: value,
-    }));
+  const choosePurpose = (purpose: AdoptionPurpose) => {
+    setSelectedPurpose(purpose);
+    setSelectedNature(null);
+    setSelectedScope(null);
+    trackEvent("quick_diagnosis_option_select", {
+      mode: "adoption_mini_report",
+      field: "purpose",
+      value: purpose,
+      selectedWork: selectedWork ?? "",
+      quickDiagnosisVersion,
+    });
   };
 
-  const showReport = () => {
-    if (!completeEffortInput) return;
+  const chooseNature = (nature: WorkNature) => {
+    setSelectedNature(nature);
+    setSelectedScope(null);
+    trackEvent("quick_diagnosis_option_select", {
+      mode: "adoption_mini_report",
+      field: "nature",
+      value: nature,
+      selectedWork: selectedWork ?? "",
+      selectedPurpose: selectedPurpose ?? "",
+      quickDiagnosisVersion,
+    });
+  };
+
+  const chooseScope = (scope: UsageScope) => {
+    setSelectedScope(scope);
+    trackEvent("quick_diagnosis_option_select", {
+      mode: "adoption_mini_report",
+      field: "scope",
+      value: scope,
+      selectedWork: selectedWork ?? "",
+      selectedPurpose: selectedPurpose ?? "",
+      selectedNature: selectedNature ?? "",
+      quickDiagnosisVersion,
+    });
+  };
+
+  const showResult = () => {
+    if (
+      selectedWork === null ||
+      selectedPurpose === null ||
+      selectedNature === null ||
+      selectedScope === null
+    ) {
+      return;
+    }
+
     const stored = getStoredUtm(window.sessionStorage);
     trackEvent("quick_diagnosis_complete", {
-      mode: "adoption_report",
-      selectedWork: activeWork,
-      volume: completeEffortInput.volume,
-      time: completeEffortInput.time,
-      exposure: completeEffortInput.exposure,
-      monthlyHoursRange: effect.monthlyHoursRange,
-      savingHoursRange: effect.savingHoursRange,
+      mode: "adoption_mini_report",
+      selectedWork,
+      selectedPurpose,
+      selectedNature,
+      selectedScope,
       quickDiagnosisVersion,
       utm_source: stored.source ?? "",
       utm_campaign: stored.campaign ?? "",
     });
-    goToScreen(3);
+    goToScreen(5);
   };
 
   const requestPilot = () => {
     trackEvent("quick_diagnosis_pilot_cta_click", {
-      mode: "adoption_report",
-      selectedWork: activeWork,
+      mode: "adoption_mini_report",
+      selectedWork: selectedWork ?? "",
+      selectedPurpose: selectedPurpose ?? "",
+      selectedNature: selectedNature ?? "",
+      selectedScope: selectedScope ?? "",
       quickDiagnosisVersion,
     });
   };
 
   const copyResult = async () => {
-    const summary = formatResultSummary(workLabel, effect, report);
+    const summary = formatResultSummary(report);
     await writeClipboardText(summary);
-    setCopyStatus("결과를 복사했습니다");
+    setToastMessage("결과를 복사했습니다");
     trackEvent("quick_diagnosis_result_copy", {
-      mode: "adoption_report",
-      selectedWork: activeWork,
+      mode: "adoption_mini_report",
+      selectedWork: selectedWork ?? "",
+      quickDiagnosisVersion,
+    });
+  };
+
+  const saveResult = () => {
+    const summary = formatResultSummary(report);
+    window.sessionStorage.setItem("agentproof-quick-diagnosis-result", summary);
+    setToastMessage("결과를 저장했습니다");
+    trackEvent("quick_diagnosis_result_save", {
+      mode: "adoption_mini_report",
+      selectedWork: selectedWork ?? "",
       quickDiagnosisVersion,
     });
   };
@@ -170,32 +219,53 @@ export function QuickDiagnosisPage() {
             <CardTopBar screenIndex={screenIndex} />
             {screenIndex === 0 ? <AwarenessScreen onStart={start} /> : null}
             {screenIndex === 1 ? (
-              <WorkScreen
-                selectedWork={selectedWork}
-                onSelect={chooseWork}
-                onNext={() => goToScreen(2)}
+              <OptionStepScreen
+                options={workOptions}
+                screenIndex={1}
+                selectedValue={selectedWork}
                 onBack={() => goToScreen(0)}
+                onNext={() => goToScreen(2)}
+                onSelect={chooseWork}
               />
             ) : null}
             {screenIndex === 2 ? (
-              <CalculatorScreen
-                effortInput={effortInput}
-                selectedWorkLabel={workLabel}
+              <OptionStepScreen
+                options={adoptionPurposeOptions}
+                screenIndex={2}
+                selectedValue={selectedPurpose}
                 onBack={() => goToScreen(1)}
-                onNext={showReport}
-                onSelect={selectEffort}
+                onNext={() => goToScreen(3)}
+                onSelect={choosePurpose}
               />
             ) : null}
             {screenIndex === 3 ? (
-              <ReportScreen
-                copyStatus={copyStatus}
-                effect={effect}
-                report={report}
-                selectedWork={activeWork}
-                selectedWorkLabel={workLabel}
+              <OptionStepScreen
+                options={workNatureOptions}
+                screenIndex={3}
+                selectedValue={selectedNature}
                 onBack={() => goToScreen(2)}
-                onCopy={copyResult}
+                onNext={() => goToScreen(4)}
+                onSelect={chooseNature}
+              />
+            ) : null}
+            {screenIndex === 4 ? (
+              <OptionStepScreen
+                options={usageScopeOptions}
+                screenIndex={4}
+                selectedValue={selectedScope}
+                onBack={() => goToScreen(3)}
+                onNext={showResult}
+                onSelect={chooseScope}
+              />
+            ) : null}
+            {screenIndex === 5 ? (
+              <ReportScreen
+                report={report}
+                toastMessage={toastMessage}
+                onBack={() => goToScreen(4)}
+                onCopy={() => void copyResult()}
                 onPilotClick={requestPilot}
+                onSave={saveResult}
               />
             ) : null}
           </section>
@@ -206,7 +276,7 @@ export function QuickDiagnosisPage() {
 }
 
 function CardTopBar({ screenIndex }: { screenIndex: ScreenIndex }) {
-  const screen = referenceDiagnosisScreens[screenIndex];
+  const screen: ReferenceDiagnosisScreen = referenceDiagnosisScreens[screenIndex];
 
   return (
     <div className={styles.referenceTopBar}>
@@ -246,18 +316,22 @@ function AwarenessScreen({ onStart }: { onStart: () => void }) {
   );
 }
 
-function WorkScreen({
-  selectedWork,
+function OptionStepScreen<TValue extends string>({
+  options,
+  screenIndex,
+  selectedValue,
   onBack,
   onNext,
   onSelect,
 }: {
-  selectedWork: WorkType | null;
+  options: readonly DiagnosisOption<TValue>[];
+  screenIndex: ScreenIndex;
+  selectedValue: TValue | null;
   onBack: () => void;
   onNext: () => void;
-  onSelect: (workType: WorkType) => void;
+  onSelect: (value: TValue) => void;
 }) {
-  const screen = referenceDiagnosisScreens[1];
+  const screen: ReferenceDiagnosisScreen = referenceDiagnosisScreens[screenIndex];
 
   return (
     <div className={styles.referenceScreen}>
@@ -270,8 +344,8 @@ function WorkScreen({
         <p className={styles.referenceQuestionHelper}>{screen.subcopy}</p>
       ) : null}
       <div className={styles.referenceOptionList}>
-        {workOptions.map((option) => {
-          const selected = option.value === selectedWork;
+        {options.map((option) => {
+          const selected = option.value === selectedValue;
           return (
             <button
               aria-pressed={selected}
@@ -294,7 +368,7 @@ function WorkScreen({
       <ReferenceActions onBack={onBack}>
         <button
           className={styles.referencePrimaryButton}
-          disabled={selectedWork === null}
+          disabled={selectedValue === null}
           type="button"
           onClick={onNext}
         >
@@ -302,109 +376,25 @@ function WorkScreen({
         </button>
       </ReferenceActions>
     </div>
-  );
-}
-
-function CalculatorScreen({
-  effortInput,
-  selectedWorkLabel,
-  onBack,
-  onNext,
-  onSelect,
-}: {
-  effortInput: PartialAdoptionInputState;
-  selectedWorkLabel: string;
-  onBack: () => void;
-  onNext: () => void;
-  onSelect: (groupId: EffortQuestionGroup["id"], value: EffortValue) => void;
-}) {
-  const screen = referenceDiagnosisScreens[2];
-  const canContinue = getCompleteEffortInput(effortInput) !== null;
-
-  return (
-    <div className={styles.referenceScreen}>
-      <h1 id="reference-title">{screen.title}</h1>
-      {screen.subcopy ? (
-        <p className={styles.referenceQuestionHelper}>{screen.subcopy}</p>
-      ) : null}
-      <p className={styles.referenceSelectedWork}>업무 · {selectedWorkLabel}</p>
-      <div className={styles.referenceCalculator}>
-        {effortQuestionGroups.map((group) => (
-          <EffortQuestionBlock
-            group={group}
-            key={group.id}
-            selectedValue={effortInput[group.id]}
-            onSelect={onSelect}
-          />
-        ))}
-      </div>
-      <ReferenceActions onBack={onBack}>
-        <button
-          className={styles.referencePrimaryButton}
-          disabled={!canContinue}
-          type="button"
-          onClick={onNext}
-        >
-          {screen.cta}
-        </button>
-      </ReferenceActions>
-    </div>
-  );
-}
-
-function EffortQuestionBlock({
-  group,
-  selectedValue,
-  onSelect,
-}: {
-  group: EffortQuestionGroup;
-  selectedValue: EffortValue | null;
-  onSelect: (groupId: EffortQuestionGroup["id"], value: EffortValue) => void;
-}) {
-  return (
-    <fieldset className={styles.referenceEffortGroup}>
-      <legend>{group.label}</legend>
-      <div className={styles.referencePillGroup}>
-        {group.options.map((option) => {
-          const selected = option.value === selectedValue;
-          return (
-            <button
-              aria-pressed={selected}
-              className={styles.referencePillButton}
-              data-selected={selected ? "true" : "false"}
-              key={option.value}
-              type="button"
-              onClick={() => onSelect(group.id, option.value)}
-            >
-              {option.label}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
   );
 }
 
 function ReportScreen({
-  copyStatus,
-  effect,
   report,
-  selectedWork,
-  selectedWorkLabel,
+  toastMessage,
   onBack,
   onCopy,
   onPilotClick,
+  onSave,
 }: {
-  copyStatus: string;
-  effect: AdoptionEffectResult;
-  report: MiniReport;
-  selectedWork: WorkType;
-  selectedWorkLabel: string;
+  report: AdoptionReport;
+  toastMessage: string;
   onBack: () => void;
-  onCopy: () => Promise<void>;
+  onCopy: () => void;
   onPilotClick: () => void;
+  onSave: () => void;
 }) {
-  const screen = referenceDiagnosisScreens[3];
+  const screen = referenceDiagnosisScreens[5];
   const pilotHref = `mailto:agentproof.ai@gmail.com?subject=${encodeURIComponent(
     "30일 파일럿 설계 요청",
   )}`;
@@ -412,35 +402,30 @@ function ReportScreen({
   return (
     <div className={`${styles.referenceScreen} ${styles.referenceReportScreen}`}>
       <section className={styles.referenceReportHero} aria-labelledby="reference-title">
-        <span>{selectedWorkLabel}</span>
+        <span>{report.workLabel}</span>
         <h1 id="reference-title">
           {report.headline.split("\n").map((line) => (
             <span key={line}>{line}</span>
           ))}
         </h1>
+        <p className={styles.referenceReportLead}>{report.natureLine}</p>
       </section>
 
-      <ReportCard title="예상 효과">
-        <div className={styles.referenceEffectGrid}>
-          <MetricBlock
-            label="예상 업무량"
-            range={effect.monthlyHoursRange}
-            estimateLabel={effect.estimateLabel}
-          />
-          <MetricBlock
-            label="줄일 수 있는 시간"
-            range={effect.savingHoursRange}
-            estimateLabel={effect.estimateLabel}
-          />
-        </div>
-        <p className={styles.referenceReportNote}>
-          입력한 빈도와 소요시간 기준 예상 범위입니다.
-        </p>
+      <ReportCard title="기대효과">
+        <p className={styles.referenceSupportNote}>{report.expectedValueCopy}</p>
+        {report.timeEstimate ? (
+          <div className={styles.referenceEstimateBox}>
+            <span>예상 절감</span>
+            <strong>{report.timeEstimate}</strong>
+            <small>예상 범위</small>
+          </div>
+        ) : report.valueItems ? (
+          <CompactList items={report.valueItems} />
+        ) : null}
       </ReportCard>
 
       <ReportCard title="권장 방식">
         <p className={styles.referenceMethod}>{report.method}</p>
-        <p className={styles.referenceReportNote}>노출 범위 · {effect.exposureLabel}</p>
       </ReportCard>
 
       <ReportCard title="사람이 봐야 하는 경우">
@@ -467,35 +452,21 @@ function ReportScreen({
         <button
           className={`${styles.referencePrimaryButton} ${styles.referenceSecondaryButton}`}
           type="button"
-          onClick={() => void onCopy()}
+          onClick={onSave}
         >
           결과 저장하기
         </button>
+        <button
+          className={`${styles.referencePrimaryButton} ${styles.referenceTertiaryButton}`}
+          type="button"
+          onClick={onCopy}
+        >
+          결과 복사하기
+        </button>
       </ReferenceActions>
       <div className={styles.referenceCopyStatus} role="status" aria-live="polite">
-        {copyStatus}
+        {toastMessage}
       </div>
-      <span className={styles.referenceVisuallyHidden}>
-        선택한 업무 키: {selectedWork}
-      </span>
-    </div>
-  );
-}
-
-function MetricBlock({
-  label,
-  range,
-  estimateLabel,
-}: {
-  label: string;
-  range: string;
-  estimateLabel: string;
-}) {
-  return (
-    <div className={styles.referenceMetricBlock}>
-      <span>{label}</span>
-      <strong>{formatMonthlyEstimate(range)}</strong>
-      <small>{estimateLabel}</small>
     </div>
   );
 }
@@ -534,17 +505,6 @@ function ReferenceActions({
       </button>
     </div>
   );
-}
-
-function getCompleteEffortInput(input: PartialAdoptionInputState) {
-  if (input.volume === null || input.time === null || input.exposure === null) {
-    return null;
-  }
-  return {
-    volume: input.volume,
-    time: input.time,
-    exposure: input.exposure as ExposureScope,
-  };
 }
 
 async function writeClipboardText(text: string): Promise<void> {

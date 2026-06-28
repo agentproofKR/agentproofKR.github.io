@@ -125,7 +125,9 @@ test("survey page uses the fixed home header and keeps the phone card logo-free"
   await page.getByRole("button", { name: "시작하기" }).click();
   await page.getByRole("button", { name: /고객 문의 응대/ }).click();
   await page.getByRole("button", { name: "다음" }).click();
-  await expect(page.getByRole("heading", { name: "효과를 계산해볼게요" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /AI로 무엇을\s*얻고 싶나요\?/ }),
+  ).toBeVisible();
 
   const metrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,

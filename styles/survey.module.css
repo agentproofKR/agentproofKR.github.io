@@ -286,6 +286,14 @@
   color: rgb(255 255 255 / 88%);
 }
 
+.referenceTertiaryButton {
+  min-height: 46px;
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  color: rgb(255 255 255 / 62%);
+}
+
 .referenceOptionList {
   display: grid;
   gap: 10px;
@@ -449,6 +457,15 @@
   font-size: clamp(26px, 8vw, 34px);
 }
 
+.referenceReportLead {
+  margin: 0;
+  color: rgb(255 255 255 / 66%);
+  font-size: 14px;
+  font-weight: 620;
+  line-height: 1.46;
+  word-break: keep-all;
+}
+
 .referenceReportCard {
   display: grid;
   gap: 10px;
@@ -487,6 +504,33 @@
 }
 
 .referenceMetricBlock strong {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 850;
+  line-height: 1.05;
+}
+
+.referenceEstimateBox {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 4%);
+  padding: 12px;
+}
+
+.referenceEstimateBox span,
+.referenceEstimateBox small {
+  color: rgb(255 255 255 / 56%);
+  font-size: 12px;
+  font-weight: 690;
+  line-height: 1.35;
+}
+
+.referenceEstimateBox strong {
+  grid-row: span 2;
   color: #ffffff;
   font-size: 18px;
   font-weight: 850;
